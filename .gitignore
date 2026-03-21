@@ -1,0 +1,32 @@
+# Node
+**/node_modules/
+**/npm-debug.log*
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# Builds
+**/dist/
+**/build/
+**/out/
+
+# Expo / React Native
+**/.expo/
+**/.expo-shared/
+**/android/
+**/ios/
+
+# Electron
+**/release/
+**/*.asar
+
+# Env
+**/.env
+**/.env.*
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# IDE
+**/.vscode/
+**/.idea/
