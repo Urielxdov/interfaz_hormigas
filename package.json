@@ -1,5 +1,6 @@
 {
   "name": "hormigas_interfaz",
+  "private": true,
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,5 +9,9 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "babel-plugin-module-resolver": "^5.0.3",
+    "typescript": "^5.4.0"
+  }
 }

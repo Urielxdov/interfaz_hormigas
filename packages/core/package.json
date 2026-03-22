@@ -1,0 +1,9 @@
+{
+  "name": "@hormigas/core",
+  "version": "1.0.0",
+  "main": "./index.ts",
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  }
+}
