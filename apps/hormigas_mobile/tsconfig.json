@@ -1,0 +1,24 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@hormigas/core": ["../../packages/core/index.ts"],
+      "lucide-react-native": [
+        "./node_modules/lucide-react-native/dist/lucide-react-native.d.ts"
+      ]
+    },
+    "jsx": "react-native",
+    "moduleResolution": "bundler",
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "moduleSuffixes": [".ios", ".android", ".native", ""]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}
