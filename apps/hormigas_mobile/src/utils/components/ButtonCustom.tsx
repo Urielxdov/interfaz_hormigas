@@ -1,17 +1,25 @@
+import { LucideIcon } from 'lucide-react-native'
 import { GestureResponderEvent, Pressable, Text } from 'react-native'
+import { Color } from '../constants/Colors'
 
 interface ButtonCustomProps {
-  title: string
+  title?: string
   onPress: (event: GestureResponderEvent) => void
   bgColor?: string
   disabled?: boolean
+  icon?: LucideIcon
+  iconColor?: Color
+  iconSize?: number
 }
 
 export default function ButtonCustom ({
-  title,
+  title = '',
   onPress,
   bgColor = 'bg-blue-500',
-  disabled = false
+  disabled = false,
+  icon: Icon,
+  iconColor = 'white',
+  iconSize = 20
 }: ButtonCustomProps) {
   return (
     <Pressable
@@ -19,7 +27,8 @@ export default function ButtonCustom ({
       onPress={onPress}
       disabled={disabled}
     >
-      <Text className='text-white font-bold text-lg'>{title}</Text>
+      {Icon && <Icon size={iconSize} color={iconColor}/>}
+      {title && <Text className='text-white font-bold text-lg'>{title}</Text>}
     </Pressable>
   )
 }

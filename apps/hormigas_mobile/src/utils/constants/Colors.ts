@@ -8,7 +8,8 @@ export const COLORS = {
   purple: 'purple',
   pink: 'pink',
   indigo: 'indigo',
-  orange: 'orange'
+  orange: 'orange',
+  white: 'white'
 } as const
 
 export const SHADES = {
@@ -23,6 +24,8 @@ export const SHADES = {
   800: 800,
   900: 900,
 } as const
+
+
 
 export type Color = keyof typeof COLORS
 export type Shade = keyof typeof SHADES

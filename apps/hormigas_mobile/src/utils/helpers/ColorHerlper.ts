@@ -1,6 +1,7 @@
 import { Color, Shade } from "../constants/Colors"
 
 const bgMap: Record<Color, Partial<Record<Shade, string>>> = {
+  white: { 200: 'bg-white', 600: 'bg-white' },
   blue: { 200: 'bg-blue-200', 600: 'bg-blue-600' },
   green: { 200: 'bg-green-200', 600: 'bg-green-600' },
   purple: { 200: 'bg-purple-200', 600: 'bg-purple-600' },
@@ -13,6 +14,7 @@ const bgMap: Record<Color, Partial<Record<Shade, string>>> = {
 }
 
 const borderMap: Record<Color, Partial<Record<Shade, string>>> = {
+  white: { 300: 'border-white' },
   blue: { 300: 'border-blue-300' },
   green: { 300: 'border-green-300' },
   purple: { 300: 'border-purple-300' },
@@ -25,6 +27,7 @@ const borderMap: Record<Color, Partial<Record<Shade, string>>> = {
 }
 
 const textMap: Record<Color, Partial<Record<Shade, string>>> = {
+  white: { 600: 'text-white' },
   blue: { 600: 'text-blue-600' },
   green: { 600: 'text-green-600' },
   purple: { 600: 'text-purple-600' },
@@ -36,6 +39,21 @@ const textMap: Record<Color, Partial<Record<Shade, string>>> = {
   orange: { 600: 'text-orange-600' },
 }
 
+const statusMap: Record<Color, string> = {
+  white:   'text-black bg-white rounded-full px-2 py-1',
+  blue:   'text-blue-600 bg-blue-100 rounded-full px-2 py-1',
+  green:  'text-green-600 bg-green-100 rounded-full px-2 py-1',
+  purple: 'text-purple-600 bg-purple-100 rounded-full px-2 py-1',
+  yellow: 'text-yellow-600 bg-yellow-100 rounded-full px-2 py-1',
+  red:    'text-red-600 bg-red-100 rounded-full px-2 py-1',
+  gray:   'text-gray-600 bg-gray-100 rounded-full px-2 py-1',
+  pink:   'text-pink-600 bg-pink-100 rounded-full px-2 py-1',
+  indigo: 'text-indigo-600 bg-indigo-100 rounded-full px-2 py-1',
+  orange: 'text-orange-600 bg-orange-100 rounded-full px-2 py-1',
+}
+
+
 export const bgClass = (color: Color, shade: Shade) => bgMap[color][shade] ?? 'bg-gray-600'
 export const borderClass = (color: Color, shade: Shade) => borderMap[color][shade] ?? 'border-gray-300'
 export const textClass = (color: Color, shade: Shade) => textMap[color][shade] ?? 'text-gray-600'
+export const statusClass = (color: Color) => statusMap[color]
