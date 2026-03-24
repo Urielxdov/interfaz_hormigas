@@ -13,7 +13,7 @@ interface BranchForm {
 }
 
 export default function Branchessss() {
-    const { control, handleSubmit, formState: { errors } } = useForm<BranchForm>({
+    const { control, handleSubmit, formState: { errors }, watch } = useForm<BranchForm>({
         defaultValues: {
             nombre: '',
             direccion: '',
@@ -21,8 +21,8 @@ export default function Branchessss() {
         }
     })
 
-    const onSubmit = () => {
-        console.log("simon")
+    const onSubmit = (data: BranchForm) => {
+        console.log(data)
     }
 
     return (
