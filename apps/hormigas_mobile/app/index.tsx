@@ -1,5 +1,10 @@
+import { NetworkProvider } from '@/src/utils/context/NetworkContext'
 import { Redirect } from 'expo-router'
 
 export default function App() {
-    return <Redirect href="/(login)" />
+    return (
+        <NetworkProvider>
+            <Redirect href="/(login)" />
+        </NetworkProvider>
+    )
 }

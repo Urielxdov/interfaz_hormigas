@@ -18,8 +18,8 @@ module.exports = function (api) {
       ['module-resolver', {
         root: ['./src'],
         alias: {
-          '@hormigas/core': '../../packages/core',
-          '@hormigas/domain': '../../packages'
+          '@hormigas/application': '../../packages/application',
+          '@hormigas/domain': '../../packages/domain'
         },
       }],
     ],

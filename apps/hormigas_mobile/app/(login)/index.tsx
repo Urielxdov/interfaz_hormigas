@@ -1,6 +1,6 @@
 import ButtonCustom from "@/src/utils/components/ButtonCustom";
 import InputField from "@/src/utils/components/InputFiled";
-import { router } from "expo-router";
+import { useAuth } from "@/src/login/hooks/useAuth";
 import { useRef, useState } from "react";
 import { Text, TextInput, View } from "react-native";
 
@@ -8,13 +8,15 @@ export default function LoginDefaultScreen() {
 
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const { login } = useAuth()
 
     const passwordRef = useRef<TextInput>(null)
 
     const handleLogin = () => {
         console.log({ email, password })
+        console.log(login({email, password}))
         // tu lógica de login aquí
-        router.replace('/(branche)')
+        //router.replace('/(branche)')
     }
 
     return (

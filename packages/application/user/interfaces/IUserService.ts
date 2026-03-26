@@ -1,4 +1,5 @@
-import { UserRequestDTO, UserTokenDTO } from "../../domain/user/dto/User";
+import { UserRequestDTO, UserTokenDTO } from "../../../domain";
+
 
 export interface IUserService {
   login(dto: UserRequestDTO): Promise<UserTokenDTO>
