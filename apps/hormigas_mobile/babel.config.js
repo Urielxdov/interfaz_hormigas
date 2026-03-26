@@ -19,6 +19,7 @@ module.exports = function (api) {
         root: ['./src'],
         alias: {
           '@hormigas/core': '../../packages/core',
+          '@hormigas/domain': '../../packages'
         },
       }],
     ],

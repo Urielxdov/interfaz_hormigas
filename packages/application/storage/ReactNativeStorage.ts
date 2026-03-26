@@ -1,4 +1,4 @@
-import { IStorage } from "../../interfaces/IStorage";
+import { IStorage } from "./IStorage";
 
 
 export class ReactNativeStorage implements IStorage {
