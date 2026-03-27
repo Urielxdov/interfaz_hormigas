@@ -1,3 +1,4 @@
+import BranchSummaryScreen from '@/src/home/components/BranchSummaryScreen'
 import CreateBranchScreen from '@/src/branches/screens/CreateBranch'
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import DataTable from '@/src/utils/components/DataTable'
@@ -93,6 +94,8 @@ export default function BranchesScreen () {
           ]}
           data={sucursales}
         />
+
+        <BranchSummaryScreen />
       </View>
 
       <Modal

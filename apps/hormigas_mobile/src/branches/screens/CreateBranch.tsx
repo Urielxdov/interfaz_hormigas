@@ -83,6 +83,7 @@ export function CreateBranchScreen () {
         control={control}
         errors={errors}
         fields={BRANCH_FORM_FIELDS}
+        scrollable={false}
       >
         <ButtonCustom title='Guardar' onPress={handleSubmit(onSubmit)} />
       </Form>

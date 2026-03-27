@@ -4,6 +4,7 @@ import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { router } from 'expo-router'
 import { useForm } from 'react-hook-form'
 import { Text, View } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 type LoginFormValues = {
   email: string
@@ -43,27 +44,34 @@ export default function LoginScreen () {
   const handleLogin = (data: LoginFormValues) => {
     console.log(data)
     console.log(login(data))
-    router.replace('/(branche)')
+    router.replace('/(inventory)')
   }
 
   return (
-    <View className='w-11/12 self-center rounded-xl border border-gray-200 bg-white p-3'>
-      <View className='flex flex-col gap-3'>
-        <View className='flex flex-col gap-2'>
-          <Text className='text-2xl font-bold'>Iniciar Sesion</Text>
-          <Text className='text-gray-500'>
-            Ingresa tu email y contrasena para acceder a tu cuenta
-          </Text>
+    <KeyboardAwareScrollView
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+      keyboardShouldPersistTaps='handled'
+      enableOnAndroid
+      extraScrollHeight={20}
+    >
+      <View className='w-11/12 self-center rounded-xl border border-gray-200 bg-white p-3'>
+        <View className='flex flex-col gap-3'>
+          <View className='flex flex-col gap-2'>
+            <Text className='text-2xl font-bold'>Iniciar Sesion</Text>
+            <Text className='text-gray-500'>
+              Ingresa tu email y contrasena para acceder a tu cuenta
+            </Text>
+          </View>
+
+          <Form control={control} errors={errors} fields={LOGIN_FIELDS} scrollable={false} />
+
+          <ButtonCustom
+            title='Iniciar sesion'
+            onPress={handleSubmit(handleLogin)}
+            bgColor='bg-black'
+          />
         </View>
-
-        <Form control={control} errors={errors} fields={LOGIN_FIELDS} />
-
-        <ButtonCustom
-          title='Iniciar sesion'
-          onPress={handleSubmit(handleLogin)}
-          bgColor='bg-black'
-        />
       </View>
-    </View>
+    </KeyboardAwareScrollView>
   )
 }

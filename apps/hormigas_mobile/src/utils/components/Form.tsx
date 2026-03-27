@@ -12,7 +12,8 @@ import {
   KeyboardTypeOptions,
   Text,
   TextInput,
-  TextInputProps
+  TextInputProps,
+  View
 } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
@@ -23,21 +24,27 @@ export type FormFieldConfig<T extends FieldValues> = {
   rules?: RegisterOptions<T, Path<T>>
   keyboardType?: KeyboardTypeOptions
   autoCapitalize?: TextInputProps['autoCapitalize']
-  secureTextEntry?: boolean
+  secureTextEntry?: boolean,
+  scrollable?: boolean
 }
 
+// Form.tsx
 interface FormProps<T extends FieldValues> {
   control: Control<T>
   errors: FieldErrors<T>
   fields: FormFieldConfig<T>[]
   children?: ReactNode
+  keyboardOffset?: number
+  scrollable?: boolean  // <-- nuevo
 }
 
 export default function Form<T extends FieldValues> ({
   control,
   errors,
   fields,
-  children
+  children,
+  keyboardOffset,
+  scrollable = true  // por defecto se comporta igual que antes
 }: FormProps<T>) {
   const inputRefs = useRef<Record<string, TextInput | null>>({})
 
@@ -48,15 +55,8 @@ export default function Form<T extends FieldValues> ({
     }
   }
 
-  return (
-    <KeyboardAwareScrollView
-      className='p-4'
-      style={{ minHeight: 0 }}
-      contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
-      keyboardShouldPersistTaps='handled'
-      enableOnAndroid
-      extraScrollHeight={20}
-    >
+  const content = (
+    <>
       {fields.map((field, index) => {
         const error = errors[field.name] as { message?: string } | undefined
         const isLast = index === fields.length - 1
@@ -89,8 +89,24 @@ export default function Form<T extends FieldValues> ({
           </Fragment>
         )
       })}
-
       {children}
+    </>
+  )
+
+  if (!scrollable) {
+    return <View className='p-4' style={{ gap: 16, paddingBottom: 32 }}>{content}</View>
+  }
+
+  return (
+    <KeyboardAwareScrollView
+      className='p-4'
+      style={{ minHeight: 0 }}
+      contentContainerStyle={{ gap: 16, paddingBottom: 32 }}
+      keyboardShouldPersistTaps='handled'
+      enableOnAndroid
+      extraScrollHeight={keyboardOffset ?? 20}
+    >
+      {content}
     </KeyboardAwareScrollView>
   )
 }
