@@ -10,7 +10,8 @@ const bgMap: Record<Color, Partial<Record<Shade, string>>> = {
   gray: { 200: 'bg-gray-200', 600: 'bg-gray-600' },
   pink: { 200: 'bg-pink-200', 600: 'bg-pink-600' },
   indigo: { 200: 'bg-indigo-200', 600: 'bg-indigo-600' },
-  orange: { 200: 'bg-orange-200', 600: 'bg-orange-600' }
+  orange: { 200: 'bg-orange-200', 600: 'bg-orange-600' },
+  black: {200: 'bg-gray-200', 600: 'bg-gray-600'}
 }
 
 const borderMap: Record<Color, Partial<Record<Shade, string>>> = {
@@ -24,6 +25,7 @@ const borderMap: Record<Color, Partial<Record<Shade, string>>> = {
   pink: { 300: 'border-pink-300' },
   indigo: { 300: 'border-indigo-300' },
   orange: { 300: 'border-orange-300' },
+  black: { 300: 'border-black'}
 }
 
 const textMap: Record<Color, Partial<Record<Shade, string>>> = {
@@ -37,6 +39,7 @@ const textMap: Record<Color, Partial<Record<Shade, string>>> = {
   pink: { 600: 'text-pink-600' },
   indigo: { 600: 'text-indigo-600' },
   orange: { 600: 'text-orange-600' },
+  black: { 600: 'text-black' }
 }
 
 const statusMap: Record<Color, string> = {
@@ -50,6 +53,7 @@ const statusMap: Record<Color, string> = {
   pink:   'text-pink-600 bg-pink-100 rounded-full px-2 py-1',
   indigo: 'text-indigo-600 bg-indigo-100 rounded-full px-2 py-1',
   orange: 'text-orange-600 bg-orange-100 rounded-full px-2 py-1',
+  black: 'text-black bg-gray-100 rounded-full px-2 py-1'
 }
 
 

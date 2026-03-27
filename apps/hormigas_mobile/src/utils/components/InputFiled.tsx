@@ -1,4 +1,11 @@
-import { View, Text, TextInput } from 'react-native'
+import { Ref } from 'react'
+import {
+  KeyboardTypeOptions,
+  Text,
+  TextInput,
+  TextInputProps,
+  View
+} from 'react-native'
 
 interface InputFieldProps {
   label: string
@@ -9,7 +16,9 @@ interface InputFieldProps {
   returnKeyType: 'done' | 'next' | 'go' | 'search' | 'send'
   onSubmitEditingProp: () => void
   blurOnSubmitProp?: boolean
-  inputRef?: React.RefObject<TextInput | null> // nueva prop
+  inputRef?: Ref<TextInput>
+  keyboardType?: KeyboardTypeOptions
+  autoCapitalize?: TextInputProps['autoCapitalize']
 }
 
 export default function InputField ({
@@ -21,7 +30,9 @@ export default function InputField ({
   returnKeyType,
   onSubmitEditingProp,
   blurOnSubmitProp = false,
-  inputRef
+  inputRef,
+  keyboardType,
+  autoCapitalize
 }: InputFieldProps) {
   return (
     <View className='flex gap-1 w-full'>
@@ -36,6 +47,8 @@ export default function InputField ({
         returnKeyType={returnKeyType}
         onSubmitEditing={onSubmitEditingProp}
         blurOnSubmit={blurOnSubmitProp}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
       />
     </View>
   )
