@@ -9,7 +9,8 @@ export const COLORS = {
   pink: 'pink',
   indigo: 'indigo',
   orange: 'orange',
-  white: 'white'
+  white: 'white',
+  black: 'black'
 } as const
 
 export const SHADES = {

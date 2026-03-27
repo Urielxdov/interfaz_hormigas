@@ -1,97 +1,93 @@
-import InputField from "@/src/utils/components/InputFiled";
-import { Text, TextInput } from "react-native";
-import { View } from "react-native";
-import { useForm, Controller } from 'react-hook-form'
-import ButtonCustom from "@/src/utils/components/ButtonCustom";
+import ButtonCustom from '@/src/utils/components/ButtonCustom'
+import Form, { FormFieldConfig } from '@/src/utils/components/Form'
+import { useForm } from 'react-hook-form'
+import { Text, View } from 'react-native'
 
-interface BranchForm {
-    nombre: string
-    direccion: string
-    responsable: string
+type BranchFormValues = {
+  nombre: string
+  direccion: string
+  responsable: string
+  codigo: string
+  telefono: string
+  ciudad: string
 }
 
-export default function CreateBranch() {
-    const { control, handleSubmit, formState: { errors } } = useForm<BranchForm>({
-        defaultValues: {
-        nombre: '',
-        direccion: '',
-        responsable: ''
-        }
-    })
+const BRANCH_FORM_FIELDS: FormFieldConfig<BranchFormValues>[] = [
+  {
+    name: 'nombre',
+    label: 'Nombre',
+    placeholder: 'Ej. Sucursal Centro',
+    rules: { required: 'El nombre es obligatorio' }
+  },
+  {
+    name: 'direccion',
+    label: 'Direccion',
+    placeholder: 'Ej. Av. Principal 123',
+    rules: { required: 'La direccion es obligatoria' }
+  },
+  {
+    name: 'responsable',
+    label: 'Responsable',
+    placeholder: 'Ej. Maria Garcia',
+    rules: { required: 'El responsable es obligatorio' }
+  },
+  {
+    name: 'codigo',
+    label: 'Codigo',
+    placeholder: 'Ej. CENTRO-01'
+  },
+  {
+    name: 'telefono',
+    label: 'Telefono',
+    placeholder: 'Ej. 555 123 4567'
+  },
+  {
+    name: 'ciudad',
+    label: 'Ciudad',
+    placeholder: 'Ej. Monterrey'
+  }
+]
 
+const defaultValues: BranchFormValues = {
+  nombre: '',
+  direccion: '',
+  responsable: '',
+  codigo: '',
+  telefono: '',
+  ciudad: ''
+}
 
-    const onSubmit = () => {
-        console.log("simon")
-    }
+export function CreateBranchScreen () {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<BranchFormValues>({
+    defaultValues
+  })
 
-    return (
-        <View>
-            <View>
-                <Text>Nueva Sucursal</Text>
-                <Text>Completa el formulario para crear una nueva sucursal</Text>
-            </View>
+  const onSubmit = (data: BranchFormValues) => {
+    console.log(data)
+  }
 
-            <View className="flex-1 p-4 gap-4">
-
-      {/* Nombre */}
-      <View className="gap-1">
-        <Text className="font-bold">Nombre</Text>
-        <Controller
-          control={control}
-          name="nombre"
-          rules={{ required: 'El nombre es obligatorio' }}
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="border border-gray-200 rounded-xl p-3"
-              placeholder="Ej. Sucursal Centro"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
-        {errors.nombre && <Text className="text-red-500">{errors.nombre.message}</Text>}
+  return (
+    <View className='w-full'>
+      <View className='gap-1 p-2'>
+        <Text className='text-2xl font-bold'>Nueva Sucursal</Text>
+        <Text className='text-gray-500'>
+          Completa el formulario para crear una nueva sucursal
+        </Text>
       </View>
 
-      {/* Dirección */}
-      <View className="gap-1">
-        <Text className="font-bold">Dirección</Text>
-        <Controller
-          control={control}
-          name="direccion"
-          rules={{ required: 'La dirección es obligatoria' }}
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="border border-gray-200 rounded-xl p-3"
-              placeholder="Ej. Av. Principal 123"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
-        {errors.direccion && <Text className="text-red-500">{errors.direccion.message}</Text>}
-      </View>
-
-      {/* Responsable */}
-      <View className="gap-1">
-        <Text className="font-bold">Responsable</Text>
-        <Controller
-          control={control}
-          name="responsable"
-          rules={{ required: 'El responsable es obligatorio' }}
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="border border-gray-200 rounded-xl p-3"
-              placeholder="Ej. María García"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
-        {errors.responsable && <Text className="text-red-500">{errors.responsable.message}</Text>}
-      </View>
-
-      <ButtonCustom title="Guardar" onPress={handleSubmit(onSubmit)} />
+      <Form
+        control={control}
+        errors={errors}
+        fields={BRANCH_FORM_FIELDS}
+      >
+        <ButtonCustom title='Guardar' onPress={handleSubmit(onSubmit)} />
+      </Form>
     </View>
-        </View>
-    )
+  )
 }
+
+export default CreateBranchScreen
