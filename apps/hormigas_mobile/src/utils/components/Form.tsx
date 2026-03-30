@@ -72,7 +72,7 @@ export default function Form<T extends FieldValues> ({
                   inputRef={ref => { inputRefs.current[field.name] = ref }}
                   label={field.label}
                   placeholder={field.placeholder}
-                  value={String(value ?? '')}
+                  value={value ?? ''}
                   onChangeText={onChange}
                   secureText={field.secureTextEntry}
                   keyboardType={field.keyboardType}

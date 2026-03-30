@@ -1,5 +1,5 @@
-import { Product } from "../../domain/product/Product";
-import { ProductRepository } from "../../domain/product/ProductRepository";
+import { Product } from "@hormigas/domain/product/Product";
+import { ProductRepository } from "@hormigas/domain/product/ProductRepository";
 
 export class SellProduct {
     constructor(private repo: ProductRepository) {}

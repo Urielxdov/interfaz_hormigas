@@ -12,6 +12,7 @@ export const NetworkProvider = ({ children }: { children: React.ReactNode }) => 
 
     useEffect(() => {
         const unsubscribe = NetInfo.addEventListener(state => {
+            console.log('NerInfo state: ', state)
             setIsOnline(!!state.isConnected)
         })
         return unsubscribe

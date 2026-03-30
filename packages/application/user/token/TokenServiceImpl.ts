@@ -1,5 +1,5 @@
-import { TokenService } from "../interfaces/TokenService";
-import { IStorage } from '../../storage/IStorage'
+import { TokenService } from "@hormigas/application/user/interfaces/TokenService";
+import { IStorage } from '@hormigas/application/storage/IStorage'
 
 const TOKEN_KEY = 'Authorization'
 const REFRESH_TOKEN_KEY = 'refresh_token'

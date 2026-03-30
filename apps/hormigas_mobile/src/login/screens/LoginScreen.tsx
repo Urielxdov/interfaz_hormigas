@@ -43,8 +43,8 @@ export default function LoginScreen () {
 
   const handleLogin = (data: LoginFormValues) => {
     console.log(data)
-    console.log(login(data))
-    router.replace('/(inventory)')
+    //console.log(login(data))
+    router.replace('/(tabs)/index')
   }
 
   return (

@@ -2,7 +2,8 @@ import 'react-native-reanimated'
 import '../global.css'
 
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { Slot } from 'expo-router'
+import { Stack } from 'expo-router'
+import Header from '@/src/utils/components/Header'
 
 export const unstable_settings = {
   anchor: '(tabs)'
@@ -11,8 +12,9 @@ export const unstable_settings = {
 export default function RootLayout () {
   return (
     <SafeAreaProvider>
-      <Slot/>
-      {/* <InformationCard /> */}
+      <Stack screenOptions={{ 
+        header: () => <Header/>  // ← aquí, aplica a todas las pantallas del Stack
+      }}/>
     </SafeAreaProvider>
   )
 }
