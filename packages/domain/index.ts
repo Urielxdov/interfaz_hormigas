@@ -1,3 +1,3 @@
-export * from '@hormigas/domain/product/Product'
-export * from '@hormigas/domain/product/ProductRepository'
-export * from '@hormigas/domain/user/dto/User'
+export * from './product/Product'
+export * from './product/ProductRepository'
+export * from './user/dto/User'
