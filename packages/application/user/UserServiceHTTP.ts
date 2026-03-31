@@ -1,7 +1,7 @@
 // UserServiceHTTP.ts
-import { UserRequestDTO, UserTokenDTO } from '../../domain';
-import { IUserService } from './interfaces/IUserService'
-import { TokenService } from './interfaces/TokenService';
+import { UserRequestDTO, UserTokenDTO } from '@hormigas/domain';
+import { IUserService } from '@hormigas/application/user/interfaces/IUserService'
+import { TokenService } from '@hormigas/application/user/interfaces/TokenService';
 
 export class UserServiceHTTP implements IUserService {
 
