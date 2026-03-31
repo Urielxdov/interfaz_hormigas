@@ -1,9 +1,9 @@
-export * from './product/SellProduct'
-export * from './user/UserServiceHTTP'
+export * from '@hormigas/application/product/SellProduct'
+export * from '@hormigas/application/user/UserServiceHTTP'
 // Almacenamiento
-export * from './storage/IStorage'
-export * from './user/UserServiceHTTP'
-export * from './user/UserServiceOffline'
+export * from '@hormigas/application/storage/IStorage'
+export * from '@hormigas/application/user/UserServiceHTTP'
+export * from '@hormigas/application/user/UserServiceOffline'
 
 // Tokens
-export * from './user/token/TokenServiceImpl'
+export * from '@hormigas/application/user/token/TokenServiceImpl'
