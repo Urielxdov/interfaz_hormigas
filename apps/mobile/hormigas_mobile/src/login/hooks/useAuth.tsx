@@ -2,8 +2,8 @@ import { storage } from "@/src/adapters/AsyncStorageAdapter"
 import { TokenServiceImpl } from "@hormigas/application"
 import { UserRequestDTO } from "@hormigas/domain"
 import { useEffect, useState } from "react"
-import { useNetwork } from "../../utils/context/NetworkContext"
-import { useUserServiceFactory } from "../../utils/hooks/useUserServiceFactory"
+import { useNetwork } from "../../../../shared/context/NetworkContext"
+import { useUserServiceFactory } from "../../../../shared/hooks/useUserServiceFactory"
 
 const tokenService: TokenServiceImpl = new TokenServiceImpl(storage)
 

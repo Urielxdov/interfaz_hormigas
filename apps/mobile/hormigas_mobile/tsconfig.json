@@ -20,5 +20,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-  ]
+, "../shared/context/NetworkContext.tsx", "../shared/hooks/useUserServiceFactory.tsx"  ]
 }
