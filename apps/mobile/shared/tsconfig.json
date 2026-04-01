@@ -4,7 +4,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@hormigas/core": ["../../packages/core/index.ts"],
+      "@hormigas/application": ["../../packages/application/index.ts"],
+      "@hormigas/domain": ["../../packages/domain/index.ts"],
+      "react": ["../hormigas_mobile/node_modules/@types/react"],
       "lucide-react-native": [
         "./node_modules/lucide-react-native/dist/lucide-react-native.d.ts"
       ]
@@ -19,6 +21,8 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
-, "../shared/context/NetworkContext.tsx", "../shared/hooks/useUserServiceFactory.tsx"  ]
+    "nativewind-env.d.ts", 
+    "../shared/context/NetworkContext.tsx",
+    "../shared/hooks/useUserServiceFactory.tsx"  
+  ]
 }

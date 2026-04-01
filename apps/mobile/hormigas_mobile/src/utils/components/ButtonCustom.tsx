@@ -9,7 +9,8 @@ interface ButtonCustomProps {
   disabled?: boolean
   icon?: LucideIcon
   iconColor?: Color
-  iconSize?: number
+  iconSize?: number,
+  compact?: boolean
 }
 
 export default function ButtonCustom ({
@@ -19,11 +20,12 @@ export default function ButtonCustom ({
   disabled = false,
   icon: Icon,
   iconColor = 'white',
-  iconSize = 20
+  iconSize = 20,
+  compact = false
 }: ButtonCustomProps) {
   return (
     <Pressable
-      className={`${bgColor} p-4 rounded-lg items-center`}
+      className={`${bgColor} ${compact ? 'p-2' : 'p-4'} rounded-lg items-center`}
       onPress={onPress}
       disabled={disabled}
     >

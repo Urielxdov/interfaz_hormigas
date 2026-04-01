@@ -5,9 +5,10 @@ import { UserServiceOffline } from "../UserServiceOffline";
 
 export const createUserService = (
     tokenService: TokenService,
-    isOnline: boolean
+    isOnline: boolean,
+    offlineAdapter?: IUserService
 ): IUserService => {
     return isOnline
         ? new UserServiceHTTP(tokenService)
-        : new UserServiceOffline(tokenService)
+        : offlineAdapter ?? new UserServiceOffline(tokenService)
 }

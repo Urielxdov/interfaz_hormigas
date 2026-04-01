@@ -1,14 +1,12 @@
-export class Product {
-    constructor(
-        public id: string,
-        public name: string,
-        public stock: number
-    ) {}
-
-    reduceStock(quantity: number) {
-        if (this.stock < quantity) {
-            throw new Error("Stock insuficiente");
-        }
-        this.stock -= quantity
-    }
+// Nuestra entidad base
+export interface Product {
+    id: string
+  nombre: string
+  sku: string
+  categoria: string
+  precio: number
+  activo: boolean
+  control: boolean
+  stockMinimo?: number
+  stockMaximo?: number
 }
