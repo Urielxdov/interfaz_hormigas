@@ -10,27 +10,10 @@ import CreateProductoScreen from './CreateProduct'
 import InformationCard from '@/src/utils/components/InformationCard'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { useForm } from 'react-hook-form'
+import { ProductViewModel } from '@/interfaces/Product'
+import { useProducts } from '@/src/utils/hooks/useProducts'
 
-const productos = [
-  {
-    nombre: 'Laptop Dell XPS 15',
-    sku: 'LAP-XPS-15',
-    categoria: 'Electronica',
-    precio: 1299.99,
-    stock: 15,
-    estado: true,
-    acciones: ' '
-  },
-  {
-    nombre: 'Mouse Inalámbrico',
-    sku: 'MOU-WRL-01',
-    categoria: 'Electronica',
-    precio: 1299.99,
-    stock: 50,
-    estado: true,
-    acciones: ' '
-  }
-]
+
 
 type FilterFormValues = {
   titleSku: string
@@ -49,12 +32,15 @@ export default function ProductHomeScreen () {
 
   })
   const [modal, setModal] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<ProductViewModel | null>(null)
+  const { products, toggleStatus, updateProduct, createProduct } = useProducts()
+
   const isTablet = useIsTablet()
-  const stockTotal = productos.reduce((acc, s) => acc + s.stock, 0)
+  const stockTotal = products.reduce((acc, s) => acc + s.stock, 0)
 
   const filterSku = watch('titleSku')
   
-  const leakedProducts = productos.filter(p => {
+  const leakedProducts = products.filter(p => {
     if (!filterSku) return true
     const search = filterSku.toLowerCase()
     return (
@@ -81,7 +67,10 @@ export default function ProductHomeScreen () {
           </View>
           <ButtonCustom
             title='+ Nuevo Producto'
-            onPress={() => setModal(true)}
+            onPress={() => {
+              setSelectedProduct(null)
+              setModal(true)
+            }}
           />
         </View>
         
@@ -135,14 +124,28 @@ export default function ProductHomeScreen () {
             {
               key: 'acciones',
               label: 'Acciones',
-              render: () => (
+              render: (_, row) => (
                 <View className='flex flex-row gap-2'>
-                  <View>
-                    <Pencil size={30} color='black' />
-                  </View>
-                  <View>
-                    <Power size={30} color='red' />
-                  </View>
+                  <ButtonCustom
+                    onPress={() => {
+                      setSelectedProduct(row)
+                      setModal(true)
+                    }}
+                    bgColor='bg-blue-500'
+                    icon={Pencil}
+                    iconSize={18}
+                    compact
+                  />
+                  <ButtonCustom
+                    onPress={() => {
+                      toggleStatus(row.id)
+                      console.log("apagamos")
+                    }}
+                    bgColor={`${row.estado ? 'bg-green-500' : 'bg-red-500'}`}
+                    icon={Power}
+                    iconSize={18}
+                    compact
+                  />
                 </View>
               )
             }
@@ -156,8 +159,31 @@ export default function ProductHomeScreen () {
       <Modal
         isOpen={modal}
         onClose={() => setModal(false)}
+        
       >
-        <CreateProductoScreen />
+        <CreateProductoScreen
+          defaultValues={selectedProduct ?? undefined}
+          onSubmit={(data) => {
+            if (selectedProduct) {
+              // convierte a ProductListItemDTO
+              updateProduct({ 
+                ...selectedProduct,  // conserva id y stock
+                nombre: data.nombre,
+                sku: data.sku,
+                categoria: data.categoria,
+                precio: data.precio,
+                estado: data.estado,
+              })
+            } else {
+              createProduct({
+                ...data,
+                control: data.control ?? false,
+              })
+            }
+            setModal(false)
+            setSelectedProduct(null)
+          }}
+        />
       </Modal>
     </View>
   )

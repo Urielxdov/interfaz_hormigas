@@ -1,21 +1,12 @@
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
+import { CreateProductDTO, ProductListItemDTO } from '@hormigas/application'
 import { useForm } from 'react-hook-form'
 import { Text, View } from 'react-native'
 
-type ProductFormValues = {
-  nombre: string
-  sku: string
-  categoria: string
-  precio: number
-  activo: boolean
-  control: boolean
-  // Subformulario
-  stockMinimo?: number
-  stockMaximo?: number
-}
 
-const PRODUCTS_FORM_FIELDS: FormFieldConfig<ProductFormValues>[] = [
+
+const PRODUCTS_FORM_FIELDS: FormFieldConfig<CreateProductDTO>[] = [
   {
     name: 'nombre',
     label: 'Nombre',
@@ -24,7 +15,7 @@ const PRODUCTS_FORM_FIELDS: FormFieldConfig<ProductFormValues>[] = [
   },
   {
     name: 'sku',
-    label: 'Direccion',
+    label: 'SKU',
     placeholder: 'Ej. Av. Principal 123',
     rules: { required: 'La direccion es obligatoria' }
   },
@@ -40,7 +31,7 @@ const PRODUCTS_FORM_FIELDS: FormFieldConfig<ProductFormValues>[] = [
     placeholder: '0.00'
   },
   {
-    name: 'activo',
+    name: 'estado',
     label: 'Activo'
   },
   {
@@ -49,7 +40,7 @@ const PRODUCTS_FORM_FIELDS: FormFieldConfig<ProductFormValues>[] = [
     placeholder: 'Ej. Monterrey'
   }
 ]
-const INVENTARIO_FIELDS: FormFieldConfig<ProductFormValues>[] = [
+const INVENTARIO_FIELDS: FormFieldConfig<CreateProductDTO>[] = [
   {
     name: 'stockMinimo',
     label: 'Stock Mínimo',
@@ -62,24 +53,49 @@ const INVENTARIO_FIELDS: FormFieldConfig<ProductFormValues>[] = [
   }
 ]
 
-const defaultValues: ProductFormValues = {
+const defaultValues: CreateProductDTO = {
   nombre: '',
   sku: '',
   categoria: '',
   precio: 0.00,
-  activo: true,
+  estado: true,
   control: false,
   
 }
 
-export default function CreateProductoScreen () {
-  const { control, handleSubmit, formState: { errors }, watch } = useForm<ProductFormValues>({
-    defaultValues
+// Los campos que comparten ambos
+type ProductFormBase = {
+  nombre: string
+  sku: string
+  categoria: string
+  precio: number
+  estado: boolean
+  control?: boolean
+  stockMinimo?: number
+  stockMaximo?: number
+}
+
+interface CreateProductScreenProps {
+  defaultValues?: Partial<ProductFormBase>
+  onSubmit?: (data: ProductFormBase) => void
+}
+
+export default function CreateProductoScreen ({defaultValues, onSubmit: onSubmitProp}: CreateProductScreenProps) {
+  const { control, handleSubmit, formState: { errors }, watch } = useForm<CreateProductDTO>({
+    defaultValues: {
+      nombre: '',
+      sku: '',
+      categoria: '',
+      precio: 0.00,
+      estado: true,
+      control: false,
+      ...defaultValues
+    }
   })
   const controlInventario = watch('control')
 
-  const onSubmit = (data: ProductFormValues) => {
-    console.log(data)
+  const onSubmit = (data: CreateProductDTO | ProductListItemDTO) => {
+    onSubmitProp?.(data)
   }
 
   return (

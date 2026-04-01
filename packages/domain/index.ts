@@ -1,3 +1,6 @@
-export * from '@hormigas/domain/product/Product'
-export * from '@hormigas/domain/product/ProductRepository'
-export * from '@hormigas/domain/user/dto/User'
+// Producto
+export * from './product/Product'
+export * from './product/ProductRepository'
+
+// Usuario
+export * from './user/dto/User'

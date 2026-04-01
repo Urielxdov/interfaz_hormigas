@@ -2,7 +2,7 @@ import { Text, View } from 'react-native'
 import { Package, Wifi } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import useIsTablet from '../hooks/useIsTablet'
-import { useNetwork } from '../context/NetworkContext'
+import { useNetwork } from '../../../../shared/context/NetworkContext'
 
 export default function Header () {
   const isTablet = useIsTablet()

@@ -19,7 +19,8 @@ module.exports = function (api) {
         root: ['./src'],
         alias: {
           '@hormigas/application': '../../../packages/application',
-          '@hormigas/domain': '../../../packages/domain'
+          '@hormigas/domain': '../../../packages/domain',
+          '@hormigas/mobile-shared': '../shared'
         },
       }],
     ],

@@ -22,6 +22,7 @@ config.resolver.extraNodeModules = {
   'react-native': path.resolve(projectRoot, 'node_modules/react-native'),
   '@hormigas/application': path.resolve(workspaceRoot, 'packages/application'),
   '@hormigas/domain': path.resolve(workspaceRoot, 'packages/domain'),
+  '@hormigas/mobile-shared': path.resolve(workspaceRoot, 'app/mobile/shared'),
   'react-native-css-interop': path.resolve(projectRoot, 'node_modules/react-native-css-interop'),
   'react-native-css-interop/jsx-runtime': path.resolve(projectRoot, 'node_modules/react-native-css-interop/jsx-runtime'),
 }
