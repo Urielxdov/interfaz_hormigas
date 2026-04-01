@@ -44,7 +44,7 @@ export default function LoginScreen () {
   const handleLogin = (data: LoginFormValues) => {
     console.log(data)
     //console.log(login(data))
-    router.replace('/(tabs)/index')
+    router.replace('/(tabs)/home')
   }
 
   return (
