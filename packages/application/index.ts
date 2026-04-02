@@ -15,3 +15,6 @@ export * from './user/factories/createUserService'
 
 // Products
 export * from './product/dtos/Product'
+
+// Branch
+export * from './branch/dtos/Branch'
