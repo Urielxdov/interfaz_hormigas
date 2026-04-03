@@ -7,7 +7,8 @@ export const BranchMapper = {
       id: dto.id,
       nombre: dto.nombre,
       responsable: dto.responsable,
-      estado: dto.estado,
+      direccion: dto.direccion,
+      activa: dto.activa,
       acciones: ''
     }
   }

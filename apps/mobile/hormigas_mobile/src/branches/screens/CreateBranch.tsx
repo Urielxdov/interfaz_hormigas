@@ -1,5 +1,6 @@
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
+import { BranchItemListDTO } from '@hormigas/application'
 import { useForm } from 'react-hook-form'
 import { Text, View } from 'react-native'
 
@@ -57,7 +58,15 @@ const defaultValues: BranchFormValues = {
   ciudad: ''
 }
 
-export function CreateBranchScreen () {
+interface CreateBranchScreenProps {
+  defaultValues?: Partial<BranchItemListDTO>
+  onSubmit?: (data: BranchItemListDTO) => void
+}
+
+export function CreateBranchScreen ({
+  defaultValues,
+  onSubmit
+}): CreateBranchScreenProps {
   const {
     control,
     handleSubmit,

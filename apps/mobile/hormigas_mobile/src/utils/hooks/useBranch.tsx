@@ -7,13 +7,13 @@ const branchesMook: BranchItemListDTO[] = [
     id: 1n,
     nombre: 'La perrona',
     responsable: 'El buen Baruc',
-    estado: true
+    activa: true
   },
   {
     id: 1n,
     nombre: 'La perrona 2.0',
     responsable: 'El buen Baruc (que chambeador)',
-    estado: true
+    activa: true
   }
 ]
 
