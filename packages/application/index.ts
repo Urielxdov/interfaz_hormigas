@@ -1,17 +1,17 @@
 export * from './product/SellProduct'
 export * from './user/UserServiceHTTP'
 // Almacenamiento
-export * from './storage/IStorage'
+export * from './sync/IStorage'
 export * from './user/UserServiceHTTP'
 export * from './user/UserServiceOffline'
-export * from './user/interfaces/IUserService'
+export * from './port/IUserService'
 
 // Tokens
 export * from './user/token/TokenServiceImpl'
-export * from './user/interfaces/TokenService'
+export * from './port/TokenService'
 
 // Factories
-export * from './user/factories/createUserService'
+export * from './factories/createUserService'
 
 // Products
 export * from './product/dtos/Product'

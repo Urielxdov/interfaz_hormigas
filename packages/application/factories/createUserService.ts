@@ -1,7 +1,7 @@
-import { IUserService } from "../interfaces/IUserService";
-import { TokenService } from "../interfaces/TokenService";
-import { UserServiceHTTP } from "../UserServiceHTTP";
-import { UserServiceOffline } from "../UserServiceOffline";
+import { IUserService } from "../port/IUserService";
+import { TokenService } from "../port/TokenService";
+import { UserServiceHTTP } from "../user/UserServiceHTTP";
+import { UserServiceOffline } from "../user/UserServiceOffline";
 
 export const createUserService = (
     tokenService: TokenService,
