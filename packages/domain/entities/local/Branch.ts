@@ -1,5 +1,4 @@
-export interface Sucursal {
-  id: number;
+export interface Branch {
   nombre: string;
   direccion?: string;
   activa: boolean;

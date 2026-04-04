@@ -1,5 +1,4 @@
 export interface Inventary {
-  id: number;
   productoId: number;
   sucursalId: number;
   stockActual: number;
