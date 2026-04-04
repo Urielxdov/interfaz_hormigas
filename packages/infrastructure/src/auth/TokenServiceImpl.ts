@@ -1,13 +1,12 @@
-import { TokenService } from "@hormigas/application/user/interfaces/TokenService";
-import { IStorage } from '@hormigas/application/storage/IStorage'
+import { IStorage, TokenService } from "@hormigas/application"
 
 const TOKEN_KEY = 'Authorization'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 
 export class TokenServiceImpl implements TokenService {
 
-    constructor (private storage: IStorage) {}
-    
+    constructor(private storage: IStorage) { }
+
     async saveToken(token: string): Promise<void> {
         await this.storage.setItem(TOKEN_KEY, token)
     }

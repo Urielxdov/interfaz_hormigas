@@ -1,11 +1,9 @@
-// UserServiceHTTP.ts
-import { UserRequestDTO, UserTokenDTO } from '@hormigas/domain';
-import { IUserService } from '@hormigas/application/user/interfaces/IUserService'
-import { TokenService } from '@hormigas/application/user/interfaces/TokenService';
+import { IUserService, TokenService, UserRequestDTO } from "@hormigas/application"
+import { UserTokenDTO } from "../user/user.token.dto"
 
 export class UserServiceHTTP implements IUserService {
 
-  constructor(private tokenService: TokenService) {} 
+  constructor(private tokenService: TokenService) { }
 
   async login(dto: UserRequestDTO): Promise<UserTokenDTO> {
     const res = await fetch('http://10.44.1.140:8080/api/auth/login', {

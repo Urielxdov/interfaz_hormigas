@@ -7,6 +7,7 @@ export interface CreateBranchDTO {
 export interface BranchItemListDTO {
   id: bigint
   nombre: string
+  direccion?: string
   responsable: string
   activa: boolean
 }

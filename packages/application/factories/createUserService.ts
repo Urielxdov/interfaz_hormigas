@@ -1,14 +1,13 @@
-import { IUserService } from "../port/IUserService";
-import { TokenService } from "../port/TokenService";
-import { UserServiceHTTP } from "../user/UserServiceHTTP";
-import { UserServiceOffline } from "../user/UserServiceOffline";
+import { IUserService } from "../port/user.port";
+import { TokenService } from "../port/token.port";
+import { UserServiceHTTP } from "../../infrastructure/src/auth/UserServiceHTTP";
 
 export const createUserService = (
     tokenService: TokenService,
     isOnline: boolean,
-    offlineAdapter?: IUserService
+    offlineAdapter: IUserService
 ): IUserService => {
     return isOnline
         ? new UserServiceHTTP(tokenService)
-        : offlineAdapter ?? new UserServiceOffline(tokenService)
+        : offlineAdapter
 }

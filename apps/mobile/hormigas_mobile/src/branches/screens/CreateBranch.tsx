@@ -65,14 +65,18 @@ interface CreateBranchScreenProps {
 
 export function CreateBranchScreen ({
   defaultValues,
-  onSubmit
-}): CreateBranchScreenProps {
+  onSubmit: OnSubmit
+}: CreateBranchScreenProps) {
   const {
     control,
     handleSubmit,
     formState: { errors }
   } = useForm<BranchFormValues>({
-    defaultValues
+    defaultValues: {
+      nombre: '',
+      direccion: '',
+      responsable: ''
+    }
   })
 
   const onSubmit = (data: BranchFormValues) => {

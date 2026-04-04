@@ -1,5 +1,3 @@
-
-
 export interface TokenService {
     saveToken(token: string): Promise<void>
     getToken(): Promise<string | null>
