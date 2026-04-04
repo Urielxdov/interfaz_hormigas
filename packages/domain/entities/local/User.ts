@@ -1,5 +1,5 @@
 export interface User {
-  id: number;
+  localId: string // Generado por dispositivo
   nombre: string;
   correo: string;
   passwordHash: string;

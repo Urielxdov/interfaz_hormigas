@@ -1,5 +1,5 @@
 export interface Product {
-  id: number;
+  localId: string // Generado por dispositivo
   nombre: string;
   sku: string;
   descripcion?: string;

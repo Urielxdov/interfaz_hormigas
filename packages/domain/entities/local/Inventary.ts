@@ -1,4 +1,5 @@
 export interface Inventary {
+  localId: string // Generado por dispositivo
   productoId: number;
   sucursalId: number;
   stockActual: number;
