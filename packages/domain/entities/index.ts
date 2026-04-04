@@ -1,1 +1,6 @@
-export * from '.'
+export * from './Product'
+export * from './Branch'
+export * from './Inventory'
+export * from './Transaction'
+export * from './TypeTransaction'
+export * from './User'

@@ -1,5 +1,5 @@
 // Entities
-export * from './index'
+export * from './entities/index'
 
 // Database
 export * from './database/Schema'
