@@ -20,6 +20,7 @@ module.exports = function (api) {
         alias: {
           '@hormigas/application': '../../../packages/application',
           '@hormigas/domain': '../../../packages/domain',
+          '@hormigas/infrastructure': '../../../packages/infrastructure',
           '@hormigas/mobile-shared': '../shared'
         },
       }],
