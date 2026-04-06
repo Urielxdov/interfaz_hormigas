@@ -1,4 +1,4 @@
-export const migration003 = {
+export const migration004 = {
     version: 1,
     name: 'create_sync_queue',
     up: `
