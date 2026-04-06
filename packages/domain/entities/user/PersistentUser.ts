@@ -1,4 +1,4 @@
-import { User } from "../local/User";
+import { User } from "./User"
 
 export interface PersistentUser extends User {
   id: bigint

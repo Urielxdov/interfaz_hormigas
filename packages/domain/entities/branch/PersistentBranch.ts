@@ -1,4 +1,4 @@
-import { Branch } from "../local/Branch";
+import { Branch } from "./Branch";
 
 export interface PersistentBranch extends Branch {
   id: bigint

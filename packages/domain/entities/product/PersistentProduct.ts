@@ -1,4 +1,4 @@
-import { Product } from "../local/Product";
+import { Product } from "./Product";
 
 export interface PersistentProduct extends Product {
   id: bigint

@@ -4,7 +4,7 @@ export interface User {
   correo: string;
   passwordHash: string;
   activo: boolean;
-  empresaId?: number;
+  empresaId: string;
   fechaCreacion?: string;
   ultimoAcceso?: string;
 }
