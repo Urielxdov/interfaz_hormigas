@@ -1,9 +1,5 @@
-// Producto
-export * from './product/Product'
-export * from './product/ProductRepository'
+// Entities
+export * from './entities/index'
 
-// Usuario
-export * from './user/dto/User'
-
-// Sucursal
-export * from './branch/Branch'
+// Database
+export * from './database/Schema'

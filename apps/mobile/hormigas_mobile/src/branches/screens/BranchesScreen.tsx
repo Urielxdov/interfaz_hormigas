@@ -5,30 +5,26 @@ import DataTable from '@/src/utils/components/DataTable'
 import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
-import { Building, Pencil, Trash } from 'lucide-react-native'
+import { Building, Pencil, Power } from 'lucide-react-native'
 import { useState } from 'react'
 import { Text, View } from 'react-native'
-
-const sucursales = [
-  {
-    nombre: 'Sucursal Centro',
-    direccion: 'Av. Prncipal 123, Ciudad',
-    responsable: 'Maria Garcia',
-    estado: true,
-    acciones: ''
-  },
-  {
-    nombre: 'Sucursal Centro',
-    direccion: 'Av. Prncipal 123, Ciudad',
-    responsable: 'Maria Garcia',
-    estado: false,
-    acciones: ''
-  }
-]
+import { useBranches } from '@/src/utils/hooks/useBranch'
+import { BranchItemTableDTO } from '@/interfaces/Branch'
+import { BranchMapper } from '@/mappers/BranchMapper'
 
 export default function BranchesScreen () {
   const [modal, setModal] = useState(false)
   const isTablet = useIsTablet()
+
+  const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(
+    null
+  )
+
+  const { branches, toggleStatus, updateBranch, createBranch } = useBranches()
+
+  const mappedBranches: BranchItemTableDTO[] = branches.map(branch =>
+    BranchMapper.toListTable(branch)
+  )
 
   return (
     <View>
@@ -69,7 +65,7 @@ export default function BranchesScreen () {
               label: 'Responsable'
             },
             {
-              key: 'estado',
+              key: 'activa',
               label: 'Estado',
               render: val => (
                 <Text className={statusClass(val ? 'blue' : 'gray')}>
@@ -80,30 +76,60 @@ export default function BranchesScreen () {
             {
               key: 'acciones',
               label: 'Acciones',
-              render: () => (
+              render: (_, row) => (
                 <View className='flex flex-row gap-2'>
-                  <View>
-                    <Pencil size={30} color='black' />
-                  </View>
-                  <View>
-                    <Trash size={30} color='red' />
-                  </View>
+                  <ButtonCustom
+                    onPress={() => {
+                      setSelectedBranch(row)
+                      setModal(true)
+                    }}
+                    bgColor='bg-blue-500'
+                    icon={Pencil}
+                    iconSize={18}
+                    compact
+                  />
+                  <ButtonCustom
+                    onPress={() => {
+                      toggleStatus(row.id)
+                      console.log('apagamos')
+                    }}
+                    bgColor={`${row.activa ? 'bg-green-500' : 'bg-red-500'}`}
+                    icon={Power}
+                    iconSize={18}
+                    compact
+                  />
                 </View>
               )
             }
           ]}
-          data={sucursales}
+          data={mappedBranches}
         />
 
         <BranchSummaryScreen />
       </View>
 
-      <Modal
-        isOpen={modal}
-        onClose={() => setModal(false)}
-      >
-        <CreateBranchScreen />
-      </Modal>
+      {/* <Modal isOpen={modal} onClose={() => setModal(false)}>
+        <CreateBranchScreen 
+          defaultValues={selectBranch ?? undefined}
+          onSubmit={(data) => {
+            if (selectBranch) {
+              // convierte a Prod1|uctListItemDTO
+              updateBranch({ 
+                ...selectBranch,  // conserva id y stock
+                nombre: data.nombre,
+                direccion: data
+              })
+            } else {
+              createBranch({
+                ...data,
+                control: data.control ?? false,
+              })
+            }
+            setModal(false)
+            setSelectedBranch(null)
+          }}
+        />
+      </Modal> */}
     </View>
   )
 }

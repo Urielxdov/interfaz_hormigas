@@ -5,6 +5,7 @@
     "paths": {
       "@/*": ["./*"],
       "@hormigas/domain": ["../../packages/domain/index.ts"],
+      "@hormigas/infrastructure": ["../../packages/infrastructure/index.ts"],
       "@hormigas/application": ["../../packages/application/index.ts"],
       "@hormigas/mobile-shared": ["../shared/index.ts"],
       "lucide-react-native": [
@@ -21,6 +22,8 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "nativewind-env.d.ts"
-, "../shared/context/NetworkContext.tsx", "../shared/hooks/useUserServiceFactory.tsx"  ]
+    "nativewind-env.d.ts",
+    "../shared/context/NetworkContext.tsx",
+    "../shared/hooks/useUserServiceFactory.tsx"
+  ]
 }
