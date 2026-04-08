@@ -9,4 +9,4 @@ export * from './migrations/005_create_sync_metadata'
 
 
 // Repositories
-export * from './repositories/'
+export * from './repositories/index'
