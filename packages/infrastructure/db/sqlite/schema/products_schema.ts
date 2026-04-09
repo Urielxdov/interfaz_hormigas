@@ -1,7 +1,15 @@
-import { Product } from "packages/domain/entities/product/Product";
+/**
+ * Definiciones de tablas, nombre de columanas y queries base
+ */
+export const PRODUCTS_TABLE = 'products' 
 
-export interface ProductRepository {
-    findAll(): Promise<Product[]>
-    findById(id: string): Promise<Product | null>
-    save(product: Product): Promise<boolean>
+export const PRODUCTS_COLUMNS = {
+    id: 'id',
+    name: 'nombre',
+    sku: 'sku',
+    description: 'descripcion',
+    price: 'precio',
+    status: 'activo',
+    category: 'categoria_id',
+    company: 'empresa_id'
 }

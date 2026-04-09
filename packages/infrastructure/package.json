@@ -8,5 +8,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "peerDependenciesMeta": {
+    "expo-sqlite": {
+      "optional": true
+    }
+  }
 }
