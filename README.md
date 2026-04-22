@@ -1,51 +1,45 @@
-# 🐜 Hormigas
+# Hormigas
 
 > Sistema de inventarios con soporte offline-first para gestión de empresas, sucursales y productos.
 
 ---
 
-## 📋 Descripción general
+## Descripción general
 
-**Hormigas** es un monorepo que alberga las aplicaciones cliente del sistema de inventarios, compartiendo lógica de negocio común entre ellas. El sistema está diseñado bajo un principio **offline-first**: si hay conexión a internet, los datos se persisten directamente en la nube a través de la API; si no la hay, se almacenan localmente en SQLite y se sincronizan en cuanto se restablece la conexión mediante **cargas batch**.
+**Hormigas** es un monorepo que alberga las aplicaciones cliente del sistema de inventarios, compartiendo lógica de negocio común entre ellas. El sistema está diseñado bajo un principio **offline-first puro**: siempre se escribe primero en SQLite local, y la sincronización con la API ocurre en segundo plano o al recuperar conexión.
 
-La sincronización se controla mediante una **bandera booleana por registro** (`synced`). Esta bandera solo cambia a `true` cuando el servidor responde con un `HTTP 200`. Si la respuesta falla o no llega, el registro permanece marcado como pendiente hasta el próximo intento de sincronización.
+La sincronización se controla mediante:
+- Una **bandera `synced`** por registro en SQLite (`0` = pendiente, `1` = confirmado por el servidor).
+- Una **tabla `sync_queue`** que encola cada operación (CREATE / UPDATE / DELETE) hasta que el servidor responde con `HTTP 200`. Si falla, el registro queda en cola para el siguiente intento.
 
 ---
 
-## 🏗️ Arquitectura del sistema
+## Arquitectura del sistema
 
-### Flujo de almacenamiento offline / online
+### Flujo offline-first
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  App Cliente                    │
-│            (React Native / Electron)            │
-└──────────────────────┬──────────────────────────┘
-                       │
-              ¿Hay conexión?
-             /                \
-           SÍ                  NO
-           │                    │
-           ▼                    ▼
-  ┌─────────────────┐   ┌───────────────────┐
-  │   API REST      │   │  SQLite Local     │
-  │  (PostgreSQL)   │   │  synced = false   │
-  └────────┬────────┘   └────────┬──────────┘
-           │                     │
-     HTTP 200?          Conexión restaurada
-     /      \                    │
-   SÍ        NO                  ▼
-   │          │         ┌─────────────────┐
-   ▼          ▼         │  Carga Batch    │
-synced=true  sin        │  → API REST     │
-             cambio     └────────┬────────┘
-                                 │
-                           HTTP 200?
-                           /      \
-                         SÍ        NO
-                         │          │
-                    synced=true   sin cambio
-                                 (reintento)
+Usuario crea/edita dato
+        │
+        ▼
+  SQLite local
+  synced = 0
+  + sync_queue (PENDING)
+        │
+        ├─── ¿Hay conexión? ──SÍ──► POST/PUT API
+        │                               │
+        │                         HTTP 200?
+        │                        /        \
+        │                      SÍ          NO
+        │                      │            │
+        │                synced=1      retries++
+        │                queue DONE    (reintento)
+        │
+   Conexión restaurada
+        │
+        ▼
+   syncPending() ──► procesa cola pendiente
+   pullFromServer() ──► descarga estado del servidor
 ```
 
 ### Modelo de datos principal
@@ -60,79 +54,138 @@ Empresa
 ### Estructura del monorepo
 
 ```
-hormigas/
+hormigas_interfaz/
 ├── apps/
-│   ├── mobile/          # App React Native (activa)
-│   └── desktop/         # App Electron (futuro alcance)
-├── packages/            # Lógica de negocio compartida
-│   ├── application/     # Casos de uso y lógica de negocio
-│   └── domain/          # Entidades core del sistema
-├── package.json
-└── README.md
+│   ├── mobile/
+│   │   ├── hormigas_mobile/     # App React Native activa
+│   │   └── shared/              # NetworkContext, factories compartidos
+│   └── desktop/                 # App Electron (futuro)
+└── packages/
+    ├── domain/                  # Entidades, Schema SQL
+    ├── application/             # Casos de uso, interfaces, ProductService
+    └── infrastructure/          # Implementaciones: SQLite, HTTP, Mappers
+```
+
+### Dependencias entre capas
+
+```
+domain  ←  application  ←  infrastructure  ←  mobile app
+```
+
+Ninguna capa inferior importa de capas superiores.
+
+---
+
+## Stack tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| App móvil | React Native 0.81 + Expo 54 + TypeScript |
+| Navegación | Expo Router |
+| UI | NativeWind (Tailwind CSS) |
+| Base de datos local | expo-sqlite v15 |
+| HTTP client | fetch nativo + `ApiHttpClient` (Bearer token) |
+| Almacenamiento seguro | expo-secure-store (tokens JWT) |
+| Base de datos nube | PostgreSQL (via API Spring Boot) |
+
+---
+
+## Configuración de entorno
+
+Crear el archivo `.env` en `apps/mobile/hormigas_mobile/`:
+
+```
+EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080
 ```
 
 ---
 
-## 🛠️ Stack tecnológico
+## Capas del sistema
 
-| Capa | Tecnología |
-|---|---|
-| App móvil | React Native + TypeScript |
-| App desktop | Electron *(futuro)* |
-| Base de datos local | SQLite |
-| Base de datos nube | PostgreSQL |
-| Lógica compartida | `/packages` manual (application + domain) |
+### `packages/domain`
+- Entidades: `Product`, `Branch`, `User`, `Inventary`, `Transaction`
+- `Schema.ts` — DDL completo para SQLite (todas las tablas, incluyendo `sync_queue`)
+
+### `packages/application`
+- **Interfaces de repositorio:** `IProductRepository`, `ISyncQueueRepository`
+- **Puerto API:** `IApiProductRepository`
+- **`ProductService`** — lógica offline-first:
+  - `create(dto)` → guarda en SQLite + encola en sync_queue
+  - `findAll()` → lee desde SQLite
+  - `syncPending()` → procesa cola y empuja a la API
+  - `pullFromServer()` → descarga productos del servidor a SQLite
+- **`SyncManager`** — orquesta sync sobre ProductService
+- **DTOs:** `CreateProductDTO`, `ProductListItemDTO`, `NuevoProductoDTO`, `ApiProductResponseDTO`
+
+### `packages/infrastructure`
+- **`ApiHttpClient`** — cliente HTTP con inyección automática de `Authorization: Bearer <token>` y URL configurable
+- **`SqliteProductRepositoryImpl`** — implementa `IProductRepository` sobre expo-sqlite
+- **`SqliteSyncQueueRepositoryImpl`** — implementa `ISyncQueueRepository` sobre la tabla `sync_queue`
+- **`ApiProductRepositoryImpl`** — llama a `POST /api/producto/nuevo` y `GET /api/producto/`
+- **`UserServiceHTTP`** — login via `POST /api/auth/login` usando `ApiHttpClient`
+- **`TokenServiceImpl`** — persiste el JWT en expo-secure-store
+
+### `apps/mobile/hormigas_mobile`
+- **`ExpoSQLiteClient`** — adapter que envuelve `expo-sqlite` como `DatabaseClient`
+- **`productServiceInstance.ts`** — singleton lazy de `ProductService` con todas las dependencias inyectadas
+- **`useProducts`** — hook que lee de SQLite, crea productos y dispara sync automáticamente al recuperar red
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
-### ✅ En desarrollo
-- [x] Monorepo base con estructura `/packages` (application + domain)
-- [x] App React Native — gestión de empresas
-- [x] App React Native — gestión de sucursales
-- [x] App React Native — gestión de inventarios y productos
-- [x] Almacenamiento local con SQLite
-- [x] Mecanismo de sincronización offline con bandera `synced`
+### Completado
+- [x] Monorepo base con estructura `/packages` (domain + application + infrastructure)
+- [x] App React Native — gestión de empresas, sucursales, inventarios y productos (UI)
+- [x] Login con JWT via API
+- [x] `ApiHttpClient` genérico con Bearer token (URL desde `.env`)
+- [x] SQLite inicializado con todas las tablas al arranque
+- [x] Capa offline-first para **Producto**: create local → sync_queue → push al API
+- [x] `syncPending()` automático al recuperar conexión de red
+- [x] `pullFromServer()` para descargar catálogo desde el servidor
 
-### 🔄 En proceso
-- [ ] Carga batch automática al recuperar conexión
-- [ ] Manejo de conflictos en sincronización
-- [ ] App de **Punto de Venta (POS)** — gestión de movimientos de inventario
+### En proceso
+- [ ] Carga batch automática con reintentos y backoff
+- [ ] Manejo de conflictos en sincronización (servidor gana vs. cliente gana)
+- [ ] App de **Punto de Venta (POS)** — movimientos de inventario
+- [ ] Extender offline-first a Sucursal, Inventario y Movimiento
 
-### 🔮 Futuro alcance
+### Futuro alcance
 - [ ] App Electron (desktop) compartiendo lógica de `/packages`
 - [ ] Dashboard web de administración
-- [ ] Reportes y exportación de inventario
 - [ ] Soporte multi-usuario con roles por sucursal
 
 ---
 
-## 📦 Instalación
+## Instalacion
 
-> Requisitos previos: Node.js, npm/yarn, entorno React Native configurado.
+> Requisitos: Node.js 20+, pnpm, entorno React Native / Expo configurado.
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/tu-usuario/hormigas.git
-cd hormigas
+# Clonar
+git clone https://github.com/Urielxdov/hormigas_interfaz.git
+cd hormigas_interfaz
 
 # Instalar dependencias
-npm install
+pnpm install
+
+# Configurar entorno
+echo "EXPO_PUBLIC_API_URL=http://10.44.1.140:8080" > apps/mobile/hormigas_mobile/.env
 
 # Iniciar la app móvil
-cd apps/mobile
-npm run android   # o npm run ios
+cd apps/mobile/hormigas_mobile
+pnpm android   # o pnpm ios
 ```
 
 ---
 
-## 📝 Notas de desarrollo
+## Notas de desarrollo
 
-- La bandera `synced` **nunca se cambia a `true` en el cliente** si el servidor no confirma con `HTTP 200`.
-- Todos los modelos y tipos viven en `/packages/domain` y los casos de uso en `/packages/application` para garantizar consistencia entre apps.
-- La app de Punto de Venta será donde el modo offline cobra mayor relevancia, dado el volumen de movimientos en sucursales sin conexión estable.
+- La bandera `synced` **nunca cambia a `1` en el cliente** si el servidor no confirma con `HTTP 200`.
+- El `local_id` (UUID) es la clave primaria local; `server_id` se asigna tras la primera sincronización exitosa.
+- Todos los modelos viven en `@hormigas/domain` y los casos de uso en `@hormigas/application`. Ningún paquete de nivel inferior importa de capas superiores.
+- La app de Punto de Venta será donde el modo offline cobra mayor relevancia dado el volumen de movimientos en sucursales sin conexión estable.
 
 ---
 
-*Proyecto en desarrollo activo. 🐜*
+*Proyecto en desarrollo activo.*

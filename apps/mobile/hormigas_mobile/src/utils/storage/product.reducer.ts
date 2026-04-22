@@ -4,7 +4,7 @@ import { CreateProductDTO } from "@hormigas/application";
 export type ProductAction =
     | { type: 'CREATE'; payload: CreateProductDTO }
     | { type: 'UPDATE'; payload: ProductViewModel }
-    | { type: 'TOGGLE_ESTADO'; payload: bigint }
+    | { type: 'TOGGLE_ESTADO'; payload: string }
 
 
 
@@ -13,7 +13,7 @@ export function productReducer(state: ProductViewModel[], action: ProductAction)
         case 'CREATE':
             const newProduct: ProductViewModel = {
                 ...action.payload,
-                id: BigInt(Date.now()),
+                id: `local-${Date.now()}`,
                 stock: 0,
                 acciones: ' ',
                 estado: true

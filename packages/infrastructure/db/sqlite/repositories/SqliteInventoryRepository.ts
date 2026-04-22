@@ -1,4 +1,4 @@
-import { Inventary } from "packages/domain/entities/inventary/Inventary"
+import { Inventary } from '@hormigas/domain'
 
 import { SqliteRepository } from "./SqliteRepository"
 

@@ -137,10 +137,7 @@ export default function ProductHomeScreen () {
                     compact
                   />
                   <ButtonCustom
-                    onPress={() => {
-                      toggleStatus(row.id)
-                      console.log("apagamos")
-                    }}
+                    onPress={() => { toggleStatus(row.id) }}
                     bgColor={`${row.estado ? 'bg-green-500' : 'bg-red-500'}`}
                     icon={Power}
                     iconSize={18}
@@ -163,11 +160,10 @@ export default function ProductHomeScreen () {
       >
         <CreateProductoScreen
           defaultValues={selectedProduct ?? undefined}
-          onSubmit={(data) => {
+          onSubmit={async (data) => {
             if (selectedProduct) {
-              // convierte a ProductListItemDTO
-              updateProduct({ 
-                ...selectedProduct,  // conserva id y stock
+              await updateProduct({
+                ...selectedProduct,
                 nombre: data.nombre,
                 sku: data.sku,
                 categoria: data.categoria,
@@ -175,7 +171,7 @@ export default function ProductHomeScreen () {
                 estado: data.estado,
               })
             } else {
-              createProduct({
+              await createProduct({
                 ...data,
                 control: data.control ?? false,
               })

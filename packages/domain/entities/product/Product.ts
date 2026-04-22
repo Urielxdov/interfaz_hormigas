@@ -5,5 +5,6 @@ export interface Product {
   descripcion?: string;
   precio?: number;
   activo: boolean;
-  categoriaId?: number;
+  categoria?: string;
+  categoriaId?: number; // ID del servidor (disponible tras sincronizar)
 }

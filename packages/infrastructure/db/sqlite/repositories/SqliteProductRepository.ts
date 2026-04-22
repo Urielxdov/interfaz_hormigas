@@ -1,4 +1,4 @@
-import { Product } from "packages/domain/entities/product/Product"
+import { Product } from '@hormigas/domain'
 
 import { SqliteRepository } from "./SqliteRepository"
 

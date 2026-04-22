@@ -19,14 +19,15 @@ export const CREATE_TABLES_SQL = `
   );
 
   CREATE TABLE IF NOT EXISTS producto (
-    id INTEGER PRIMARY KEY,
+    local_id TEXT PRIMARY KEY,
+    server_id INTEGER,
     nombre TEXT NOT NULL,
     sku TEXT NOT NULL,
     descripcion TEXT,
     precio REAL,
     activo INTEGER NOT NULL DEFAULT 1,
-    categoria_id INTEGER,
-    empresa_id INTEGER NOT NULL
+    categoria TEXT,
+    synced INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS inventario (
@@ -38,7 +39,6 @@ export const CREATE_TABLES_SQL = `
     stock_maximo INTEGER NOT NULL,
     ultima_actualizacion TEXT,
     UNIQUE (sucursal_id, producto_id),
-    FOREIGN KEY (producto_id) REFERENCES producto(id),
     FOREIGN KEY (sucursal_id) REFERENCES sucursal(id)
   );
 
@@ -57,5 +57,17 @@ export const CREATE_TABLES_SQL = `
     sincronizado INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (inventario_id) REFERENCES inventario(id),
     FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS sync_queue (
+    id TEXT PRIMARY KEY NOT NULL,
+    entity TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    retries INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
   );
 `;

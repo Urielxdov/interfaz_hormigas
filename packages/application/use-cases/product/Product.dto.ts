@@ -10,7 +10,7 @@ export interface CreateProductDTO {
 }
 
 export interface ProductListItemDTO {
-  id: bigint
+  id: string  // localId UUID
   nombre: string
   sku: string
   categoria: string

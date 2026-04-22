@@ -1,4 +1,4 @@
-import { UserTokenDTO } from "../../infrastructure/src/user/user.token.dto";
+import { UserTokenDTO } from '../use-cases/user/user.token.dto';
 import { UserRequestDTO } from "../use-cases/user/request.user.dto";
 
 export interface IUserService {

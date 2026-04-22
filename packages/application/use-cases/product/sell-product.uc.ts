@@ -1,15 +1,13 @@
-import { Product } from "@hormigas/domain/product/Product";
-import { ProductRepository } from "@hormigas/domain/product/ProductRepository";
+import { Product } from '@hormigas/domain'
+import { IProductRepository } from '../../repositories/product.repository'
 
 export class SellProduct {
-    constructor(private repo: ProductRepository) {}
+    constructor(private repo: IProductRepository) {}
 
-    async execute(productId: string, quantity: number) {
+    async execute(productId: string, quantity: number): Promise<void> {
         const product: Product | null = await this.repo.findById(productId)
-        if (!product) throw new Error("Producto no encontrado")
-
-        product.reduceStock(quantity)
-
+        if (!product) throw new Error('Producto no encontrado')
+        // la reducción de stock se maneja en inventario, no en el producto
         await this.repo.save(product)
     }
 }

@@ -1,9 +1,7 @@
-import { IUserService } from "@hormigas/application";
-import { UserRequestDTO, UserTokenDTO } from "@hormigas/domain";
-
+import { IUserService, UserRequestDTO, UserTokenDTO } from '@hormigas/application'
 
 export default class UserServiceOfflineAdapter implements IUserService {
-    login(dto: UserRequestDTO): Promise<UserTokenDTO> {
-        throw new Error("Method not implemented.");
+    login(_dto: UserRequestDTO): Promise<UserTokenDTO> {
+        return Promise.reject(new Error('Sin conexión: no se puede iniciar sesión offline.'))
     }
 }

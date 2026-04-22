@@ -1,15 +1,15 @@
-// Entidades no persistentes
-export * from './local/Branch'
-export * from './local/Inventary'
-export * from './local/Product'
-export * from './local/Transaction'
-export * from './local/TypeTransaction'
-export * from './local/User'
+export * from './branch/Branch'
+export * from './branch/PersistentBranch'
 
+export * from './inventary/Inventary'
+export * from './inventary/PersistentInventary'
 
-// Entidades persistentes
-export * from './persistent/PersistentBranch'
-export * from './persistent/PersistentInventary'
-export * from './persistent/PersistentProduct'
-export * from './persistent/PersistentTransaction'
-export * from './persistent/PersistentUser'
+export * from './product/Product'
+export * from './product/PersistentProduct'
+
+export * from './transaction/Transaction'
+export * from './transaction/TypeTransaction'
+export * from './transaction/PersistentTransaction'
+
+export * from './user/User'
+export * from './user/PersistentUser'

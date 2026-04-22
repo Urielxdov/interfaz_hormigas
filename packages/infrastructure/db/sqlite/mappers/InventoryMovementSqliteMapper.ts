@@ -2,8 +2,7 @@
  * Conversion de entidad de dominio a fila de SQLite
  */
 
-import { Transaction } from "packages/domain/entities/transaction/Transaction"
-import { TypeTransaction } from "packages/domain/entities/transaction/TypeTransaction"
+import { Transaction, TypeTransaction } from '@hormigas/domain'
 
 export type InventoryMovement = {
     id: string // Generado por dispositivo

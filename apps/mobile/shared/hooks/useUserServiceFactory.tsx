@@ -1,17 +1,14 @@
-// packages/ui/src/hooks/useUserService.ts
-
-import { useMemo } from "react";
-import { TokenService, createUserService, IUserService } from '@hormigas/application' 
-
-
+import { useMemo } from 'react'
+import { createUserService, IUserService } from '@hormigas/application'
 
 export const useUserServiceFactorie = (
-    tokenService: TokenService,
-    isOnline: boolean,
-    offlineAdapter?: IUserService
-): IUserService =>  {
+    onlineAdapter: IUserService,
+    offlineAdapter: IUserService,
+    isOnline: boolean
+): IUserService => {
     return useMemo(
-        () => createUserService(tokenService, isOnline, offlineAdapter),
+        () => createUserService(onlineAdapter, offlineAdapter, isOnline),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         [isOnline]
-    );
-};
+    )
+}

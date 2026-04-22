@@ -2,7 +2,7 @@
  * Conversion de entidad de domino a fila de SQLite
  */
 
-import { User } from "packages/domain/entities/user/User"
+import { User } from '@hormigas/domain'
 
 export type UserRow = {
     id: string

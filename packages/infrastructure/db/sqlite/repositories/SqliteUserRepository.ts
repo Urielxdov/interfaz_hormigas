@@ -1,4 +1,4 @@
-import { User } from "packages/domain/entities/user/User"
+import { User } from '@hormigas/domain'
 
 import { SqliteRepository } from "./SqliteRepository"
 
