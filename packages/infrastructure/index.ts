@@ -14,10 +14,15 @@ export * from './db/contracts/DatabaseConnectionFactory'
 // Mappers
 export * from './db/sqlite/mappers/ProductSqliteMapper'
 export * from './db/sqlite/mappers/UserSqliteMapper'
+export * from './db/sqlite/mappers/BranchSqliteMapper'
 
 // SQLite repositories (implementaciones concretas)
 export * from './src/product/SqliteProductRepositoryImpl'
+export * from './src/branch/SqliteBranchRepositoryImpl'
 export * from './src/sync/SqliteSyncQueueRepositoryImpl'
 
 // API repositories
 export * from './src/product/ApiProductRepositoryImpl'
+export * from './src/branch/ApiBranchRepositoryImpl'
+export * from './src/pos/ApiPOSRepositoryImpl'
+export * from './src/pos/SqlitePOSCacheRepositoryImpl'

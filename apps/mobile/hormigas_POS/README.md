@@ -1,50 +1,75 @@
-# Welcome to your Expo app 👋
+# Hormigas POS
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación de punto de venta (POS) para el sistema Hormigas. Permite registrar ventas por sucursal con flujo offline-first.
 
-## Get started
+## Flujo de la app
 
-1. Install dependencies
+1. **Login** — el cajero ingresa con email y contraseña (JWT almacenado en SecureStore)
+2. **Selección de sucursal** — el cajero elige desde qué sucursal está vendiendo
+3. **Pantalla de venta** — grid de productos con búsqueda, carrito y botón de cobro
+4. **Offline-first** — las ventas se guardan localmente y se sincronizan cuando hay conexión
 
-   ```bash
-   npm install
-   ```
+## Correr el proyecto
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Desde la raíz del monorepo:
 
 ```bash
-npm run reset-project
+cd apps/mobile/hormigas_POS
+npm install
+expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Variables de entorno
 
-## Learn more
+Crea un archivo `.env` en esta carpeta:
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+EXPO_PUBLIC_API_URL=http://localhost:8080
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Arquitectura
 
-## Join the community
+```
+hormigas_POS/
+├── app/
+│   ├── _layout.tsx          # Guard de autenticación y routing
+│   ├── login.tsx            # Pantalla de login
+│   ├── branch-select.tsx    # Selección de sucursal
+│   └── (pos)/
+│       └── sale.tsx         # Pantalla principal de venta
+├── adapters/
+│   ├── AsyncStorageAdapter.ts   # SecureStore wrapper
+│   ├── ExpoSQLiteClient.ts      # SQLite wrapper
+│   └── posServiceInstance.ts    # Singleton del POSService
+├── context/
+│   ├── AuthContext.tsx      # Token + sucursal seleccionada
+│   └── NetworkContext.tsx   # Estado de conexión
+├── db/
+│   └── DataBase.ts          # Inicialización de hormigas_pos.db
+└── hooks/
+    ├── useLogin.ts          # Autenticación contra API
+    └── usePOS.ts            # Productos, carrito y sync
+```
 
-Join our community of developers creating universal apps.
+## Capas del monorepo usadas
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+| Paquete | Qué aporta |
+|---|---|
+| `@hormigas/application` | `POSService`, `CartItem`, `POSProductDTO`, `SucursalDTO` |
+| `@hormigas/infrastructure` | `ApiPOSRepositoryImpl`, `SqlitePOSCacheRepositoryImpl`, `SqliteSyncQueueRepositoryImpl` |
+| `@hormigas/domain` | `CREATE_TABLES_SQL` (incluye tabla `pos_producto`) |
+
+## Endpoints del backend usados
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/auth/login` | Autenticación |
+| `GET` | `/api/sucursal/listar` | Lista de sucursales activas |
+| `GET` | `/api/inventario/porSucursal?sucursalId=` | Productos con stock por sucursal |
+| `POST` | `/api/movimiento/crear` | Registra un movimiento tipo `VENTA` |
+
+## Flujo offline-first
+
+1. Al conectarse, sincroniza el catálogo de productos desde la API (`syncProducts`)
+2. Al cobrar, cada ítem del carrito se guarda en `sync_queue` con `status = PENDING` y se reduce el stock local
+3. Al reconectarse, `syncPending` envía los movimientos pendientes a la API

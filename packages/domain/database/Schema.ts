@@ -1,10 +1,15 @@
 export const CREATE_TABLES_SQL = `
   CREATE TABLE IF NOT EXISTS sucursal (
-    id INTEGER PRIMARY KEY,
+    local_id TEXT PRIMARY KEY,
+    server_id INTEGER,
     nombre TEXT NOT NULL,
     direccion TEXT,
+    responsable TEXT,
+    codigo TEXT,
+    telefono TEXT,
+    ciudad TEXT,
     activa INTEGER NOT NULL DEFAULT 1,
-    empresa_id INTEGER
+    synced INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS usuario (
@@ -38,8 +43,16 @@ export const CREATE_TABLES_SQL = `
     stock_minimo INTEGER,
     stock_maximo INTEGER NOT NULL,
     ultima_actualizacion TEXT,
-    UNIQUE (sucursal_id, producto_id),
-    FOREIGN KEY (sucursal_id) REFERENCES sucursal(id)
+    UNIQUE (sucursal_id, producto_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS pos_producto (
+    id INTEGER PRIMARY KEY,
+    sucursal_id INTEGER NOT NULL,
+    nombre TEXT NOT NULL,
+    sku TEXT,
+    precio REAL,
+    stock_actual INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS movimiento (

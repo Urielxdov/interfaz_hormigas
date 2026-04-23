@@ -16,15 +16,18 @@ export default function BranchesScreen () {
   const [modal, setModal] = useState(false)
   const isTablet = useIsTablet()
 
-  const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(
-    null
-  )
+  const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(null)
 
   const { branches, toggleStatus, updateBranch, createBranch } = useBranches()
 
   const mappedBranches: BranchItemTableDTO[] = branches.map(branch =>
     BranchMapper.toListTable(branch)
   )
+
+  const handleClose = () => {
+    setModal(false)
+    setSelectedBranch(null)
+  }
 
   return (
     <View>
@@ -52,18 +55,9 @@ export default function BranchesScreen () {
           title='Sucursales'
           icon={Building}
           columns={[
-            {
-              key: 'nombre',
-              label: 'Nombre'
-            },
-            {
-              key: 'direccion',
-              label: 'Direccion'
-            },
-            {
-              key: 'responsable',
-              label: 'Responsable'
-            },
+            { key: 'nombre', label: 'Nombre' },
+            { key: 'direccion', label: 'Direccion' },
+            { key: 'responsable', label: 'Responsable' },
             {
               key: 'activa',
               label: 'Estado',
@@ -89,10 +83,7 @@ export default function BranchesScreen () {
                     compact
                   />
                   <ButtonCustom
-                    onPress={() => {
-                      toggleStatus(row.id)
-                      console.log('apagamos')
-                    }}
+                    onPress={() => toggleStatus(row.id)}
                     bgColor={`${row.activa ? 'bg-green-500' : 'bg-red-500'}`}
                     icon={Power}
                     iconSize={18}
@@ -108,28 +99,32 @@ export default function BranchesScreen () {
         <BranchSummaryScreen />
       </View>
 
-      {/* <Modal isOpen={modal} onClose={() => setModal(false)}>
-        <CreateBranchScreen 
-          defaultValues={selectBranch ?? undefined}
+      <Modal isOpen={modal} onClose={handleClose}>
+        <CreateBranchScreen
+          defaultValues={selectBranch ? {
+            nombre: selectBranch.nombre,
+            direccion: selectBranch.direccion ?? '',
+            responsable: selectBranch.responsable ?? '',
+          } : undefined}
           onSubmit={(data) => {
             if (selectBranch) {
-              // convierte a Prod1|uctListItemDTO
-              updateBranch({ 
-                ...selectBranch,  // conserva id y stock
+              updateBranch({
+                localId: selectBranch.id,
                 nombre: data.nombre,
-                direccion: data
+                direccion: data.direccion,
+                responsable: data.responsable,
+                codigo: data.codigo,
+                telefono: data.telefono,
+                ciudad: data.ciudad,
+                activa: selectBranch.activa,
               })
             } else {
-              createBranch({
-                ...data,
-                control: data.control ?? false,
-              })
+              createBranch(data)
             }
-            setModal(false)
-            setSelectedBranch(null)
+            handleClose()
           }}
         />
-      </Modal> */}
+      </Modal>
     </View>
   )
 }

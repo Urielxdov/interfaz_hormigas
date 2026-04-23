@@ -1,13 +1,17 @@
 export interface CreateBranchDTO {
   nombre: string
   direccion?: string
-  activa: boolean
+  responsable?: string
+  codigo?: string
+  telefono?: string
+  ciudad?: string
+  activa?: boolean
 }
 
 export interface BranchItemListDTO {
-  id: bigint
+  id: string
   nombre: string
   direccion?: string
-  responsable: string
+  responsable?: string
   activa: boolean
 }

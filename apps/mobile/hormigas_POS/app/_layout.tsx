@@ -1,24 +1,48 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { NetworkProvider } from '@/context/NetworkContext'
+import { initDatabase } from '@/db/DataBase'
+import { Slot, useRouter, useSegments } from 'expo-router'
+import { useEffect, useState } from 'react'
+import { View } from 'react-native'
+import '../global.css'
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+function Guard() {
+  const { token, branchId, isLoading } = useAuth()
+  const router = useRouter()
+  const segments = useSegments()
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+  useEffect(() => {
+    if (isLoading) return
+    const inPos = segments[0] === '(pos)'
+    const inLogin = segments[0] === 'login'
+    const inBranchSelect = segments[0] === 'branch-select'
+
+    if (!token) {
+      if (!inLogin) router.replace('/login')
+    } else if (!branchId) {
+      if (!inBranchSelect) router.replace('/branch-select')
+    } else {
+      if (!inPos) router.replace('/(pos)/sale')
+    }
+  }, [token, branchId, isLoading, segments])
+
+  return <Slot />
+}
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const [dbReady, setDbReady] = useState(false)
+
+  useEffect(() => {
+    initDatabase().then(() => setDbReady(true)).catch(console.error)
+  }, [])
+
+  if (!dbReady) return <View className='flex-1 bg-white' />
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    <NetworkProvider>
+      <AuthProvider>
+        <Guard />
+      </AuthProvider>
+    </NetworkProvider>
+  )
 }

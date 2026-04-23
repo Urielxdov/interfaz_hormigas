@@ -1,32 +1,66 @@
+import { Branch } from '@hormigas/domain'
 import { BranchItemListDTO, CreateBranchDTO } from '@hormigas/application'
-import { useReducer } from 'react'
-import { branchReducer } from '../storage/branches.reducer'
+import { useCallback, useEffect, useState } from 'react'
+import { useNetwork } from '../../../../../shared/context/NetworkContext'
+import { getBranchService } from '@/src/adapters/branchServiceInstance'
 
-const branchesMook: BranchItemListDTO[] = [
-  {
-    id: 1n,
-    nombre: 'La perrona',
-    responsable: 'El buen Baruc',
-    activa: true
-  },
-  {
-    id: 1n,
-    nombre: 'La perrona 2.0',
-    responsable: 'El buen Baruc (que chambeador)',
-    activa: true
-  }
-]
-
-export function useBranches (initial: BranchItemListDTO[] = []) {
-  const [branches, dispatch] = useReducer(branchReducer, branchesMook)
-
+function mapToListDTO(branch: Branch): BranchItemListDTO {
   return {
-    branches,
-    createBranch: (data: CreateBranchDTO) =>
-      dispatch({ type: 'CREATE', payload: data }),
-    updateBranch: (branch: BranchItemListDTO) =>
-      dispatch({ type: 'UPDATE', payload: branch }),
-    toggleStatus: (id: bigint) =>
-      dispatch({ type: 'TOGGLE_STATUS', payload: id })
+    id: branch.localId,
+    nombre: branch.nombre,
+    direccion: branch.direccion,
+    responsable: branch.responsable,
+    activa: branch.activa,
   }
+}
+
+export function useBranches() {
+  const [branches, setBranches] = useState<BranchItemListDTO[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const { isOnline } = useNetwork()
+
+  const loadBranches = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const svc = await getBranchService()
+      const domainBranches = await svc.findAll()
+      setBranches(domainBranches.map(mapToListDTO))
+    } catch (e) {
+      console.error('[useBranches] loadBranches:', e)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadBranches()
+  }, [loadBranches])
+
+  useEffect(() => {
+    if (!isOnline) return
+    getBranchService()
+      .then(svc => svc.syncPending())
+      .then(loadBranches)
+      .catch(e => console.warn('[useBranches] syncPending:', e))
+  }, [isOnline, loadBranches])
+
+  const createBranch = async (dto: CreateBranchDTO) => {
+    const svc = await getBranchService()
+    await svc.create(dto)
+    await loadBranches()
+  }
+
+  const updateBranch = async (branch: Branch) => {
+    const svc = await getBranchService()
+    await svc.update(branch)
+    await loadBranches()
+  }
+
+  const toggleStatus = async (id: string) => {
+    const svc = await getBranchService()
+    await svc.toggleActive(id)
+    await loadBranches()
+  }
+
+  return { branches, isLoading, createBranch, updateBranch, toggleStatus }
 }

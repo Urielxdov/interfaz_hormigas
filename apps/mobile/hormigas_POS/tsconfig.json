@@ -3,9 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"],
+      "@hormigas/application": ["../../../packages/application/index.ts"],
+      "@hormigas/domain": ["../../../packages/domain/index.ts"],
+      "@hormigas/infrastructure": ["../../../packages/infrastructure/index.ts"]
     }
   },
   "include": [
