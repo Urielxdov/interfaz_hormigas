@@ -4,95 +4,51 @@ import { Color } from '@/src/utils/constants/Colors'
 import {
   AlertOctagon,
   AlertTriangle,
-  BellRing,
   Building2,
   CheckCircle2,
   LucideIcon,
   Package,
-  TrendingUp
 } from 'lucide-react-native'
-import { FlatList, ScrollView, useWindowDimensions } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { FlatList, Text, useWindowDimensions, View } from 'react-native'
+import { DashboardData } from '../hooks/useDashboard'
 
 const CARD_MAX_WIDTH = 250
 const CARD_GAP = 16
 
-const cards: {
-  title: string
-  description: string
-  icon: LucideIcon
-  iconBgColor: Color
-}[] = [
-  {
-    title: 'Total Productos',
-    description: '2,847',
-    icon: Package,
-    iconBgColor: 'blue'
-  },
-  {
-    title: 'Sucursales',
-    description: '8',
-    icon: Building2,
-    iconBgColor: 'green'
-  },
-  {
-    title: 'Tendencia',
-    description: '+12%',
-    icon: TrendingUp,
-    iconBgColor: 'purple'
-  },
-  {
-    title: 'Alertas',
-    description: '3',
-    icon: AlertTriangle,
-    iconBgColor: 'yellow'
-  }
-]
+type Props = { dashboard: DashboardData }
 
-const alerts: {
-  title: string
-  description: string
-  icon: LucideIcon
-  color: Color
-}[] = [
-  {
-    title: 'Stock critico detectad',
-    description: '15 productos estan por debajo del minimo requerido',
-    icon: AlertOctagon,
-    color: 'orange'
-  },
-  {
-    title: 'Reabastecimiento completado',
-    description: 'Sucursal Centro - 45 productos ingresados exitosamente',
-    icon: CheckCircle2,
-    color: 'green'
-  },
-  {
-    title: 'Actualizacion pendiente',
-    description: 'Revisar inventario de Sucursal Norte programado para hoy',
-    icon: BellRing,
-    color: 'blue'
-  }
-]
-
-export default function MetricsSection () {
+export default function MetricsSection({ dashboard }: Props) {
+  const { totalProductos, totalSucursales, totalAlertas, lowStockItems, isLoading } = dashboard
   const { width } = useWindowDimensions()
-  const numColumns = Math.floor(width / (CARD_MAX_WIDTH + CARD_GAP))
+  const numColumns = Math.max(1, Math.floor(width / (CARD_MAX_WIDTH + CARD_GAP)))
+
+  const cards: { title: string; description: string; icon: LucideIcon; iconBgColor: Color }[] = [
+    { title: 'Total Productos', description: isLoading ? '…' : String(totalProductos), icon: Package, iconBgColor: 'blue' },
+    { title: 'Sucursales', description: isLoading ? '…' : String(totalSucursales), icon: Building2, iconBgColor: 'green' },
+    { title: 'Alertas Stock', description: isLoading ? '…' : String(totalAlertas), icon: AlertTriangle, iconBgColor: 'yellow' },
+  ]
+
+  const alerts = lowStockItems.slice(0, 5).map(item => ({
+    title: `Stock bajo: ${item.nombre}`,
+    description: `${item.stockActual} unidades (mínimo: ${item.stockMinimo})`,
+    icon: AlertOctagon,
+    color: 'orange' as Color,
+  }))
 
   return (
-    <SafeAreaView className='flex-1' edges={['top']}>
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        <FlatList
-          data={cards}
-          numColumns={numColumns}
-          key={numColumns}
-          keyExtractor={item => item.title}
-          contentContainerStyle={{ gap: 16, padding: 16 }}
-          columnWrapperStyle={numColumns > 1 ? { gap: 16 } : undefined}
-          renderItem={({ item }) => <InformationCard {...item} />}
-          scrollEnabled={false}
-        />
+    <View style={{ gap: 16 }}>
+      <FlatList
+        data={cards}
+        numColumns={numColumns}
+        key={numColumns}
+        keyExtractor={item => item.title}
+        contentContainerStyle={{ gap: 16 }}
+        columnWrapperStyle={numColumns > 1 ? { gap: 16 } : undefined}
+        renderItem={({ item }) => <InformationCard {...item} />}
+        scrollEnabled={false}
+      />
 
+      {alerts.length > 0 && (
         <FlatList
           data={alerts}
           keyExtractor={item => item.title}
@@ -100,7 +56,14 @@ export default function MetricsSection () {
           renderItem={({ item }) => <AlertCard {...item} />}
           scrollEnabled={false}
         />
-      </ScrollView>
-    </SafeAreaView>
+      )}
+
+      {alerts.length === 0 && !isLoading && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12 }}>
+          <CheckCircle2 size={18} color='#10b981' />
+          <Text style={{ color: '#6b7280', fontSize: 14 }}>Sin alertas de stock</Text>
+        </View>
+      )}
+    </View>
   )
 }

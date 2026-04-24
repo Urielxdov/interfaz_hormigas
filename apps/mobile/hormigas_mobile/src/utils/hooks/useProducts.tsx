@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Product } from '@hormigas/domain'
-import { CreateProductDTO } from '@hormigas/application'
+import { CreateProductDTO, ProductWithStock } from '@hormigas/application'
 import { ProductViewModel } from '@/interfaces/Product'
 import { useNetwork } from '../../../../../shared/context/NetworkContext'
 import { getProductService } from '@/src/adapters/productServiceInstance'
 
-function mapToViewModel(product: Product): ProductViewModel {
+function mapToViewModel(product: ProductWithStock): ProductViewModel {
     return {
         id: product.localId,
+        categoriaId: product.categoriaId,
         nombre: product.nombre,
         sku: product.sku,
         categoria: product.categoria ?? '',
         precio: product.precio ?? 0,
-        stock: 0,
+        stock: product.stockTotal,
         estado: product.activo,
         acciones: ' ',
     }
@@ -27,8 +28,8 @@ export function useProducts() {
         setIsLoading(true)
         try {
             const svc = await getProductService()
-            const domainProducts = await svc.findAll()
-            setProducts(domainProducts.map(mapToViewModel))
+            const withStock = await svc.findAllWithStock()
+            setProducts(withStock.map(mapToViewModel))
         } catch (e) {
             console.error('[useProducts] loadProducts:', e)
         } finally {
@@ -43,9 +44,9 @@ export function useProducts() {
     useEffect(() => {
         if (!isOnline) return
         getProductService()
-            .then(svc => svc.syncPending())
+            .then(svc => Promise.all([svc.pullFromServer(), svc.syncPending()]))
             .then(loadProducts)
-            .catch(e => console.warn('[useProducts] syncPending:', e))
+            .catch(e => console.warn('[useProducts] sync:', e))
     }, [isOnline, loadProducts])
 
     const createProduct = async (dto: CreateProductDTO) => {
@@ -58,6 +59,7 @@ export function useProducts() {
         const svc = await getProductService()
         await svc.update({
             localId: product.id,
+            categoriaId: product.categoriaId,
             nombre: product.nombre,
             sku: product.sku,
             categoria: product.categoria,

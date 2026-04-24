@@ -5,6 +5,7 @@ export const BranchMapper = {
   toListTable(dto: BranchItemListDTO): BranchItemTableDTO {
     return {
       id: dto.id,
+      serverId: dto.serverId,
       nombre: dto.nombre,
       responsable: dto.responsable,
       direccion: dto.direccion,

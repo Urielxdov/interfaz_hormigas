@@ -1,4 +1,4 @@
-import { IApiProductRepository, ApiProductResponseDTO, NuevoProductoDTO } from '@hormigas/application'
+import { IApiProductRepository, ApiProductResponseDTO, NuevoProductoDTO, UpdateProductoDTO } from '@hormigas/application'
 import { ApiHttpClient } from '../http/ApiHttpClient'
 
 type SpringPage<T> = {
@@ -13,6 +13,10 @@ export class ApiProductRepositoryImpl implements IApiProductRepository {
 
     async create(dto: NuevoProductoDTO): Promise<ApiProductResponseDTO> {
         return this.http.post<ApiProductResponseDTO>('/api/producto/nuevo', dto)
+    }
+
+    async update(serverId: number, dto: UpdateProductoDTO): Promise<ApiProductResponseDTO> {
+        return this.http.put<ApiProductResponseDTO>(`/api/producto/${serverId}`, dto)
     }
 
     async findAll(page = 0, size = 100): Promise<ApiProductResponseDTO[]> {

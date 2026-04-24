@@ -10,6 +10,7 @@ export interface CreateBranchDTO {
 
 export interface BranchItemListDTO {
   id: string
+  serverId?: number
   nombre: string
   direccion?: string
   responsable?: string

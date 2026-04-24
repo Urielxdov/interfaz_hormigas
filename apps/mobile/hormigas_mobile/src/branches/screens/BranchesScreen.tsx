@@ -106,10 +106,11 @@ export default function BranchesScreen () {
             direccion: selectBranch.direccion ?? '',
             responsable: selectBranch.responsable ?? '',
           } : undefined}
-          onSubmit={(data) => {
+          onSubmit={async (data) => {
             if (selectBranch) {
-              updateBranch({
+              await updateBranch({
                 localId: selectBranch.id,
+                serverId: selectBranch.serverId,
                 nombre: data.nombre,
                 direccion: data.direccion,
                 responsable: data.responsable,
@@ -119,7 +120,7 @@ export default function BranchesScreen () {
                 activa: selectBranch.activa,
               })
             } else {
-              createBranch(data)
+              await createBranch(data)
             }
             handleClose()
           }}

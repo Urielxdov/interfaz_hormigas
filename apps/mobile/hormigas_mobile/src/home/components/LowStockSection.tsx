@@ -1,41 +1,31 @@
 import { ProductCardProps } from '@/src/utils/components/product/ProductCard'
 import ProductList from '@/src/utils/components/product/ProductList'
 import { AlertTriangle } from 'lucide-react-native'
-import { ScrollView } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { DashboardData } from '../hooks/useDashboard'
 
-const lowStockProducts: ProductCardProps[] = [
-  {
-    name: 'Laptop HP ProBook 450',
-    sku: 'LAP-HP-450',
-    location: 'Centro',
-    category: 'Electronica',
-    stock: 3,
-    maxStock: 100,
-    status: 'Bajo'
-  },
-  {
-    name: 'Laptop HP ProBook 450',
-    sku: 'LAP-HP-450-2',
-    location: 'Centro',
-    category: 'Electronica',
-    stock: 3,
-    maxStock: 100,
-    status: 'Bajo'
-  }
-]
+type Props = { dashboard: DashboardData }
 
-export default function LowStockSection () {
+export default function LowStockSection({ dashboard }: Props) {
+  const { lowStockItems, isLoading } = dashboard
+
+  if (isLoading || lowStockItems.length === 0) return null
+
+  const products: ProductCardProps[] = lowStockItems.map(item => ({
+    name: item.nombre,
+    sku: item.sku,
+    location: `Sucursal ${item.sucursalId}`,
+    category: item.categoria ?? '',
+    stock: item.stockActual,
+    maxStock: item.stockMinimo * 2,
+    status: item.stockActual === 0 ? 'Crítico' : 'Bajo',
+  }))
+
   return (
-    <SafeAreaView className='flex-1' edges={['top']}>
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        <ProductList
-          title='Stock bajo'
-          description='Productos que requieren reabastecimiento'
-          icon={AlertTriangle}
-          products={lowStockProducts}
-        />
-      </ScrollView>
-    </SafeAreaView>
+    <ProductList
+      title='Stock bajo'
+      description='Productos que requieren reabastecimiento'
+      icon={AlertTriangle}
+      products={products}
+    />
   )
 }

@@ -29,6 +29,7 @@ export class ProductSqliteMapper {
     static toRow(product: Product, synced = 0): ProductRow {
         return {
             local_id: product.localId,
+            server_id: product.categoriaId,
             nombre: product.nombre,
             sku: product.sku,
             descripcion: product.descripcion,

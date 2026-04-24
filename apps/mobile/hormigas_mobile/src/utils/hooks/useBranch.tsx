@@ -7,6 +7,7 @@ import { getBranchService } from '@/src/adapters/branchServiceInstance'
 function mapToListDTO(branch: Branch): BranchItemListDTO {
   return {
     id: branch.localId,
+    serverId: branch.serverId,
     nombre: branch.nombre,
     direccion: branch.direccion,
     responsable: branch.responsable,

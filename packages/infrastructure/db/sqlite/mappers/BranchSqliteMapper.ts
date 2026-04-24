@@ -17,6 +17,7 @@ export class BranchSqliteMapper {
   static toDomain(row: BranchRow): Branch {
     return {
       localId: row.local_id,
+      serverId: row.server_id,
       nombre: row.nombre,
       direccion: row.direccion ?? undefined,
       responsable: row.responsable ?? undefined,
@@ -30,6 +31,7 @@ export class BranchSqliteMapper {
   static toRow(branch: Branch, synced = 0): BranchRow {
     return {
       local_id: branch.localId,
+      server_id: branch.serverId,
       nombre: branch.nombre,
       direccion: branch.direccion,
       responsable: branch.responsable,
