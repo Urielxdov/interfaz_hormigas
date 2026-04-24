@@ -29,10 +29,10 @@ export function usePOS(sucursalId: number) {
     if (!isOnline) return
     setIsSyncing(true)
     getPOSService()
+      .then(svc => svc.syncPending())
+      .then(() => getPOSService())
       .then(svc => svc.syncProducts(sucursalId))
       .then(loadProducts)
-      .then(() => getPOSService())
-      .then(svc => svc.syncPending())
       .catch(e => console.warn('[usePOS] sync:', e))
       .finally(() => setIsSyncing(false))
   }, [isOnline, sucursalId, loadProducts])

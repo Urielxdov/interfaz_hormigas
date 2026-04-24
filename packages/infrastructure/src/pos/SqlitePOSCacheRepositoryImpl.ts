@@ -14,13 +14,24 @@ export class SqlitePOSCacheRepositoryImpl implements ISqlitePOSCacheRepository {
   constructor(private db: DatabaseClient) {}
 
   async replaceProducts(sucursalId: number, products: POSProductDTO[]): Promise<void> {
-    await this.db.run('DELETE FROM pos_producto WHERE sucursal_id = ?', [sucursalId])
+    // Upsert primero — si se interrumpe, el caché anterior sigue intacto
     for (const p of products) {
       await this.db.run(
-        `INSERT INTO pos_producto (id, sucursal_id, nombre, sku, precio, stock_actual)
+        `INSERT OR REPLACE INTO pos_producto (id, sucursal_id, nombre, sku, precio, stock_actual)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [p.productoId, sucursalId, p.nombre, p.sku ?? null, p.precio ?? null, p.stockActual]
       )
+    }
+    // Eliminar solo los que ya no devuelve el servidor
+    if (products.length > 0) {
+      const placeholders = products.map(() => '?').join(', ')
+      const ids = products.map(p => p.productoId)
+      await this.db.run(
+        `DELETE FROM pos_producto WHERE sucursal_id = ? AND id NOT IN (${placeholders})`,
+        [sucursalId, ...ids]
+      )
+    } else {
+      await this.db.run('DELETE FROM pos_producto WHERE sucursal_id = ?', [sucursalId])
     }
   }
 

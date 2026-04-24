@@ -24,9 +24,9 @@ export class POSService {
 
   async submitSale(items: CartItem[], sucursalId: number): Promise<void> {
     const saleRef = generateUUID()
+    const products = await this.cacheRepo.getProducts(sucursalId)
 
     for (const item of items) {
-      const products = await this.cacheRepo.getProducts(sucursalId)
       const product = products.find(p => p.productoId === item.productoId)
       const stockNuevo = Math.max(0, (product?.stockActual ?? 0) - item.cantidad)
 
