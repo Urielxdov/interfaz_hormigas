@@ -249,13 +249,55 @@ Al reconectar:
 - [x] POS: `replaceProducts()` usa upsert antes de borrar obsoletos (caché nunca queda vacío si se interrumpe la sync)
 
 ### Pendiente
-- [ ] Carga batch automática con reintentos y backoff exponencial
-- [ ] Manejo de conflictos en sincronización (servidor gana vs. cliente gana)
-- [ ] Poblar tabla `inventario` al crear producto con `control=true` (actualmente se envía al servidor pero no se inserta localmente hasta el pull)
-- [ ] Extender offline-first a movimientos de inventario en `hormigas_mobile`
-- [ ] App Electron (desktop) compartiendo lógica de `/packages`
-- [ ] Dashboard web de administración
+
+#### Estabilidad para producción con múltiples usuarios
+
+**Retry con techo y estado FAILED**
+- Añadir `MAX_RETRIES = 5` en `syncPending()` de todos los servicios
+- Cuando `item.retries >= MAX_RETRIES`, cambiar status a `'FAILED'` en lugar de seguir incrementando
+- Requiere añadir `markAsFailed(id)` a `ISyncQueueRepository` y su implementación en `SqliteSyncQueueRepositoryImpl`
+- Items en `FAILED` deben ser visibles en la UI para que el usuario pueda decidir (reintentar o descartar)
+
+**Backoff exponencial en reintentos**
+- Filtrar en `findPending()` solo items cuyo `updated_at` supere el tiempo de espera según sus reintentos
+- Fórmula sugerida: `espera = retries² minutos` (1→1 min, 2→4 min, 3→9 min…)
+- SQL: `AND datetime(updated_at, '+' || (retries * retries) || ' minutes') <= datetime('now')`
+- Evita saturar el servidor con reintentos continuos cuando hay un error persistente
+
+**Resolución de conflictos de stock entre dispositivos offline**
+- El sistema ya envía movimientos con delta (`cantidad`, `tipoMovimiento`) en lugar de estados absolutos — eso es la base correcta
+- Lo que falta en el **servidor**: que `POST /api/movimiento/crear` valide stock disponible y devuelva `HTTP 409` si es insuficiente
+- Lo que falta en el **cliente**: que `POSService.syncPending()` distinga error de red (reintento) de error de negocio (marcar `FAILED`, notificar al cajero)
+- Flujo esperado: dos cajeros venden offline el mismo producto → el primero en sincronizar gana → el segundo recibe 409 → se notifica al cajero para resolución manual
+
+#### Tests
+
+**Tests unitarios de servicios** (mayor retorno por esfuerzo)
+- `ProductService`, `BranchService`, `POSService` con repositorios mockeados
+- Casos críticos: `syncPending()` con CREATE y UPDATE, `syncPending()` con error de red, `submitSale()` con múltiples items, `toggleActive()` con y sin `serverId`
+- Stack sugerido: Jest + mocks manuales de `IProductRepository`, `ISyncQueueRepository`, `IApiProductRepository`
+
+**Tests de integración de repositorios SQLite** (mayor confianza en queries)
+- `findAllWithStock()`: verifica que devuelve 0 cuando no hay registros en `inventario`
+- `findLowStock()`: verifica el filtro `stock_actual < stock_minimo`
+- `replaceProducts()`: verifica que el caché previo persiste si los inserts fallan a mitad
+- Stack sugerido: `better-sqlite3` en Jest (mismo SQL, sin Expo)
+
+#### Funcionalidad incompleta
+
+- [ ] Implementar `inventary.service.ts` — la tabla `inventario` y su schema ya existen; falta el servicio que gestione stock por sucursal, alertas de mínimo y movimientos desde `hormigas_mobile`
+- [ ] Poblar tabla `inventario` localmente al crear producto con `control=true` (hoy se envía al servidor pero no se inserta en SQLite local hasta el siguiente `pullFromServer`)
+- [ ] `pullFromServer` para sucursales — hoy solo existe para productos; cambios creados desde el backend nunca llegan a la app
+- [ ] Extender offline-first a movimientos de inventario en `hormigas_mobile` (entradas, ajustes, traslados)
+- [ ] Historial de ventas y movimientos visible en el POS
+- [ ] `useSucursales` en el POS sin fallback offline — si el usuario nunca seleccionó sucursal y abre sin internet, queda bloqueado
+
+#### Plataformas futuras
+
+- [ ] App Electron (desktop) compartiendo lógica de `/packages` — scaffolding ya existe en `apps/desktop/hormigas_desktop`
+- [ ] Dashboard web de administración — reportes, métricas, gestión de usuarios
 - [ ] Soporte multi-usuario con roles por sucursal
+- [ ] Venta en línea (e-commerce) — ver [`ECOMMERCE.md`](./ECOMMERCE.md) para el análisis completo de alcance, módulos necesarios y fases de implementación
 
 ---
 
