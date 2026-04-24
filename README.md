@@ -155,9 +155,9 @@ EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080
 - `syncPending()` → procesa CREATE y UPDATE de la cola
 
 `POSService` — punto de venta offline-first:
-- `syncProducts(sucursalId)` → reemplaza catálogo local desde API
-- `getProducts(sucursalId)` → lee desde SQLite (`pos_producto`)
-- `submitSale(items, sucursalId)` → actualiza stock local + encola movimiento VENTA
+- `syncProducts(sucursalId)` → upsert del catálogo local desde API (sin pérdida de datos si se interrumpe)
+- `getProducts(sucursalId)` → lee desde SQLite (`pos_producto`); funciona sin conexión
+- `submitSale(items, sucursalId)` → descuenta stock local + encola movimiento VENTA en sync_queue
 - `syncPending()` → empuja movimientos pendientes al servidor
 
 **DTOs:**
@@ -178,7 +178,7 @@ EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080
 - `SqliteProductRepositoryImpl` — implementa `IProductRepository` incluyendo `findAllWithStock()` (LEFT JOIN) y `findLowStock()` (JOIN con filtro)
 - `SqliteBranchRepositoryImpl` — preserva `server_id` en cada save via `BranchSqliteMapper`
 - `SqliteSyncQueueRepositoryImpl` — gestiona la cola de operaciones pendientes
-- `SqlitePOSCacheRepositoryImpl` — caché local del catálogo POS por sucursal
+- `SqlitePOSCacheRepositoryImpl` — caché local del catálogo POS; `replaceProducts()` hace upsert antes de borrar obsoletos, garantizando que el caché nunca quede vacío si la sincronización se interrumpe
 
 **API — repositorios:**
 - `ApiProductRepositoryImpl` — `POST /api/producto/nuevo`, `PUT /api/producto/{id}`, `GET /api/producto/`
@@ -207,9 +207,26 @@ App de gestión de inventario para administradores.
 
 App de punto de venta para cajeros en sucursal.
 
-- **`useLogin`** → autenticación + selección de sucursal
-- **`usePOS`** — carga catálogo desde SQLite, sincroniza con servidor al conectarse, gestiona carrito y registra ventas offline
-- **Pantalla de venta** — grid de productos con búsqueda, carrito modal, indicador online/offline
+- **`useLogin`** → autenticación con JWT; `branchId` y `branchName` persisten en SecureStore entre sesiones
+- **`AuthContext`** → guard de rutas: sin token redirige a `/login`; con token pero sin sucursal redirige a `/branch-select`; con ambos entra directo a `/(pos)/sale`
+- **`usePOS`** — al recuperar conexión ejecuta en orden: `syncPending()` primero (envía ventas offline al servidor), luego `syncProducts()` (descarga inventario actualizado), luego refresca la UI
+- **`useSucursales`** — obtiene sucursales activas desde la API para la selección inicial (requiere conexión)
+- **Pantalla de venta** — grid de productos con búsqueda, carrito modal, indicador online/offline en tiempo real
+
+**Flujo offline del POS:**
+```
+Primera vez (requiere conexión):
+  Login → seleccionar sucursal → syncProducts() descarga catálogo → SQLite local
+
+Ventas offline:
+  submitSale() → descuenta stock en SQLite + encola en sync_queue
+  (la UI muestra el stock correcto sin internet)
+
+Al reconectar:
+  1. syncPending()   → envía ventas a /api/movimiento/crear
+  2. syncProducts()  → descarga inventario ya actualizado por esas ventas
+  3. loadProducts()  → refresca la pantalla con el stock real del servidor
+```
 
 ---
 
@@ -228,6 +245,8 @@ App de punto de venta para cajeros en sucursal.
 - [x] Dashboard Home con datos reales (productos, sucursales, alertas de stock)
 - [x] App **Punto de Venta (POS)** — catálogo por sucursal, carrito, ventas offline-first
 - [x] `server_id` preservado en cada save para no perder sincronización al editar registros
+- [x] POS: orden de sync corregido (push antes de pull para evitar stock desincronizado)
+- [x] POS: `replaceProducts()` usa upsert antes de borrar obsoletos (caché nunca queda vacío si se interrumpe la sync)
 
 ### Pendiente
 - [ ] Carga batch automática con reintentos y backoff exponencial
@@ -275,6 +294,8 @@ pnpm android   # o pnpm ios
 - El `local_id` (UUID) es la clave primaria local; `server_id` se asigna tras la primera sincronización exitosa. En `Product` se expone como `categoriaId`; en `Branch` como `serverId`.
 - Si un registro no está sincronizado (sin `server_id`), los `update()` solo guardan localmente. Cuando el CREATE pendiente se sincronice, el servidor recibirá el estado actual en ese momento.
 - El stock (`inventario`) se pobla desde el servidor via `pullFromServer()`. Localmente existirá inventario solo si el servidor lo retorna en la descarga o si el usuario creó el producto con `control=true` y el servidor procesó el stock inicial.
+- El POS guarda el catálogo en una tabla separada (`pos_producto`) en su propia base de datos (`hormigas_pos.db`), independiente de la app de inventario. El sync del POS va siempre contra el inventario real del servidor por sucursal.
+- En el POS, `syncPending()` debe ejecutarse **antes** que `syncProducts()` al reconectar. De lo contrario, el pull descargaría el stock previo a las ventas offline y lo mostraría incorrectamente hasta el siguiente ciclo.
 - Todos los modelos viven en `@hormigas/domain` y los casos de uso en `@hormigas/application`. Ningún paquete de nivel inferior importa de capas superiores.
 
 ---
