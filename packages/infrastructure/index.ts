@@ -29,3 +29,6 @@ export * from './src/sale/ApiSaleRepositoryImpl'
 
 // User API repository
 export * from './src/user/ApiUserRepositoryImpl'
+
+// Empresa API repository
+export * from './src/empresa/ApiEmpresaRepositoryImpl'

@@ -18,6 +18,26 @@ const httpClient = new ApiHttpClient(API_URL, tokenService)
 const onlineAdapter = new UserServiceHTTP(tokenService, httpClient)
 const offlineAdapter = new UserServiceOfflineAdapter()
 
+function decodeJWTPayload(token: string): Record<string, unknown> {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(base64))
+  } catch {
+    return {}
+  }
+}
+
+export function getRolesFromToken(token: string): string[] {
+  const payload = decodeJWTPayload(token)
+  const roles = payload['roles']
+  if (typeof roles !== 'string') return []
+  return roles.split(' ')
+}
+
+export function isSuperAdminToken(token: string): boolean {
+  return getRolesFromToken(token).includes('ROLE_SUPER_ADMIN')
+}
+
 export const useAuth = () => {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -36,25 +56,20 @@ export const useAuth = () => {
       .catch(() => setToken(null))
       .finally(() => setIsLoading(false))
   }, [])
+
   const login = async (dto: UserRequestDTO) => {
-    console.log('➡️ Login request DTO:', dto)
-
     const data = await userService.login(dto)
-    console.log('✅ Login response:', data)
-
     const savedToken = await tokenService.getToken()
-    console.log('🔑 Saved token:', savedToken)
-
     setToken(savedToken)
     return data
   }
 
   const logout = async () => {
-    console.log('🚪 Logging out...')
     await tokenService.clearTokens()
     setToken(null)
-    console.log('❌ Tokens cleared')
   }
 
-  return { token, isLoading, login, logout }
+  const isSuperAdmin = token ? isSuperAdminToken(token) : false
+
+  return { token, isLoading, login, logout, isSuperAdmin }
 }

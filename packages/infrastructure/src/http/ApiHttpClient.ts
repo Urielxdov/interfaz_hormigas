@@ -102,6 +102,17 @@ export class ApiHttpClient {
         return data as T
     }
 
+    async patch<T = void>(path: string, body?: unknown): Promise<T> {
+        const res = await fetch(`${this.baseUrl}${path}`, {
+            method: 'PATCH',
+            headers: await this.buildHeaders(),
+            body: body !== undefined ? JSON.stringify(body) : undefined,
+        })
+        const data = await res.json().catch(() => null)
+        if (!res.ok) throw new HttpError(res.status, `PATCH ${path} → ${res.status}`)
+        return data as T
+    }
+
     async delete(path: string): Promise<void> {
         console.log('[API][DELETE] url:', `${this.baseUrl}${path}`)
 

@@ -21,6 +21,7 @@ export default function RootLayout () {
       >
         <Stack.Screen name='(login)' options={{ headerShown: false }} />
         <Stack.Screen name='(tabs)' options={{ headerShown: true }} />
+        <Stack.Screen name='(superadmin)' options={{ headerShown: false }} />
       </Stack>
     </SafeAreaProvider>
   )

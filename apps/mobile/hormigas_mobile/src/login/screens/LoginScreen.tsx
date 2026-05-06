@@ -1,4 +1,8 @@
-import { useAuth } from '@/src/login/hooks/useAuth'
+import { useAuth, isSuperAdminToken } from '@/src/login/hooks/useAuth'
+import { TokenServiceImpl } from '@hormigas/infrastructure'
+import { storage } from '@/src/adapters/AsyncStorageAdapter'
+
+const tokenService = new TokenServiceImpl(storage)
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { router } from 'expo-router'
@@ -44,7 +48,9 @@ export default function LoginScreen () {
   const handleLogin = async (data: LoginFormValues) => {
     try {
       await login(data)
-      router.replace('/(tabs)/home')
+      const token = await tokenService.getToken()
+      const superAdmin = token ? isSuperAdminToken(token) : false
+      router.replace(superAdmin ? '/(superadmin)' : '/(tabs)/home')
     } catch (error) {
       console.error('[LoginScreen] Error:', error)
     }
