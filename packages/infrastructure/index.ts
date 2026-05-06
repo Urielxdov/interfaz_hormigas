@@ -21,3 +21,8 @@ export * from './src/sync/SqliteSyncQueueRepositoryImpl'
 
 // API repositories
 export * from './src/product/ApiProductRepositoryImpl'
+
+// Sale repositories
+export * from './src/sale/SqliteSaleRepositoryImpl'
+export * from './src/sale/SqliteInventaryForSaleImpl'
+export * from './src/sale/ApiSaleRepositoryImpl'
