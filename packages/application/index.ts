@@ -1,6 +1,7 @@
 // Ports
 export * from './port/storage.port'
 export * from './port/user.port'
+export * from './port/user-api.port'
 export * from './port/token.port'
 export * from './port/product-api.port'
 

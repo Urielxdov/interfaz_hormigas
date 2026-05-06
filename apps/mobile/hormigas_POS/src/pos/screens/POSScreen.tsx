@@ -1,7 +1,6 @@
 import { usePOS, ProductWithStock } from '@/src/pos/hooks/usePOS'
 import {
     ActivityIndicator,
-    FlatList,
     StyleSheet,
     Text,
     TextInput,
@@ -11,13 +10,24 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getSaleService } from '@/src/adapters/saleServiceInstance'
+import { getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
 
 interface Props {
     token: string | null
 }
 
 export default function POSScreen({ token }: Props) {
+    const sucursalId = token ? (getSucursalIdFromToken(token) ?? 0) : 0
+
+    useEffect(() => {
+        if (!sucursalId) return
+        getSaleService()
+            .then(svc => svc.pullProductsWithStock(sucursalId))
+            .catch(e => console.warn('[POS] pull failed:', e))
+    }, [sucursalId])
+
     const {
         query, setQuery,
         results, searching,

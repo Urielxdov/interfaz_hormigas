@@ -3,6 +3,7 @@ import { Package, Wifi } from 'lucide-react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import useIsTablet from '../hooks/useIsTablet'
 import { useNetwork } from '../../../../shared/context/NetworkContext'
+import SyncQueueBadge from './SyncQueueBadge'
 
 export default function Header () {
   const isTablet = useIsTablet()
@@ -10,9 +11,9 @@ export default function Header () {
   const { isOnline } = useNetwork()
 
   return (
-    <View 
+    <View
       className='p-4 border-b'
-      style={{ paddingTop: insets.top + 8 }}  // ← y esto (el +8 reemplaza el padding top del className)
+      style={{ paddingTop: insets.top + 8 }}
     >
       <View className='flex-row items-center'>
         <View className={`bg-blue-600 rounded-lg ${isTablet ? 'p-4' : 'p-1'}`}>
@@ -25,9 +26,11 @@ export default function Header () {
           <Text className={isTablet ? 'text-lg' : 'text-sm'}>
             Panel de administración
           </Text>
-          
         </View>
-        <Wifi color={isOnline ? 'green' : 'red'}/>
+        <View className='flex-row items-center gap-3'>
+          <SyncQueueBadge />
+          <Wifi color={isOnline ? 'green' : 'red'}/>
+        </View>
       </View>
     </View>
   )
