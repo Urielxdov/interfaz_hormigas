@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 18.11.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "node": "20",
+      "env": {
+        "EXPO_USE_WORKSPACES": "1"
+      }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "prebuildCommand": "pnpm install --frozen-lockfile"
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "prebuildCommand": "pnpm install --frozen-lockfile",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://verbose-system-66pgxjvrxvv3rg57-8080.app.github.dev"
+      }
+    },
+    "production": {
+      "extends": "base",
+      "autoIncrement": true,
+      "prebuildCommand": "pnpm install --frozen-lockfile"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
