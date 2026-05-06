@@ -1,35 +1,50 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Tabs, Redirect } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
+import { useAuth } from '@/src/auth/hooks/useAuth'
+import { POSHeader } from '@/src/utils/components/POSHeader'
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+    const { token, isLoading } = useAuth()
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
-  );
+    if (isLoading) return null
+    if (!token) return <Redirect href="/(login)" />
+
+    return (
+        <Tabs
+            screenOptions={{
+                tabBarActiveTintColor: '#111',
+                tabBarInactiveTintColor: '#9ca3af',
+                tabBarShowLabel: true,
+                tabBarStyle: {
+                    backgroundColor: '#fff',
+                    borderTopWidth: 1,
+                    borderTopColor: '#e5e7eb',
+                    height: 60,
+                    paddingBottom: 8,
+                },
+                header: () => <POSHeader />,
+            }}
+        >
+            <Tabs.Screen
+                name="pos"
+                options={{
+                    title: 'Venta',
+                    tabBarIcon: ({ focused, color, size }) => (
+                        <Ionicons name={focused ? 'cart' : 'cart-outline'} size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="history"
+                options={{
+                    title: 'Historial',
+                    tabBarIcon: ({ focused, color, size }) => (
+                        <Ionicons name={focused ? 'receipt' : 'receipt-outline'} size={size} color={color} />
+                    ),
+                }}
+            />
+        </Tabs>
+    )
 }
