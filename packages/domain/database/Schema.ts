@@ -70,4 +70,26 @@ export const CREATE_TABLES_SQL = `
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS venta (
+    id TEXT PRIMARY KEY,
+    sucursal_id TEXT NOT NULL,
+    total REAL NOT NULL,
+    monto_recibido REAL NOT NULL,
+    cambio REAL NOT NULL,
+    fecha TEXT NOT NULL,
+    sincronizado INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS venta_item (
+    id TEXT PRIMARY KEY,
+    venta_id TEXT NOT NULL REFERENCES venta(id),
+    producto_local_id TEXT NOT NULL,
+    producto_server_id INTEGER,
+    nombre TEXT NOT NULL,
+    sku TEXT NOT NULL,
+    precio REAL NOT NULL,
+    cantidad INTEGER NOT NULL,
+    subtotal REAL NOT NULL
+  );
 `;

@@ -13,3 +13,5 @@ export * from './transaction/PersistentTransaction'
 
 export * from './user/User'
 export * from './user/PersistentUser'
+
+export * from './sale/Sale'
