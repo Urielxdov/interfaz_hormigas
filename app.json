@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "ab284479-d6c4-4b13-aa94-7751a1d36e5e"
+      }
+    },
+    "android": {
+      "package": "com.urielxdov.hormigas_interfaz"
+    }
+  }
+}

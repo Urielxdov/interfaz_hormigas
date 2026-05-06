@@ -3,6 +3,11 @@
   "private": true,
   "version": "1.0.0",
   "main": "index.js",
+  "workspaces": [
+    "apps/mobile/shared",
+    "apps/mobile/*",
+    "packages/*"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,4 +20,3 @@
     "typescript": "^5.4.0"
   }
 }
- 
