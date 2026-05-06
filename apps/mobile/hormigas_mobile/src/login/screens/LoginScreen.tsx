@@ -41,10 +41,13 @@ export default function LoginScreen () {
     }
   })
 
-  const handleLogin = (data: LoginFormValues) => {
-    console.log(data)
-    //console.log(login(data))
-    router.replace('/(tabs)/home')
+  const handleLogin = async (data: LoginFormValues) => {
+    try {
+      await login(data)
+      router.replace('/(tabs)/home')
+    } catch (error) {
+      console.error('[LoginScreen] Error:', error)
+    }
   }
 
   return (
@@ -63,7 +66,12 @@ export default function LoginScreen () {
             </Text>
           </View>
 
-          <Form control={control} errors={errors} fields={LOGIN_FIELDS} scrollable={false} />
+          <Form
+            control={control}
+            errors={errors}
+            fields={LOGIN_FIELDS}
+            scrollable={false}
+          />
 
           <ButtonCustom
             title='Iniciar sesion'
