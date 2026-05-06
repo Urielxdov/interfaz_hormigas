@@ -26,3 +26,10 @@ export * from './factories/createProductService'
 
 // Utils
 export * from './utils/uuid'
+
+// Sale
+export * from './use-cases/sale/sale.dto'
+export * from './repositories/sale.repository'
+export * from './port/sale-api.port'
+export * from './services/sale.service'
+export * from './factories/createSaleService'
