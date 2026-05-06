@@ -3,11 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "main": "index.js",
-  "workspaces": [
-    "apps/mobile/shared",
-    "apps/mobile/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
