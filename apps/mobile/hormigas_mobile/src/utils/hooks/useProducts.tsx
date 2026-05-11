@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useReducer } from 'react'
 import { Product } from '@hormigas/domain'
 import { CreateProductDTO } from '@hormigas/application'
 import { ProductViewModel } from '@/interfaces/Product'
 import { getProductService } from '@/src/adapters/productServiceInstance'
 import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
+import { productReducer } from '../storage/product.reducer'
 
 function mapToViewModel (product: Product): ProductViewModel {
   return {
@@ -19,39 +20,35 @@ function mapToViewModel (product: Product): ProductViewModel {
 }
 
 export function useProducts () {
-  const [products, setProducts] = useState<ProductViewModel[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [products, dispatch] = useReducer(productReducer, [])
   const { isOnline } = useNetwork()
 
-  const loadProducts = useCallback(async () => {
-    setIsLoading(true)
+  const loadLocal = useCallback(async () => {
     try {
       const svc = await getProductService()
-      const domainProducts = await svc.findAll()
-      setProducts(domainProducts.map(mapToViewModel))
+      const data = await svc.findAll()
+      dispatch({ type: 'SET', payload: data.map(mapToViewModel) })
     } catch (e) {
-      console.error('[useProducts] loadProducts:', e)
-    } finally {
-      setIsLoading(false)
+      console.error('[useProducts] loadLocal:', e)
     }
   }, [])
 
   useEffect(() => {
-    loadProducts()
-  }, [loadProducts])
+    loadLocal()
+  }, [loadLocal])
 
   useEffect(() => {
     if (!isOnline) return
     getProductService()
       .then(svc => svc.syncPending())
-      .then(loadProducts)
+      .then(loadLocal)
       .catch(e => console.warn('[useProducts] syncPending:', e))
-  }, [isOnline, loadProducts])
+  }, [isOnline, loadLocal])
 
   const createProduct = async (dto: CreateProductDTO) => {
     const svc = await getProductService()
     await svc.create(dto)
-    await loadProducts()
+    await loadLocal()
   }
 
   const updateProduct = async (product: ProductViewModel) => {
@@ -64,14 +61,14 @@ export function useProducts () {
       precio: product.precio,
       activo: product.estado
     })
-    await loadProducts()
+    await loadLocal()
   }
 
   const toggleStatus = async (id: string) => {
     const svc = await getProductService()
     await svc.toggleActive(id)
-    await loadProducts()
+    await loadLocal()
   }
 
-  return { products, isLoading, createProduct, updateProduct, toggleStatus }
+  return { products, createProduct, updateProduct, toggleStatus }
 }

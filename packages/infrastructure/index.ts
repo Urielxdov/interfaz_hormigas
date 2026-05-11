@@ -29,6 +29,11 @@ export * from './src/sale/ApiSaleRepositoryImpl'
 
 // User API repository
 export * from './src/user/ApiUserRepositoryImpl'
+export * from './src/user/SqliteUserRepositoryImpl'
+
+// Branch repositories
+export * from './src/branch/ApiBranchRepositoryImpl'
+export * from './src/branch/SqliteBranchRepositoryImpl'
 
 // Empresa API repository
 export * from './src/empresa/ApiEmpresaRepositoryImpl'

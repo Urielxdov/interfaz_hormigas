@@ -2,6 +2,7 @@ import { ProductViewModel } from "@/interfaces/Product";
 import { CreateProductDTO } from "@hormigas/application";
 
 export type ProductAction =
+    | { type: 'SET'; payload: ProductViewModel[] }
     | { type: 'CREATE'; payload: CreateProductDTO }
     | { type: 'UPDATE'; payload: ProductViewModel }
     | { type: 'TOGGLE_ESTADO'; payload: string }
@@ -10,6 +11,8 @@ export type ProductAction =
 
 export function productReducer(state: ProductViewModel[], action: ProductAction): ProductViewModel[] {
     switch (action.type) {
+        case 'SET':
+            return action.payload
         case 'CREATE':
             const newProduct: ProductViewModel = {
                 ...action.payload,

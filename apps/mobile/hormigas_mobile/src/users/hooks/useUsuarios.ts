@@ -1,48 +1,62 @@
-import { useEffect, useState } from 'react'
-import { ApiHttpClient, ApiUserRepositoryImpl, TokenServiceImpl } from '@hormigas/infrastructure'
-import { UsuarioResponseDTO, CreateUsuarioDTO } from '@hormigas/application'
-import { storage } from '@/src/adapters/AsyncStorageAdapter'
+import { useCallback, useEffect, useReducer, useState } from 'react'
+import { CreateUsuarioDTO } from '@hormigas/application'
+import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
+import { getUserRepos } from '@/src/adapters/userRepoInstance'
+import { userReducer } from '@/src/utils/storage/user.reducer'
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? ''
+export function useUsuarios () {
+  const [usuarios, dispatch] = useReducer(userReducer, [])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const { isOnline } = useNetwork()
 
-function getRepo() {
-    const tokenService = new TokenServiceImpl(storage)
-    const http = new ApiHttpClient(API_URL, tokenService)
-    return new ApiUserRepositoryImpl(http)
-}
-
-export function useUsuarios() {
-    const [usuarios, setUsuarios] = useState<UsuarioResponseDTO[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const [creating, setCreating] = useState(false)
-
-    const cargar = async () => {
-        setLoading(true)
-        setError(null)
-        try {
-            const data = await getRepo().listarUsuarios()
-            setUsuarios(data)
-        } catch (e) {
-            setError('Error al cargar usuarios')
-            console.error('[Usuarios] cargar:', e)
-        } finally {
-            setLoading(false)
-        }
+  const loadLocal = useCallback(async () => {
+    try {
+      const { sqlite } = await getUserRepos()
+      const data = await sqlite.findAll()
+      dispatch({ type: 'SET', payload: data })
+    } catch (e) {
+      console.error('[useUsuarios] loadLocal:', e)
     }
+  }, [])
 
-    useEffect(() => { cargar() }, [])
-
-    const crear = async (dto: CreateUsuarioDTO) => {
-        setCreating(true)
-        try {
-            const nuevo = await getRepo().crearUsuario(dto)
-            setUsuarios(prev => [...prev, nuevo])
-            return nuevo
-        } finally {
-            setCreating(false)
-        }
+  const syncFromServer = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { api, sqlite } = await getUserRepos()
+      const data = await api.listarUsuarios()
+      await sqlite.upsertMany(data)
+      dispatch({ type: 'SET', payload: data })
+    } catch (e) {
+      setError('Error al cargar usuarios')
+      console.error('[useUsuarios] syncFromServer:', e)
+    } finally {
+      setLoading(false)
     }
+  }, [])
 
-    return { usuarios, loading, error, creating, crear, recargar: cargar }
+  useEffect(() => {
+    loadLocal()
+  }, [loadLocal])
+
+  useEffect(() => {
+    if (!isOnline) return
+    syncFromServer()
+  }, [isOnline, syncFromServer])
+
+  const crear = async (dto: CreateUsuarioDTO) => {
+    setCreating(true)
+    try {
+      const { api } = await getUserRepos()
+      const nuevo = await api.crearUsuario(dto)
+      dispatch({ type: 'CREATE', payload: nuevo })
+      return nuevo
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  return { usuarios, loading, error, creating, crear, recargar: syncFromServer }
 }

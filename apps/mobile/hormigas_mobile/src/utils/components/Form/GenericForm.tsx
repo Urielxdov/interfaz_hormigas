@@ -1,5 +1,5 @@
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
-import { useForm, DefaultValues, FieldValues } from 'react-hook-form'
+import { useForm, DefaultValues, FieldValues, UseFormWatch } from 'react-hook-form'
 import { Text, View } from 'react-native'
 import Form, { FormFieldConfig } from './Form'
 
@@ -10,7 +10,7 @@ interface GenericFormProps<T extends FieldValues> {
   defaultValues?: DefaultValues<T>
   onSubmit: (data: T) => void
   submitLabel?: string
-  children?: (control: any, errors: any) => React.ReactNode // para subformularios
+  children?: (control: any, errors: any, watch: UseFormWatch<T>) => React.ReactNode
 }
 
 export function GenericForm<T extends FieldValues> ({
@@ -25,6 +25,7 @@ export function GenericForm<T extends FieldValues> ({
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors }
   } = useForm<T>({ defaultValues })
 
@@ -41,7 +42,7 @@ export function GenericForm<T extends FieldValues> ({
         scrollable={false}
       >
         {/* render prop para subformularios opcionales */}
-        {children?.(control, errors)}
+        {children?.(control, errors, watch)}
         <ButtonCustom title={submitLabel} onPress={handleSubmit(onSubmit)} />
       </Form>
     </View>

@@ -8,6 +8,6 @@ export interface BranchItemListDTO {
   id: bigint
   nombre: string
   direccion?: string
-  responsable: string
+  responsable?: string
   activa: boolean
 }

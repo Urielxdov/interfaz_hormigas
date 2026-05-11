@@ -1,8 +1,5 @@
-import ButtonCustom from '@/src/utils/components/ButtonCustom'
-import Form, { FormFieldConfig } from '@/src/utils/components/Form'
-import { BranchItemListDTO } from '@hormigas/application'
-import { useForm } from 'react-hook-form'
-import { Text, View } from 'react-native'
+import { GenericForm } from '@/src/utils/components/Form/GenericForm'
+import { FormFieldConfig } from '@/src/utils/components/Form'
 
 type BranchFormValues = {
   nombre: string
@@ -22,24 +19,24 @@ const BRANCH_FORM_FIELDS: FormFieldConfig<BranchFormValues>[] = [
   },
   {
     name: 'direccion',
-    label: 'Direccion',
+    label: 'Dirección',
     placeholder: 'Ej. Av. Principal 123',
-    rules: { required: 'La direccion es obligatoria' }
+    rules: { required: 'La dirección es obligatoria' }
   },
   {
     name: 'responsable',
     label: 'Responsable',
-    placeholder: 'Ej. Maria Garcia',
+    placeholder: 'Ej. Maria García',
     rules: { required: 'El responsable es obligatorio' }
   },
   {
     name: 'codigo',
-    label: 'Codigo',
+    label: 'Código',
     placeholder: 'Ej. CENTRO-01'
   },
   {
     name: 'telefono',
-    label: 'Telefono',
+    label: 'Teléfono',
     placeholder: 'Ej. 555 123 4567'
   },
   {
@@ -49,58 +46,20 @@ const BRANCH_FORM_FIELDS: FormFieldConfig<BranchFormValues>[] = [
   }
 ]
 
-const defaultValues: BranchFormValues = {
-  nombre: '',
-  direccion: '',
-  responsable: '',
-  codigo: '',
-  telefono: '',
-  ciudad: ''
-}
-
 interface CreateBranchScreenProps {
-  defaultValues?: Partial<BranchItemListDTO>
-  onSubmit?: (data: BranchItemListDTO) => void
+  defaultValues?: Partial<BranchFormValues>
+  onSubmit?: (data: BranchFormValues) => void
 }
 
-export function CreateBranchScreen ({
-  defaultValues,
-  onSubmit: OnSubmit
-}: CreateBranchScreenProps) {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors }
-  } = useForm<BranchFormValues>({
-    defaultValues: {
-      nombre: '',
-      direccion: '',
-      responsable: ''
-    }
-  })
-
-  const onSubmit = (data: BranchFormValues) => {
-    console.log(data)
-  }
-
+export function CreateBranchScreen ({ defaultValues, onSubmit }: CreateBranchScreenProps) {
   return (
-    <View className='w-full'>
-      <View className='gap-1 p-2'>
-        <Text className='text-2xl font-bold'>Nueva Sucursal</Text>
-        <Text className='text-gray-500'>
-          Completa el formulario para crear una nueva sucursal
-        </Text>
-      </View>
-
-      <Form
-        control={control}
-        errors={errors}
-        fields={BRANCH_FORM_FIELDS}
-        scrollable={false}
-      >
-        <ButtonCustom title='Guardar' onPress={handleSubmit(onSubmit)} />
-      </Form>
-    </View>
+    <GenericForm<BranchFormValues>
+      title='Nueva Sucursal'
+      subtitle='Completa el formulario para crear una nueva sucursal'
+      fields={BRANCH_FORM_FIELDS}
+      defaultValues={{ nombre: '', direccion: '', responsable: '', codigo: '', telefono: '', ciudad: '', ...defaultValues }}
+      onSubmit={data => onSubmit?.(data)}
+    />
   )
 }
 
