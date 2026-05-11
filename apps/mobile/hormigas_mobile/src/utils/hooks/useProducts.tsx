@@ -48,6 +48,7 @@ export function useProducts () {
   const createProduct = async (dto: CreateProductDTO) => {
     const svc = await getProductService()
     await svc.create(dto)
+    if (isOnline) await svc.syncPending()
     await loadLocal()
   }
 
