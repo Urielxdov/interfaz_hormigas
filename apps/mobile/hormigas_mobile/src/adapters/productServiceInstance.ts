@@ -24,10 +24,12 @@ export const getProductService = (): Promise<ProductService> => {
         const dbClient = new ExpoSQLiteClient(db)
         const tokenService = new TokenServiceImpl(storage)
         const httpClient = new ApiHttpClient(API_URL, tokenService)
+        console.log("guardado en local")
 
         const productRepo = new SqliteProductRepositoryImpl(dbClient)
         const syncQueueRepo = new SqliteSyncQueueRepositoryImpl(dbClient)
         const apiProductRepo = new ApiProductRepositoryImpl(httpClient)
+
 
         _service = createProductService(productRepo, syncQueueRepo, apiProductRepo)
         return _service

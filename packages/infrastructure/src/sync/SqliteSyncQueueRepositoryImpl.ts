@@ -28,9 +28,10 @@ function rowToItem(row: SyncQueueRow): SyncQueueItem {
 }
 
 export class SqliteSyncQueueRepositoryImpl implements ISyncQueueRepository {
-    constructor(private db: DatabaseClient) {}
+    constructor(private db: DatabaseClient) { }
 
     async save(item: SyncQueueItem): Promise<boolean> {
+        console.log('Iniciamos')
         await this.db.run(
             `INSERT OR REPLACE INTO sync_queue
              (id, entity, entity_id, operation, payload, status, retries, created_at, updated_at)
