@@ -1,61 +1,80 @@
 import DataTable from '@/src/utils/components/DataTable'
 import { Building2 } from 'lucide-react-native'
-import { Text, View } from 'react-native'
+import { Text, View, ActivityIndicator } from 'react-native'
+import { useEffect, useState } from 'react'
+import { BranchItemListDTO } from '@hormigas/application'
+import { useBranches } from '@/src/utils/hooks/useBranch'
+import { getReporteRepo } from '@/src/adapters/reporteServiceInstance'
+import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
+import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
 
-const sucursales = [
-  {
-    nombre: 'Centro',
-    totalProductos: 847,
-    stockBajo: 8,
-    valorInventario: '$1,245,800',
-    movimiento: '+12.5%',
-    estado: 'Optimo'
-  },
-  {
-    nombre: 'Norte',
-    totalProductos: 623,
-    stockBajo: 5,
-    valorInventario: '$892,400',
-    movimiento: '+8.3%',
-    estado: 'Optimo'
-  },
-  {
-    nombre: 'Sur',
-    totalProductos: 456,
-    stockBajo: 12,
-    valorInventario: '$645,200',
-    movimiento: '+5.1%',
-    estado: 'Atencion'
-  },
-  {
-    nombre: 'Este',
-    totalProductos: 534,
-    stockBajo: 3,
-    valorInventario: '$756,900',
-    movimiento: '+15.2%',
-    estado: 'Optimo'
-  },
-  {
-    nombre: 'Oeste',
-    totalProductos: 387,
-    stockBajo: 7,
-    valorInventario: '$534,500',
-    movimiento: '+3.8%',
-    estado: 'Optimo'
-  }
-]
+type SucursalRow = {
+  nombre: string
+  valorInventario: string
+  productosConPrecio: number
+  productosSinPrecio: number
+  stockBajo: number
+  estado: string
+}
 
 const getStatusColor = (estado: string | number): string => {
-  const normalized = String(estado).toLowerCase()
-
-  if (normalized === 'optimo') return 'bg-blue-200 text-blue-600'
-  if (normalized === 'atencion') return 'bg-orange-200 text-orange-600'
-  if (normalized === 'bajo') return 'bg-red-200 text-red-600'
-
+  const n = String(estado).toLowerCase()
+  if (n === 'optimo') return 'bg-blue-200 text-blue-600'
+  if (n === 'atencion') return 'bg-orange-200 text-orange-600'
   return 'text-gray-500'
 }
 
-export default function BranchSummaryScreen () {
+async function buildRow(branch: BranchItemListDTO): Promise<SucursalRow> {
+  try {
+    const reporteRepo = await getReporteRepo()
+    const { sqlite } = await getInventarioRepos()
+    const [reporte, inventario] = await Promise.all([
+      reporteRepo.valorInventario(Number(branch.id)),
+      sqlite.findBySucursal(Number(branch.id)),
+    ])
+    const stockBajo = inventario.filter(i => i.stockActual < i.stockMinimo).length
+    return {
+      nombre: branch.nombre,
+      valorInventario: `$${reporte.valorTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`,
+      productosConPrecio: reporte.productosConPrecio,
+      productosSinPrecio: reporte.productosSinPrecio,
+      stockBajo,
+      estado: stockBajo > 0 ? 'Atencion' : 'Optimo',
+    }
+  } catch {
+    return {
+      nombre: branch.nombre,
+      valorInventario: 'N/A',
+      productosConPrecio: 0,
+      productosSinPrecio: 0,
+      stockBajo: 0,
+      estado: 'Optimo',
+    }
+  }
+}
+
+export default function BranchSummaryScreen() {
+  const { branches } = useBranches()
+  const { isOnline } = useNetwork()
+  const [rows, setRows] = useState<SucursalRow[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (branches.length === 0) return
+    setLoading(true)
+    Promise.all(branches.map(buildRow))
+      .then(setRows)
+      .finally(() => setLoading(false))
+  }, [branches, isOnline])
+
+  if (loading) {
+    return (
+      <View className="border rounded-xl border-gray-200 p-6 items-center">
+        <ActivityIndicator />
+      </View>
+    )
+  }
+
   return (
     <DataTable
       title='Resumen por Sucursal'
@@ -70,27 +89,26 @@ export default function BranchSummaryScreen () {
               <View className='rounded-xl bg-blue-100 p-1'>
                 <Building2 size={24} color='#1d4ed8' />
               </View>
-              <Text>{val}</Text>
+              <Text>{String(val)}</Text>
             </View>
           )
         },
-        { key: 'totalProductos', label: 'Total Productos' },
+        { key: 'productosConPrecio', label: 'Productos' },
         { key: 'stockBajo', label: 'Stock Bajo' },
-        { key: 'valorInventario', label: 'Valor inventario' },
-        { key: 'movimiento', label: 'Movimiento' },
+        { key: 'valorInventario', label: 'Valor' },
         {
           key: 'estado',
           label: 'Estado',
           render: val => (
             <View>
-              <Text className={`${getStatusColor(val)} rounded-xl p-1 text-center font-semibold`}>
-                {val}
+              <Text className={`${getStatusColor(String(val))} rounded-xl p-1 text-center font-semibold`}>
+                {String(val)}
               </Text>
             </View>
           )
         }
       ]}
-      data={sucursales}
+      data={rows}
     />
   )
 }
