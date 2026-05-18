@@ -12,6 +12,7 @@ import { useBranches } from '@/src/utils/hooks/useBranch'
 import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
 import { router } from 'expo-router'
+import { BranchItemListDTO } from '@hormigas/application'
 
 export default function BranchesScreen () {
   const [modal, setModal] = useState(false)
@@ -26,6 +27,11 @@ export default function BranchesScreen () {
   const mappedBranches: BranchItemTableDTO[] = branches.map(branch =>
     BranchMapper.toListTable(branch)
   )
+
+  const handleClose = () => {
+    setModal(false)
+    setSelectedBranch(null)
+  }
 
   return (
     <View>
@@ -104,7 +110,6 @@ export default function BranchesScreen () {
                   <ButtonCustom
                     onPress={() => {
                       toggleStatus(row.id)
-                      console.log('apagamos')
                     }}
                     bgColor={`${row.activa ? 'bg-green-500' : 'bg-red-500'}`}
                     icon={Power}
@@ -121,28 +126,37 @@ export default function BranchesScreen () {
         <BranchSummaryScreen />
       </View>
 
-      {/* <Modal isOpen={modal} onClose={() => setModal(false)}>
-        <CreateBranchScreen 
-          defaultValues={selectBranch ?? undefined}
-          onSubmit={(data) => {
+      <Modal isOpen={modal} onClose={handleClose}>
+        <CreateBranchScreen
+          defaultValues={
+            selectBranch
+              ? {
+                  nombre: selectBranch.nombre,
+                  direccion: selectBranch.direccion ?? '',
+                  responsable: selectBranch.responsable ?? '',
+                }
+              : undefined
+          }
+          onSubmit={data => {
             if (selectBranch) {
-              // convierte a Prod1|uctListItemDTO
-              updateBranch({ 
-                ...selectBranch,  // conserva id y stock
+              updateBranch({
+                id: selectBranch.id,
                 nombre: data.nombre,
-                direccion: data
-              })
+                direccion: data.direccion,
+                responsable: data.responsable,
+                activa: selectBranch.activa,
+              } as BranchItemListDTO)
             } else {
               createBranch({
-                ...data,
-                control: data.control ?? false,
+                nombre: data.nombre,
+                direccion: data.direccion,
+                activa: true,
               })
             }
-            setModal(false)
-            setSelectedBranch(null)
+            handleClose()
           }}
         />
-      </Modal> */}
+      </Modal>
     </View>
   )
 }
