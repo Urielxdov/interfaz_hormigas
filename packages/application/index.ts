@@ -36,3 +36,13 @@ export * from './repositories/sale.repository'
 export * from './port/sale-api.port'
 export * from './services/sale.service'
 export * from './factories/createSaleService'
+
+// Inventario
+export * from './port/inventario-api.port'
+export * from './port/movimiento-api.port'
+export * from './port/motivo-api.port'
+export * from './port/reporte-api.port'
+export * from './use-cases/inventario/inventario.dto'
+export * from './use-cases/movimiento/movimiento.dto'
+export * from './use-cases/motivo/motivo.dto'
+export * from './use-cases/reporte/reporte.dto'
