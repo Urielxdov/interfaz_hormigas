@@ -1,41 +1,55 @@
-import { ProductCardProps } from '@/src/utils/components/product/ProductCard'
 import ProductList from '@/src/utils/components/product/ProductList'
+import { ProductCardProps } from '@/src/utils/components/product/ProductCard'
 import { AlertTriangle } from 'lucide-react-native'
-import { ScrollView } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ActivityIndicator } from 'react-native'
+import { useEffect, useState } from 'react'
+import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
+import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
 
-const lowStockProducts: ProductCardProps[] = [
-  {
-    name: 'Laptop HP ProBook 450',
-    sku: 'LAP-HP-450',
-    location: 'Centro',
-    category: 'Electronica',
-    stock: 3,
-    maxStock: 100,
-    status: 'Bajo'
-  },
-  {
-    name: 'Laptop HP ProBook 450',
-    sku: 'LAP-HP-450-2',
-    location: 'Centro',
-    category: 'Electronica',
-    stock: 3,
-    maxStock: 100,
-    status: 'Bajo'
+export default function LowStockSection() {
+  const [products, setProducts] = useState<ProductCardProps[]>([])
+  const [loading, setLoading] = useState(true)
+  const { isOnline } = useNetwork()
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { sqlite } = await getInventarioRepos()
+        const lowStock = await sqlite.findLowStock()
+        setProducts(
+          lowStock.map(item => ({
+            name: item.productoNombre,
+            sku: String(item.productoId),
+            location: item.sucursalNombre,
+            category: '',
+            stock: item.stockActual,
+            maxStock: item.stockMaximo,
+            status: item.stockActual === 0 ? 'Critico' : 'Bajo',
+          }))
+        )
+      } catch (e) {
+        console.warn('[LowStockSection]', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [isOnline])
+
+  if (loading) {
+    return (
+      <View className="p-4 items-center">
+        <ActivityIndicator />
+      </View>
+    )
   }
-]
 
-export default function LowStockSection () {
   return (
-    <SafeAreaView className='flex-1' edges={['top']}>
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        <ProductList
-          title='Stock bajo'
-          description='Productos que requieren reabastecimiento'
-          icon={AlertTriangle}
-          products={lowStockProducts}
-        />
-      </ScrollView>
-    </SafeAreaView>
+    <ProductList
+      title='Stock bajo'
+      description='Productos que requieren reabastecimiento'
+      icon={AlertTriangle}
+      products={products}
+    />
   )
 }
