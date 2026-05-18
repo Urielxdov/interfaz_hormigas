@@ -37,3 +37,16 @@ export * from './src/branch/SqliteBranchRepositoryImpl'
 
 // Empresa API repository
 export * from './src/empresa/ApiEmpresaRepositoryImpl'
+
+// Inventario repositories
+export * from './src/inventario/SqliteInventarioRepositoryImpl'
+export * from './src/inventario/ApiInventarioRepositoryImpl'
+
+// Movimiento repositories
+export * from './src/movimiento/ApiMovimientoRepositoryImpl'
+
+// Motivo repositories
+export * from './src/motivo/ApiMotivoRepositoryImpl'
+
+// Reporte repositories
+export * from './src/reporte/ApiReporteRepositoryImpl'
