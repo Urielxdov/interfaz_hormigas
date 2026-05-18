@@ -131,6 +131,7 @@ Nuevas implementaciones:
 - `src/inventario/SqliteInventarioRepositoryImpl.ts` — cache en tabla `inventario_cache`
 - `src/movimiento/ApiMovimientoRepositoryImpl.ts` — llama `/api/movimiento/crear` y `/api/movimiento/buscar`
 - `src/motivo/ApiMotivoRepositoryImpl.ts` — llama `/api/motivos-movimiento` (GET sin params, empresa del JWT)
+- `src/reporte/ApiReporteRepositoryImpl.ts` — llama `/api/reportes/valor-inventario?sucursalId={id}` (solo método `valorInventario` en Ciclo A)
 
 Nueva migration:
 ```ts
@@ -156,6 +157,7 @@ Exportar nuevas clases en `packages/infrastructure/index.ts`.
 - `inventarioServiceInstance.ts` — lazy singleton que construye `ApiInventarioRepositoryImpl` + `SqliteInventarioRepositoryImpl`
 - `movimientoServiceInstance.ts` — lazy singleton para `ApiMovimientoRepositoryImpl`
 - `motivoServiceInstance.ts` — lazy singleton para `ApiMotivoRepositoryImpl`
+- `reporteServiceInstance.ts` — lazy singleton para `ApiReporteRepositoryImpl`
 
 ---
 
