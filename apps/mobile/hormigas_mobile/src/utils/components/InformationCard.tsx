@@ -20,15 +20,15 @@ export default function InformationCard ({
   const isTablet = useIsTablet()
   return (
     <View
-      className={`flex-row gap-8 p-4 border items-center rounded-xl border-gray-200
+      className={`flex-row gap-8 p-4 border items-center rounded-2xl border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900
         ${isTablet ? 'w-4/12' : 'w-10/12'} justify-between self-center`}
     >
-      <View className='flex-col gap-4'>
-        <Text className='text-lg'>{title}</Text>
-        <Text className='text-3xl'>{description}</Text>
+      <View className='flex-col gap-2'>
+        <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>{title}</Text>
+        <Text className='font-sans-bold text-zinc-900 dark:text-zinc-50 text-3xl'>{description}</Text>
       </View>
-      <View className={`${bgClass(iconBgColor, 600)} p-2 rounded-xl`}>
-        <Icon size={40} color='white' />
+      <View className={`${bgClass(iconBgColor, 600)} p-3 rounded-xl`}>
+        <Icon size={36} color='white' />
       </View>
     </View>
   )
