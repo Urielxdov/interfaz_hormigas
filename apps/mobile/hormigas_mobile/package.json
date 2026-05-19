@@ -15,6 +15,7 @@
     "eas-build-pre-install": "npm install -g pnpm@10.32.1 && pnpm install --frozen-lockfile"
   },
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
     "@hormigas/application": "workspace:*",
     "@hormigas/domain": "workspace:*",
