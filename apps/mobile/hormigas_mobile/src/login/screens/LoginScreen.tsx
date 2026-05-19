@@ -9,6 +9,7 @@ import { router } from 'expo-router'
 import { useForm } from 'react-hook-form'
 import { Text, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { Package } from 'lucide-react-native'
 
 type LoginFormValues = {
   email: string
@@ -39,10 +40,7 @@ export default function LoginScreen () {
     handleSubmit,
     formState: { errors }
   } = useForm<LoginFormValues>({
-    defaultValues: {
-      email: '',
-      password: ''
-    }
+    defaultValues: { email: '', password: '' }
   })
 
   const handleLogin = async (data: LoginFormValues) => {
@@ -62,13 +60,17 @@ export default function LoginScreen () {
       keyboardShouldPersistTaps='handled'
       enableOnAndroid
       extraScrollHeight={20}
+      className='bg-stone-50 dark:bg-zinc-950'
     >
-      <View className='w-11/12 self-center rounded-xl border border-gray-200 bg-white p-3'>
-        <View className='flex flex-col gap-3'>
-          <View className='flex flex-col gap-2'>
-            <Text className='text-2xl font-bold'>Iniciar Sesion</Text>
-            <Text className='text-gray-500'>
-              Ingresa tu email y contrasena para acceder a tu cuenta
+      <View className='w-11/12 self-center rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm'>
+        <View className='flex flex-col gap-4'>
+          <View className='items-center mb-2'>
+            <View className='bg-indigo-500 p-4 rounded-2xl mb-4'>
+              <Package size={36} color='white' />
+            </View>
+            <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Iniciar Sesión</Text>
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm text-center mt-1'>
+              Ingresa tus credenciales para acceder
             </Text>
           </View>
 
@@ -80,9 +82,8 @@ export default function LoginScreen () {
           />
 
           <ButtonCustom
-            title='Iniciar sesion'
+            title='Iniciar sesión'
             onPress={handleSubmit(handleLogin)}
-            bgColor='bg-black'
           />
         </View>
       </View>
