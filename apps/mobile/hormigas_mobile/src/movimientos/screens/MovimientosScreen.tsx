@@ -49,35 +49,35 @@ function SimpleSelect<T extends string | number>({
   const selected = options.find(o => o.value === value)
 
   return (
-    <View className="gap-1">
-      <Text className="text-sm font-medium text-gray-700">{label}</Text>
+    <View className='gap-1'>
+      <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>{label}</Text>
       <TouchableOpacity
-        className="border border-gray-200 rounded-lg px-3 py-2.5 flex-row items-center justify-between"
+        className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3.5 py-3 flex-row items-center justify-between bg-white dark:bg-zinc-800'
         onPress={() => setOpen(true)}
       >
-        <Text className={selected ? 'text-gray-900' : 'text-gray-400'}>
+        <Text className={`font-sans ${selected ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-400'}`}>
           {selected ? selected.label : placeholder ?? 'Seleccionar...'}
         </Text>
-        <ChevronDown size={14} color="#6b7280" />
+        <ChevronDown size={14} color='#a1a1aa' />
       </TouchableOpacity>
-      <Modal visible={open} transparent animationType="slide">
-        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setOpen(false)}>
+      <Modal visible={open} transparent animationType='slide'>
+        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => setOpen(false)}>
           <Pressable onPress={() => {}}>
-            <View className="bg-white rounded-t-2xl max-h-64">
-              <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-                <Text className="font-semibold">{label}</Text>
+            <View className='bg-white dark:bg-zinc-900 rounded-t-2xl max-h-64'>
+              <View className='flex-row items-center justify-between px-4 py-3 border-b border-stone-100 dark:border-zinc-800'>
+                <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>{label}</Text>
                 <TouchableOpacity onPress={() => setOpen(false)}>
-                  <X size={18} color="#6b7280" />
+                  <X size={18} color='#71717a' />
                 </TouchableOpacity>
               </View>
               <ScrollView>
                 {options.map(opt => (
                   <TouchableOpacity
                     key={String(opt.value)}
-                    className={`px-4 py-3 border-b border-gray-50 ${opt.value === value ? 'bg-gray-50' : ''}`}
+                    className={`px-4 py-3 border-b border-stone-50 dark:border-zinc-800 ${opt.value === value ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}
                     onPress={() => { onChange(opt.value); setOpen(false) }}
                   >
-                    <Text className={opt.value === value ? 'font-semibold' : 'text-gray-700'}>
+                    <Text className={`font-sans ${opt.value === value ? 'font-sans-semibold text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>
                       {opt.label}
                     </Text>
                   </TouchableOpacity>
@@ -137,27 +137,25 @@ export default function MovimientosScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="w-11/12 self-center mt-4 gap-3">
-        {/* Header */}
-        <View className="flex-row items-center justify-between">
+    <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
+      <View className='w-11/12 self-center mt-4 gap-3'>
+        <View className='flex-row items-center justify-between'>
           <View>
-            <Text className="text-2xl font-bold">Movimientos</Text>
-            <Text className="text-gray-500 text-sm">Historial de entradas y salidas</Text>
+            <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Movimientos</Text>
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>Historial de entradas y salidas</Text>
           </View>
           <TouchableOpacity
-            className="flex-row items-center gap-1 bg-black px-4 py-2 rounded-lg"
+            className='flex-row items-center gap-1 bg-indigo-500 px-4 py-2 rounded-xl'
             onPress={() => setModalOpen(true)}
           >
-            <Plus size={16} color="#fff" />
-            <Text className="text-white font-semibold">Registrar</Text>
+            <Plus size={16} color='#fff' />
+            <Text className='text-white font-sans-semibold'>Registrar</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Filter */}
         <SimpleSelect
-          label="Filtrar por sucursal"
-          placeholder="Todas las sucursales"
+          label='Filtrar por sucursal'
+          placeholder='Todas las sucursales'
           options={branchOptions}
           value={filterSucursalId ?? ''}
           onChange={v => setFilterSucursalId(v as number)}
@@ -165,24 +163,23 @@ export default function MovimientosScreen() {
 
         {filterSucursalId != null && (
           <TouchableOpacity onPress={() => setFilterSucursalId(undefined)}>
-            <Text className="text-blue-500 text-sm">Ver todas</Text>
+            <Text className='text-indigo-500 dark:text-indigo-400 text-sm font-sans'>Ver todas</Text>
           </TouchableOpacity>
         )}
 
-        {loading && <ActivityIndicator className="mt-4" />}
-        {error && <Text className="text-red-500 text-sm">{error}</Text>}
+        {loading && <ActivityIndicator className='mt-4' />}
+        {error && <Text className='text-red-500 text-sm font-sans'>{error}</Text>}
 
-        {/* List */}
-        <ScrollView showsVerticalScrollIndicator={false} className="mb-4">
+        <ScrollView showsVerticalScrollIndicator={false} className='mb-4'>
           {movimientos.length === 0 && !loading && (
-            <Text className="text-gray-400 text-center mt-8">Sin movimientos</Text>
+            <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-center mt-8'>Sin movimientos</Text>
           )}
           {movimientos.map(m => (
-            <View key={m.id} className="bg-white rounded-xl p-4 mb-2 border border-gray-100">
-              <View className="flex-row items-start justify-between">
-                <View className="flex-1">
-                  <Text className="font-semibold text-gray-900">{m.productoNombre}</Text>
-                  <Text className="text-gray-500 text-sm mt-0.5">{m.sucursalNombre}</Text>
+            <View key={m.id} className='bg-white dark:bg-zinc-900 rounded-2xl p-4 mb-2 border border-stone-100 dark:border-zinc-800'>
+              <View className='flex-row items-start justify-between'>
+                <View className='flex-1'>
+                  <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>{m.productoNombre}</Text>
+                  <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm mt-0.5'>{m.sucursalNombre}</Text>
                 </View>
                 <View className={`px-2 py-0.5 rounded-full ${m.tipoMovimiento === 'ENTRADA' ? 'bg-green-100' : 'bg-red-100'}`}>
                   <Text className={`text-xs font-semibold ${m.tipoMovimiento === 'ENTRADA' ? 'text-green-700' : 'text-red-700'}`}>
@@ -190,86 +187,88 @@ export default function MovimientosScreen() {
                   </Text>
                 </View>
               </View>
-              <View className="flex-row items-center justify-between mt-2">
-                <Text className="text-gray-400 text-xs">{m.usuarioNombre}</Text>
-                <Text className="text-gray-400 text-xs">{formatFecha(m.fecha)}</Text>
+              <View className='flex-row items-center justify-between mt-2'>
+                <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{m.usuarioNombre}</Text>
+                <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{formatFecha(m.fecha)}</Text>
               </View>
               {m.referencia && (
-                <Text className="text-gray-400 text-xs mt-1">Ref: {m.referencia}</Text>
+                <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs mt-1'>Ref: {m.referencia}</Text>
               )}
             </View>
           ))}
         </ScrollView>
       </View>
 
-      {/* Register modal */}
-      <Modal visible={modalOpen} transparent animationType="slide">
-        <Pressable className="flex-1 bg-black/40 justify-end" onPress={() => setModalOpen(false)}>
+      <Modal visible={modalOpen} transparent animationType='slide'>
+        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => setModalOpen(false)}>
           <Pressable onPress={() => {}}>
-            <View className="bg-white rounded-t-2xl p-6 gap-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xl font-bold">Nuevo movimiento</Text>
+            <View className='bg-white dark:bg-zinc-900 rounded-t-2xl p-6 gap-4'>
+              <View className='flex-row items-center justify-between'>
+                <Text className='font-sans-bold text-xl text-zinc-900 dark:text-zinc-50'>Nuevo movimiento</Text>
                 <TouchableOpacity onPress={() => setModalOpen(false)}>
-                  <X size={20} color="#6b7280" />
+                  <X size={20} color='#71717a' />
                 </TouchableOpacity>
               </View>
 
               <SimpleSelect
-                label="Sucursal"
-                placeholder="Seleccionar sucursal..."
+                label='Sucursal'
+                placeholder='Seleccionar sucursal...'
                 options={branchOptions}
                 value={form.sucursalId ? Number(form.sucursalId) : ''}
                 onChange={v => setForm(p => ({ ...p, sucursalId: String(v) }))}
               />
 
-              <View className="gap-1">
-                <Text className="text-sm font-medium text-gray-700">ID Producto</Text>
+              <View className='gap-1'>
+                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>ID Producto</Text>
                 <TextInput
-                  className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900"
+                  className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                   value={form.productoId}
                   onChangeText={v => setForm(p => ({ ...p, productoId: v }))}
-                  keyboardType="numeric"
-                  placeholder="Ej. 1"
+                  keyboardType='numeric'
+                  placeholder='Ej. 1'
+                  placeholderTextColor='#a1a1aa'
                 />
               </View>
 
               <SimpleSelect
-                label="Tipo de movimiento"
+                label='Tipo de movimiento'
                 options={tipoOptions}
                 value={form.tipo}
                 onChange={v => setForm(p => ({ ...p, tipo: v as TipoMovimiento }))}
               />
 
-              <View className="gap-1">
-                <Text className="text-sm font-medium text-gray-700">Cantidad</Text>
+              <View className='gap-1'>
+                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Cantidad</Text>
                 <TextInput
-                  className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900"
+                  className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                   value={form.cantidad}
                   onChangeText={v => setForm(p => ({ ...p, cantidad: v }))}
-                  keyboardType="numeric"
-                  placeholder="Ej. 10"
+                  keyboardType='numeric'
+                  placeholder='Ej. 10'
+                  placeholderTextColor='#a1a1aa'
                 />
               </View>
 
-              <View className="gap-1">
-                <Text className="text-sm font-medium text-gray-700">Referencia (opcional)</Text>
+              <View className='gap-1'>
+                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Referencia (opcional)</Text>
                 <TextInput
-                  className="border border-gray-200 rounded-lg px-3 py-2.5 text-gray-900"
+                  className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                   value={form.referencia}
                   onChangeText={v => setForm(p => ({ ...p, referencia: v }))}
-                  placeholder="Ej. Compra #001"
+                  placeholder='Ej. Compra #001'
+                  placeholderTextColor='#a1a1aa'
                 />
               </View>
 
               <TouchableOpacity
-                className="bg-black rounded-lg py-3.5 items-center mt-1"
+                className='bg-indigo-500 rounded-xl py-3.5 items-center mt-1'
                 onPress={handleRegistrar}
                 disabled={creating}
               >
                 {creating ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color='#fff' />
                 ) : (
-                  <Text className="text-white font-semibold text-base">Registrar movimiento</Text>
+                  <Text className='text-white font-sans-semibold text-base'>Registrar movimiento</Text>
                 )}
               </TouchableOpacity>
             </View>

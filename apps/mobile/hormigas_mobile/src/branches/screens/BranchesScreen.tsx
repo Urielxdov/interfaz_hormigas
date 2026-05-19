@@ -30,8 +30,8 @@ export default function BranchesScreen () {
   }
 
   return (
-    <View>
-      <View className='w-11/12 self-center gap-2'>
+    <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
+      <View className='w-11/12 self-center gap-2 pt-4'>
         <View
           className={`flex ${
             isTablet
@@ -40,8 +40,8 @@ export default function BranchesScreen () {
           }`}
         >
           <View>
-            <Text className='text-2xl font-bold'>Sucursales</Text>
-            <Text className='text-gray-400'>
+            <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Sucursales</Text>
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400'>
               Gestiona las sucursales de tu organizacion
             </Text>
           </View>

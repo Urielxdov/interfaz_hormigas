@@ -50,8 +50,8 @@ export default function ProductHomeScreen () {
   })
 
   return (
-    <View>
-      <View className='w-11/12 self-center gap-2'>
+    <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
+      <View className='w-11/12 self-center gap-2 pt-4'>
         <View
           className={`flex ${
             isTablet
@@ -60,8 +60,8 @@ export default function ProductHomeScreen () {
           }`}
         >
           <View>
-            <Text className='text-2xl font-bold'>Productos</Text>
-            <Text className='text-gray-400'>
+            <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Productos</Text>
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400'>
               Gestiona tu catálogo de productos
             </Text>
           </View>
@@ -131,7 +131,7 @@ export default function ProductHomeScreen () {
                       setSelectedProduct(row)
                       setModal(true)
                     }}
-                    bgColor='bg-blue-500'
+                    bgColor='bg-indigo-500'
                     icon={Pencil}
                     iconSize={18}
                     compact
