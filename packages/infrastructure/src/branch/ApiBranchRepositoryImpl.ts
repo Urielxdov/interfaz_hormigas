@@ -6,6 +6,8 @@ type SucursalServerDTO = {
     nombre: string
     direccion?: string
     activa: boolean
+    encargadoId?: number
+    encargadoNombre?: string
 }
 
 function toDTO(row: SucursalServerDTO): BranchItemListDTO {
@@ -13,7 +15,8 @@ function toDTO(row: SucursalServerDTO): BranchItemListDTO {
         id: BigInt(row.id),
         nombre: row.nombre,
         direccion: row.direccion,
-        responsable: '',
+        responsable: row.encargadoNombre,
+        encargadoId: row.encargadoId,
         activa: row.activa,
     }
 }
@@ -30,6 +33,7 @@ export class ApiBranchRepositoryImpl implements IApiBranchRepository {
         const row = await this.http.post<SucursalServerDTO>('/api/sucursal/crear', {
             nombre: dto.nombre,
             direccion: dto.direccion,
+            encargadoId: dto.encargadoId ?? null,
         })
         return toDTO(row)
     }

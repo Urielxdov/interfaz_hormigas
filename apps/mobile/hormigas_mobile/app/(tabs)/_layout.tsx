@@ -12,10 +12,11 @@ type TabConfig = {
 };
 
 const TABS: TabConfig[] = [
-  { name: 'home',     focusedIcon: 'home',     unfocusedIcon: 'home-outline' },
-  { name: 'branche',  focusedIcon: 'business', unfocusedIcon: 'business-outline' },
-  { name: 'products', focusedIcon: 'cube',     unfocusedIcon: 'cube-outline' },
-  { name: 'users',    focusedIcon: 'people',   unfocusedIcon: 'people-outline' },
+  { name: 'home',        focusedIcon: 'home',          unfocusedIcon: 'home-outline' },
+  { name: 'branche',     focusedIcon: 'business',      unfocusedIcon: 'business-outline' },
+  { name: 'movimientos', focusedIcon: 'swap-vertical', unfocusedIcon: 'swap-vertical-outline' },
+  { name: 'products',    focusedIcon: 'cube',          unfocusedIcon: 'cube-outline' },
+  { name: 'users',       focusedIcon: 'people',        unfocusedIcon: 'people-outline' },
 ];
 
 export default function TabLayout() {

@@ -2,6 +2,7 @@ export interface CreateBranchDTO {
   nombre: string
   direccion?: string
   activa: boolean
+  encargadoId?: number
 }
 
 export interface BranchItemListDTO {
@@ -9,5 +10,6 @@ export interface BranchItemListDTO {
   nombre: string
   direccion?: string
   responsable?: string
+  encargadoId?: number
   activa: boolean
 }
