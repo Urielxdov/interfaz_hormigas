@@ -21,40 +21,40 @@ export default function SelectField ({ label, placeholder, options, value, onCha
   const selected = options.find(o => o.value === value)
 
   return (
-    <View className='gap-1'>
-      <Text className='text-sm font-medium text-gray-700'>{label}</Text>
+    <View className='gap-1 mb-2'>
+      <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>{label}</Text>
       <TouchableOpacity
-        className='border border-gray-300 rounded-lg px-3 py-3 flex-row items-center justify-between bg-white'
+        className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3.5 py-3.5 flex-row items-center justify-between bg-white dark:bg-zinc-800'
         onPress={() => setOpen(true)}
       >
-        <Text className={selected ? 'text-gray-900' : 'text-gray-400'}>
+        <Text className={`font-sans ${selected ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-400'}`}>
           {selected ? selected.label : (placeholder ?? 'Seleccionar...')}
         </Text>
-        <ChevronDown size={16} color='#6b7280' />
+        <ChevronDown size={16} color='#a1a1aa' />
       </TouchableOpacity>
-      {error && <Text className='text-red-500 text-xs'>{error}</Text>}
+      {error && <Text className='text-red-500 text-xs font-sans'>{error}</Text>}
 
       <Modal visible={open} transparent animationType='slide'>
-        <Pressable className='flex-1 bg-black/40 justify-end' onPress={() => setOpen(false)}>
+        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => setOpen(false)}>
           <Pressable onPress={() => {}}>
-            <View className='bg-white rounded-t-2xl max-h-96'>
-              <View className='flex-row items-center justify-between px-4 py-3 border-b border-gray-100'>
-                <Text className='text-base font-semibold'>{label}</Text>
+            <View className='bg-white dark:bg-zinc-900 rounded-t-2xl max-h-96'>
+              <View className='flex-row items-center justify-between px-4 py-3 border-b border-stone-100 dark:border-zinc-800'>
+                <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50 text-base'>{label}</Text>
                 <TouchableOpacity onPress={() => setOpen(false)}>
-                  <X size={20} color='#6b7280' />
+                  <X size={20} color='#71717a' />
                 </TouchableOpacity>
               </View>
               <ScrollView>
                 {options.map(opt => (
                   <TouchableOpacity
                     key={String(opt.value)}
-                    className={`px-4 py-3.5 border-b border-gray-50 ${opt.value === value ? 'bg-gray-50' : ''}`}
+                    className={`px-4 py-3.5 border-b border-stone-50 dark:border-zinc-800 ${opt.value === value ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}
                     onPress={() => {
                       onChange(opt.value)
                       setOpen(false)
                     }}
                   >
-                    <Text className={`text-base ${opt.value === value ? 'font-semibold text-gray-900' : 'text-gray-700'}`}>
+                    <Text className={`font-sans text-base ${opt.value === value ? 'font-sans-semibold text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>
                       {opt.label}
                     </Text>
                   </TouchableOpacity>

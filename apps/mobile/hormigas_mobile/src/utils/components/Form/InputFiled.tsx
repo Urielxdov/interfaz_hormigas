@@ -1,4 +1,4 @@
-import { Ref } from 'react'
+import { Ref, useState } from 'react'
 import {
   KeyboardTypeOptions,
   Switch,
@@ -37,29 +37,35 @@ export default function InputField({
   keyboardType,
   autoCapitalize,
 }: InputFieldProps) {
+  const [focused, setFocused] = useState(false)
 
-  // Boolean → Switch
   if (typeof value === 'boolean') {
     return (
-      <View className='flex-row items-center justify-between w-full mb-4'>
-        <Text className='text-left text-gray-700 font-semibold'>{label}</Text>
+      <View className='flex-row items-center justify-between w-full mb-2'>
+        <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>{label}</Text>
         <Switch
           value={value}
           onValueChange={(val) => onChangeText(val)}
+          thumbColor='#6366f1'
+          trackColor={{ true: '#a5b4fc', false: '#d4d4d8' }}
         />
       </View>
     )
   }
 
-  // Number → TextInput con keyboardType numérico
+  const borderClass = focused
+    ? 'border-indigo-500'
+    : 'border-stone-200 dark:border-zinc-700'
+
   if (typeof value === 'number') {
     return (
-      <View className='flex gap-1 w-full'>
-        <Text className='text-left text-gray-700 font-semibold'>{label}</Text>
+      <View className='gap-1 w-full mb-2'>
+        <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>{label}</Text>
         <TextInput
           ref={inputRef}
-          className='w-full mb-4 p-4 border border-gray-300 rounded-lg bg-white'
+          className={`w-full p-3.5 border ${borderClass} rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 font-sans`}
           placeholder={placeholder}
+          placeholderTextColor='#a1a1aa'
           value={String(value)}
           onChangeText={(text) => {
             const parsed = parseFloat(text)
@@ -70,19 +76,21 @@ export default function InputField({
           onSubmitEditing={onSubmitEditingProp}
           blurOnSubmit={blurOnSubmitProp}
           autoCapitalize={autoCapitalize}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
         />
       </View>
     )
   }
 
-  // String → TextInput normal
   return (
-    <View className='flex gap-1 w-full'>
-      <Text className='text-left text-gray-700 font-semibold'>{label}</Text>
+    <View className='gap-1 w-full mb-2'>
+      <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>{label}</Text>
       <TextInput
         ref={inputRef}
-        className='w-full mb-4 p-4 border border-gray-300 rounded-lg bg-white'
+        className={`w-full p-3.5 border ${borderClass} rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 font-sans`}
         placeholder={placeholder}
+        placeholderTextColor='#a1a1aa'
         secureTextEntry={secureText}
         value={value}
         onChangeText={(text) => onChangeText(text)}
@@ -91,6 +99,8 @@ export default function InputField({
         blurOnSubmit={blurOnSubmitProp}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
       />
     </View>
   )
