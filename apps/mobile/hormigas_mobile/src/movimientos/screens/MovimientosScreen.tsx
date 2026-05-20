@@ -102,6 +102,7 @@ export default function MovimientosScreen() {
   const { branches } = useBranches()
   const { movimientos, loading, error, creating, registrar, recargar } = useMovimientos(filterSucursalId)
 
+  // useProducts() exposes localId (UUID); movimientos API needs the numeric server_id via categoriaId
   const [allProducts, setAllProducts] = useState<Product[]>([])
 
   useEffect(() => {
@@ -116,7 +117,7 @@ export default function MovimientosScreen() {
     .map(p => ({
       label: p.nombre,
       sublabel: p.sku,
-      value: String(p.categoriaId),
+      value: String(p.categoriaId), // server numeric ID, round-trips correctly through Number()
     }))
 
   const branchOptions = branches.map(b => ({ label: b.nombre, value: Number(b.id) }))
@@ -243,7 +244,7 @@ export default function MovimientosScreen() {
                 placeholder='Buscar producto...'
                 options={productOptions}
                 value={form.productoId}
-                onChange={v => setForm(p => ({ ...p, productoId: v }))}
+                onChange={v => setForm(p => ({ ...p, productoId: String(v) }))}
               />
 
               <SimpleSelect
