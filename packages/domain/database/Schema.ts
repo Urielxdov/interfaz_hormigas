@@ -33,11 +33,15 @@ export const CREATE_TABLES_SQL = `
   CREATE TABLE IF NOT EXISTS inventario (
     id INTEGER PRIMARY KEY,
     producto_id INTEGER NOT NULL,
+    producto_nombre TEXT NOT NULL DEFAULT '',
     sucursal_id INTEGER NOT NULL,
+    sucursal_nombre TEXT NOT NULL DEFAULT '',
+    precio REAL,
     stock_actual INTEGER NOT NULL DEFAULT 0,
-    stock_minimo INTEGER,
+    stock_minimo INTEGER NOT NULL DEFAULT 0,
     stock_maximo INTEGER NOT NULL,
     ultima_actualizacion TEXT,
+    synced_at INTEGER NOT NULL DEFAULT 0,
     UNIQUE (sucursal_id, producto_id),
     FOREIGN KEY (sucursal_id) REFERENCES sucursal(id)
   );
