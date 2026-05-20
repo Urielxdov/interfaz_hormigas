@@ -1,4 +1,4 @@
-import { ILocalInventaryRepository } from '@hormigas/application'
+import { ILocalInventaryRepository, IInventarioLocalRepo, InventarioLocalRow } from '@hormigas/application'
 import { DatabaseClient } from '../../db/contracts/DatabaseClient'
 
 type StockRow = {
@@ -10,7 +10,7 @@ type StockRow = {
     stock_actual: number
 }
 
-export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository {
+export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, IInventarioLocalRepo {
     constructor(private db: DatabaseClient) {}
 
     async decrementStock(productoLocalId: string, sucursalServerId: number, cantidad: number): Promise<void> {
@@ -72,5 +72,60 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository {
              VALUES (?, ?, ?, ?, ?, ?)`,
             [inventarioId, productoServerId, sucursalServerId, stockActual, stockMinimo, stockMaximo]
         )
+    }
+
+    async applyMovement(
+        productoServerId: number,
+        sucursalServerId: number,
+        tipo: 'ENTRADA' | 'SALIDA',
+        cantidad: number
+    ): Promise<void> {
+        const delta = tipo === 'ENTRADA' ? cantidad : -cantidad
+        await this.db.run(
+            `UPDATE inventario
+             SET stock_actual = MAX(0, stock_actual + ?)
+             WHERE producto_id = ? AND sucursal_id = ?`,
+            [delta, productoServerId, sucursalServerId]
+        )
+    }
+
+    async getSucursalIds(): Promise<number[]> {
+        const rows = await this.db.getMany<{ sucursal_id: number }>(
+            `SELECT DISTINCT sucursal_id FROM inventario`
+        )
+        return rows.map(r => r.sucursal_id)
+    }
+
+    async getLowStockItems(): Promise<InventarioLocalRow[]> {
+        const rows = await this.db.getMany<{
+            id: number
+            producto_id: number
+            producto_nombre: string
+            sucursal_id: number
+            sucursal_nombre: string
+            stock_actual: number
+            stock_minimo: number
+            stock_maximo: number
+        }>(
+            `SELECT i.id, i.producto_id,
+                    COALESCE(p.nombre, 'Producto #' || i.producto_id) AS producto_nombre,
+                    i.sucursal_id,
+                    COALESCE(s.nombre, 'Sucursal #' || i.sucursal_id) AS sucursal_nombre,
+                    i.stock_actual, i.stock_minimo, i.stock_maximo
+             FROM inventario i
+             LEFT JOIN producto p ON p.server_id = i.producto_id
+             LEFT JOIN sucursal s ON s.id = i.sucursal_id
+             WHERE i.stock_minimo IS NOT NULL AND i.stock_actual <= i.stock_minimo`
+        )
+        return rows.map(r => ({
+            id: r.id,
+            productoId: r.producto_id,
+            productoNombre: r.producto_nombre,
+            sucursalId: r.sucursal_id,
+            sucursalNombre: r.sucursal_nombre,
+            stockActual: r.stock_actual,
+            stockMinimo: r.stock_minimo,
+            stockMaximo: r.stock_maximo,
+        }))
     }
 }

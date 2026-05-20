@@ -22,6 +22,7 @@ export * from './sync/sync.manager'
 
 // Services
 export * from './services/product.service'
+export * from './services/movimiento.service'
 
 // Factories
 export * from './factories/createUserService'
