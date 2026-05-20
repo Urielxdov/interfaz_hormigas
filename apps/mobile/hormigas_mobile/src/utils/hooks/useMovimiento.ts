@@ -16,7 +16,7 @@ export function useMovimiento() {
       return await svc.registrar(dto, isOnline)
     } catch (e) {
       setError(String(e))
-      return null
+      throw e
     } finally {
       setLoading(false)
     }

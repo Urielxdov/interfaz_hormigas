@@ -36,14 +36,18 @@ export default function MovimientoScreen({
       Alert.alert('Error', 'La cantidad debe ser mayor a 0')
       return
     }
-    const result = await registrar({
-      sucursalId,
-      productoId,
-      tipoMovimiento: tipo,
-      cantidad: n,
-      referencia: referencia.trim() || undefined,
-    } satisfies CrearMovimientoDTO)
-    onSuccess(result)
+    try {
+      const result = await registrar({
+        sucursalId,
+        productoId,
+        tipoMovimiento: tipo,
+        cantidad: n,
+        referencia: referencia.trim() || undefined,
+      } satisfies CrearMovimientoDTO)
+      onSuccess(result)
+    } catch {
+      // error state set by hook — screen stays visible so user sees the message
+    }
   }
 
   return (
