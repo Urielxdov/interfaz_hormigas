@@ -22,6 +22,7 @@ interface Props<T extends string | number> {
   options: SearchableSelectOption<T>[]
   onChange: (v: T) => void
   placeholder?: string
+  emptyMessage?: string
 }
 
 export function SearchableSelect<T extends string | number>({
@@ -30,6 +31,7 @@ export function SearchableSelect<T extends string | number>({
   options,
   onChange,
   placeholder,
+  emptyMessage = 'Sin resultados',
 }: Props<T>) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -99,7 +101,7 @@ export function SearchableSelect<T extends string | number>({
 
               {filtered.length === 0 ? (
                 <View className='px-4 py-8 items-center'>
-                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-sm'>Sin productos disponibles</Text>
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-sm'>{emptyMessage}</Text>
                 </View>
               ) : (
                 <FlatList

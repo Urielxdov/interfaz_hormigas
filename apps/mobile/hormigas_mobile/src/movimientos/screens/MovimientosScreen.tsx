@@ -104,12 +104,16 @@ export default function MovimientosScreen() {
 
   // useProducts() exposes localId (UUID); movimientos API needs the numeric server_id via categoriaId
   const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [loadingProducts, setLoadingProducts] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
+    setLoadingProducts(true)
     getProductService()
       .then(svc => svc.findAll())
-      .then(data => setAllProducts(data))
-      .catch(e => console.error('[MovimientosScreen] loadProducts:', e))
+      .then(data => { if (!cancelled) { setAllProducts(data); setLoadingProducts(false) } })
+      .catch(e => { if (!cancelled) { console.error('[MovimientosScreen] loadProducts:', e); setLoadingProducts(false) } })
+    return () => { cancelled = true }
   }, [])
 
   const productOptions = allProducts
@@ -245,6 +249,7 @@ export default function MovimientosScreen() {
                 options={productOptions}
                 value={form.productoId}
                 onChange={v => setForm(p => ({ ...p, productoId: String(v) }))}
+                emptyMessage={loadingProducts ? 'Cargando productos...' : 'Sin resultados'}
               />
 
               <SimpleSelect
