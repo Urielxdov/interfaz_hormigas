@@ -121,7 +121,7 @@ export default function BranchesScreen () {
           data={mappedBranches}
         />
 
-        <BranchSummaryScreen />
+        <BranchSummaryScreen branches={branches} />
       </View>
 
       <Modal isOpen={modal} onClose={closeModal}>
