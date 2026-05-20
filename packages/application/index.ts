@@ -27,6 +27,7 @@ export * from './services/movimiento.service'
 // Factories
 export * from './factories/createUserService'
 export * from './factories/createProductService'
+export * from './factories/createMovimientoService'
 
 // Utils
 export * from './utils/uuid'
