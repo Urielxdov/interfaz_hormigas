@@ -1,13 +1,27 @@
-import LowStockSection from '@/src/home/components/LowStockSection'
 import MetricsSection from '@/src/home/components/MetricsSection'
+import LowStockSection from '@/src/home/components/LowStockSection'
+import BranchSummaryScreen from '../components/BranchSummaryScreen'
 import { useAuth } from '@/src/login/hooks/useAuth'
+import { useProducts } from '@/src/utils/hooks/useProducts'
+import { useBranches } from '@/src/utils/hooks/useBranch'
+import { useSyncQueueStatus } from '@/src/utils/hooks/useSyncQueueStatus'
+import { useInventario } from '@/src/utils/hooks/useInventario'
+import { useSyncManager } from '@/src/utils/hooks/useSyncManager'
 import { router } from 'expo-router'
 import { LogOut } from 'lucide-react-native'
+import { useCallback } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import BranchSummaryScreen from '../components/BranchSummaryScreen'
+import { useFocusEffect } from '@react-navigation/native'
 
-export default function HomeScreen () {
+export default function HomeScreen() {
   const { logout } = useAuth()
+  const { products } = useProducts()
+  const { branches } = useBranches()
+  const { pendingCount } = useSyncQueueStatus()
+  const { lowStockItems, loading: loadingStock, refresh: refreshStock } = useInventario()
+  useSyncManager()
+
+  useFocusEffect(useCallback(() => { refreshStock() }, []))
 
   const handleLogout = async () => {
     await logout()
@@ -23,9 +37,13 @@ export default function HomeScreen () {
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        <MetricsSection />
-        <LowStockSection />
-        <BranchSummaryScreen />
+        <MetricsSection
+          totalProductos={products.filter(p => p.estado).length}
+          totalSucursales={branches.filter(b => b.activa).length}
+          pendienteSync={pendingCount}
+        />
+        <LowStockSection items={lowStockItems} loading={loadingStock} />
+        <BranchSummaryScreen branches={branches} />
       </ScrollView>
     </View>
   )
