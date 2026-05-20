@@ -7,10 +7,11 @@ import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
 import { Building, Pencil, Power } from 'lucide-react-native'
 import { useState } from 'react'
-import { Text, View } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
+import { router } from 'expo-router'
 
 export default function BranchesScreen () {
   const [modal, setModal] = useState(false)
@@ -60,7 +61,19 @@ export default function BranchesScreen () {
           columns={[
             {
               key: 'nombre',
-              label: 'Nombre'
+              label: 'Nombre',
+              render: (val, row) => (
+                <TouchableOpacity
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(branche)/[sucursalId]/inventario',
+                      params: { sucursalId: String(row.id), sucursalNombre: row.nombre },
+                    })
+                  }
+                >
+                  <Text className="text-indigo-600 underline">{String(val)}</Text>
+                </TouchableOpacity>
+              )
             },
             {
               key: 'direccion',
