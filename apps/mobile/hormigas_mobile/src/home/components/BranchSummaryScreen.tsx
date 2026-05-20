@@ -1,96 +1,57 @@
 import DataTable from '@/src/utils/components/DataTable'
+import { BranchItemListDTO } from '@hormigas/application'
 import { Building2 } from 'lucide-react-native'
 import { Text, View } from 'react-native'
 
-const sucursales = [
-  {
-    nombre: 'Centro',
-    totalProductos: 847,
-    stockBajo: 8,
-    valorInventario: '$1,245,800',
-    movimiento: '+12.5%',
-    estado: 'Optimo'
-  },
-  {
-    nombre: 'Norte',
-    totalProductos: 623,
-    stockBajo: 5,
-    valorInventario: '$892,400',
-    movimiento: '+8.3%',
-    estado: 'Optimo'
-  },
-  {
-    nombre: 'Sur',
-    totalProductos: 456,
-    stockBajo: 12,
-    valorInventario: '$645,200',
-    movimiento: '+5.1%',
-    estado: 'Atencion'
-  },
-  {
-    nombre: 'Este',
-    totalProductos: 534,
-    stockBajo: 3,
-    valorInventario: '$756,900',
-    movimiento: '+15.2%',
-    estado: 'Optimo'
-  },
-  {
-    nombre: 'Oeste',
-    totalProductos: 387,
-    stockBajo: 7,
-    valorInventario: '$534,500',
-    movimiento: '+3.8%',
-    estado: 'Optimo'
-  }
-]
-
-const getStatusColor = (estado: string | number): string => {
-  const normalized = String(estado).toLowerCase()
-
-  if (normalized === 'optimo') return 'bg-blue-200 text-blue-600'
-  if (normalized === 'atencion') return 'bg-orange-200 text-orange-600'
-  if (normalized === 'bajo') return 'bg-red-200 text-red-600'
-
-  return 'text-gray-500'
+interface BranchSummaryProps {
+  branches: BranchItemListDTO[]
 }
 
-export default function BranchSummaryScreen () {
+export default function BranchSummaryScreen({ branches }: BranchSummaryProps) {
   return (
     <DataTable
-      title='Resumen por Sucursal'
-      description='Vista general del inventario en cada ubicacion'
+      title='Sucursales'
+      description='Estado de cada ubicación'
       icon={Building2}
       columns={[
         {
           key: 'nombre',
           label: 'Sucursal',
           render: val => (
-            <View className='flex flex-row items-center gap-1'>
+            <View className='flex-row items-center gap-1'>
               <View className='rounded-xl bg-blue-100 p-1'>
-                <Building2 size={24} color='#1d4ed8' />
+                <Building2 size={18} color='#1d4ed8' />
               </View>
-              <Text>{val}</Text>
+              <Text className='font-sans text-zinc-800 dark:text-zinc-200 text-sm'>{val}</Text>
             </View>
-          )
+          ),
         },
-        { key: 'totalProductos', label: 'Total Productos' },
-        { key: 'stockBajo', label: 'Stock Bajo' },
-        { key: 'valorInventario', label: 'Valor inventario' },
-        { key: 'movimiento', label: 'Movimiento' },
         {
-          key: 'estado',
+          key: 'responsable',
+          label: 'Responsable',
+          render: val => (
+            <Text className='font-sans text-zinc-600 dark:text-zinc-400 text-sm'>
+              {val ?? '—'}
+            </Text>
+          ),
+        },
+        {
+          key: 'activa',
           label: 'Estado',
           render: val => (
-            <View>
-              <Text className={`${getStatusColor(val)} rounded-xl p-1 text-center font-semibold`}>
-                {val}
+            <View className={`rounded-xl px-2 py-0.5 self-start ${val ? 'bg-green-100' : 'bg-zinc-100 dark:bg-zinc-800'}`}>
+              <Text className={`font-sans-semibold text-xs ${val ? 'text-green-700' : 'text-zinc-500'}`}>
+                {val ? 'Activa' : 'Inactiva'}
               </Text>
             </View>
-          )
-        }
+          ),
+        },
       ]}
-      data={sucursales}
+      data={branches.map(b => ({
+        nombre: b.nombre,
+        responsable: b.responsable,
+        activa: b.activa,
+      }))}
     />
   )
 }
