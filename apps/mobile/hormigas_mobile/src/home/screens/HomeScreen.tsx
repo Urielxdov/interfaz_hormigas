@@ -21,7 +21,7 @@ export default function HomeScreen() {
   const { lowStockItems, loading: loadingStock, refresh: refreshStock } = useInventario()
   useSyncManager()
 
-  useFocusEffect(useCallback(() => { refreshStock() }, []))
+  useFocusEffect(useCallback(() => { refreshStock() }, [refreshStock]))
 
   const handleLogout = async () => {
     await logout()

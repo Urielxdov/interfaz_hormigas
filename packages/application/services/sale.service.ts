@@ -15,7 +15,7 @@ export interface ILocalInventaryRepository {
         precio: number
         stockActual: number
     }[]>
-    upsertFromServer(inventarioId: number, productoServerId: number, sucursalServerId: number, stockActual: number): Promise<void>
+    upsertFromServer(inventarioId: number, productoServerId: number, sucursalServerId: number, stockActual: number, stockMinimo?: number, stockMaximo?: number): Promise<void>
 }
 
 export class SaleService {
