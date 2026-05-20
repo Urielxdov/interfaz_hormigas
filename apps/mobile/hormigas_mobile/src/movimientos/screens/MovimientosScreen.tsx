@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -13,6 +13,9 @@ import {
 import { ChevronDown, Plus, X } from 'lucide-react-native'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
+import type { Product } from '@hormigas/domain'
+import { getProductService } from '@/src/adapters/productServiceInstance'
+import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
 
 type TipoMovimiento = 'ENTRADA' | 'SALIDA'
 
@@ -98,6 +101,23 @@ export default function MovimientosScreen() {
 
   const { branches } = useBranches()
   const { movimientos, loading, error, creating, registrar, recargar } = useMovimientos(filterSucursalId)
+
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+
+  useEffect(() => {
+    getProductService()
+      .then(svc => svc.findAll())
+      .then(data => setAllProducts(data))
+      .catch(e => console.error('[MovimientosScreen] loadProducts:', e))
+  }, [])
+
+  const productOptions = allProducts
+    .filter(p => p.categoriaId !== undefined)
+    .map(p => ({
+      label: p.nombre,
+      sublabel: p.sku,
+      value: String(p.categoriaId),
+    }))
 
   const branchOptions = branches.map(b => ({ label: b.nombre, value: Number(b.id) }))
   const tipoOptions: { label: string; value: TipoMovimiento }[] = [
@@ -218,17 +238,13 @@ export default function MovimientosScreen() {
                 onChange={v => setForm(p => ({ ...p, sucursalId: String(v) }))}
               />
 
-              <View className='gap-1'>
-                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>ID Producto</Text>
-                <TextInput
-                  className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
-                  value={form.productoId}
-                  onChangeText={v => setForm(p => ({ ...p, productoId: v }))}
-                  keyboardType='numeric'
-                  placeholder='Ej. 1'
-                  placeholderTextColor='#a1a1aa'
-                />
-              </View>
+              <SearchableSelect
+                label='Producto'
+                placeholder='Buscar producto...'
+                options={productOptions}
+                value={form.productoId}
+                onChange={v => setForm(p => ({ ...p, productoId: v }))}
+              />
 
               <SimpleSelect
                 label='Tipo de movimiento'
