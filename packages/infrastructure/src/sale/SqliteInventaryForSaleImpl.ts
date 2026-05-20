@@ -59,11 +59,18 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository {
         }))
     }
 
-    async upsertFromServer(inventarioId: number, productoServerId: number, sucursalServerId: number, stockActual: number): Promise<void> {
+    async upsertFromServer(
+        inventarioId: number,
+        productoServerId: number,
+        sucursalServerId: number,
+        stockActual: number,
+        stockMinimo: number = 0,
+        stockMaximo: number = 9999
+    ): Promise<void> {
         await this.db.run(
-            `INSERT OR REPLACE INTO inventario (id, producto_id, sucursal_id, stock_actual, stock_maximo)
-             VALUES (?, ?, ?, ?, 9999)`,
-            [inventarioId, productoServerId, sucursalServerId, stockActual]
+            `INSERT OR REPLACE INTO inventario (id, producto_id, sucursal_id, stock_actual, stock_minimo, stock_maximo)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [inventarioId, productoServerId, sucursalServerId, stockActual, stockMinimo, stockMaximo]
         )
     }
 }
