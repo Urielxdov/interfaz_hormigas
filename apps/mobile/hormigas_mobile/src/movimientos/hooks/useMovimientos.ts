@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getMovimientoApi, MovimientoDTO, CrearMovimientoDTO } from '@/src/adapters/movimientoApiInstance'
+import { MovimientoDTO, CrearMovimientoDTO } from '@hormigas/application'
 import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
+import { getMovimientoService } from '@/src/adapters/movimientoServiceInstance'
 
-export function useMovimientos(sucursalId?: number) {
+export function useMovimientos(sucursalId?: number, onMovimientoRegistrado?: () => void) {
   const [movimientos, setMovimientos] = useState<MovimientoDTO[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -14,7 +15,8 @@ export function useMovimientos(sucursalId?: number) {
     setLoading(true)
     setError(null)
     try {
-      const data = await getMovimientoApi().listar(sucursalId)
+      const svc = await getMovimientoService()
+      const data = await svc.listar(sucursalId)
       setMovimientos(data)
     } catch {
       setError('Error al cargar movimientos')
@@ -23,16 +25,16 @@ export function useMovimientos(sucursalId?: number) {
     }
   }, [isOnline, sucursalId])
 
-  useEffect(() => {
-    cargar()
-  }, [cargar])
+  useEffect(() => { cargar() }, [cargar])
 
   const registrar = async (dto: CrearMovimientoDTO) => {
     setCreating(true)
     try {
-      const nuevo = await getMovimientoApi().crear(dto)
-      setMovimientos(prev => [nuevo, ...prev])
-      return nuevo
+      const svc = await getMovimientoService()
+      const result = await svc.registrar(dto, isOnline)
+      if (result) setMovimientos(prev => [result, ...prev])
+      onMovimientoRegistrado?.()
+      return result
     } finally {
       setCreating(false)
     }
