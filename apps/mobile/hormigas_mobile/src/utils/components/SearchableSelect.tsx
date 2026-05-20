@@ -111,7 +111,7 @@ export function SearchableSelect<T extends string | number>({
                       className={`px-4 py-3 border-b border-stone-50 dark:border-zinc-800 ${item.value === value ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}
                       onPress={() => handleSelect(item.value)}
                     >
-                      <Text className={`font-sans-medium text-sm ${item.value === value ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                      <Text className={`font-sans-semibold text-sm ${item.value === value ? 'text-indigo-600 dark:text-indigo-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
                         {item.label}
                       </Text>
                       {item.sublabel && (
