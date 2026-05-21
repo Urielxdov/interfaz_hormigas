@@ -1,3 +1,4 @@
+import { fieldRules } from '@/src/utils/validation'
 import { GenericForm } from '@/src/utils/components/Form/GenericForm'
 import { FormFieldConfig } from '@/src/utils/components/Form'
 import { CreateUsuarioDTO } from '@hormigas/application'
@@ -14,30 +15,31 @@ const USER_FORM_FIELDS: FormFieldConfig<UserFormValues>[] = [
     name: 'nombre',
     label: 'Nombre',
     placeholder: 'Ej. Juan García',
-    rules: { required: 'El nombre es obligatorio' }
+    rules: fieldRules.nombre
   },
   {
     name: 'correo',
     label: 'Correo electrónico',
     placeholder: 'Ej. juan@empresa.com',
-    rules: { required: 'El correo es obligatorio' },
+    rules: fieldRules.email,
     autoCapitalize: 'none',
     keyboardType: 'email-address'
   },
   {
     name: 'password',
     label: 'Contraseña',
-    rules: {
-      required: 'La contraseña es obligatoria',
-      minLength: { value: 6, message: 'Mínimo 6 caracteres' }
-    },
+    rules: fieldRules.password,
     secureTextEntry: true
   },
   {
     name: 'sucursalId',
     label: 'ID Sucursal (opcional)',
     placeholder: 'Ej. 1',
-    keyboardType: 'numeric'
+    keyboardType: 'numeric',
+    rules: {
+      maxLength: { value: 10, message: 'Máximo 10 dígitos' },
+      pattern: { value: /^[0-9]*$/, message: 'Solo números' }
+    }
   }
 ]
 

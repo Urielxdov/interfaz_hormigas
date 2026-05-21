@@ -1,3 +1,4 @@
+import { fieldRules } from '@/src/utils/validation'
 import { useAuth, isSuperAdminToken } from '@/src/login/hooks/useAuth'
 import { TokenServiceImpl } from '@hormigas/infrastructure'
 import { storage } from '@/src/adapters/AsyncStorageAdapter'
@@ -22,14 +23,14 @@ const LOGIN_FIELDS: FormFieldConfig<LoginFormValues>[] = [
     label: 'Email',
     placeholder: 'tu@email.com',
     autoCapitalize: 'none',
-    rules: { required: 'El email es obligatorio' }
+    rules: fieldRules.email
   },
   {
     name: 'password',
     label: 'Contrasena',
     placeholder: '********',
     secureTextEntry: true,
-    rules: { required: 'La contrasena es obligatoria' }
+    rules: fieldRules.password
   }
 ]
 

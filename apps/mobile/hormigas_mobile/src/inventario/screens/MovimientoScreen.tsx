@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  ActivityIndicator, Alert
+  ActivityIndicator
 } from 'react-native'
 import type { CrearMovimientoDTO, MovimientoDTO, TipoMovimiento } from '@hormigas/application'
 import { useMovimiento } from '@/src/utils/hooks/useMovimiento'
 import { useMotivo } from '@/src/utils/hooks/useMotivo'
+import { validateCantidad, validateReferencia } from '@/src/utils/validation'
 
 type TipoSimple = Extract<TipoMovimiento, 'COMPRA' | 'VENTA'>
 
@@ -27,18 +28,20 @@ export default function MovimientoScreen({
   const [referencia, setReferencia] = useState('')
   const { registrar, loading, error } = useMovimiento()
   const { motivos } = useMotivo()
+  const [cantidadError, setCantidadError] = useState<string | null>(null)
+  const [referenciaError, setReferenciaError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
-    const n = Number(cantidad)
-    if (!cantidad || n <= 0) {
-      Alert.alert('Error', 'La cantidad debe ser mayor a 0')
-      return
-    }
+    const cantErr = validateCantidad(cantidad)
+    const refErr = validateReferencia(referencia)
+    setCantidadError(cantErr)
+    setReferenciaError(refErr)
+    if (cantErr || refErr) return
     try {
       const result = await registrar({
         inventarioId,
         tipoMovimiento: tipo,
-        cantidad: n,
+        cantidad: parseInt(cantidad, 10),
         referencia: referencia.trim() || undefined,
       } satisfies CrearMovimientoDTO)
       onSuccess(result)
@@ -87,6 +90,7 @@ export default function MovimientoScreen({
           placeholder="0"
           placeholderTextColor="#a1a1aa"
         />
+        {cantidadError && <Text className="text-red-500 text-xs mt-0.5">{cantidadError}</Text>}
       </View>
 
       {/* Motivos (si existen) */}
@@ -112,10 +116,12 @@ export default function MovimientoScreen({
         <TextInput
           value={referencia}
           onChangeText={setReferencia}
+          maxLength={100}
           className="border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-2 bg-white dark:bg-zinc-900 text-base text-zinc-900 dark:text-zinc-50"
           placeholder="Ej. ticket-001"
           placeholderTextColor="#a1a1aa"
         />
+        {referenciaError && <Text className="text-red-500 text-xs mt-0.5">{referenciaError}</Text>}
       </View>
 
       {error != null && (

@@ -1,3 +1,4 @@
+import { fieldRules } from '@/src/utils/validation'
 import { GenericForm } from '@/src/utils/components/Form/GenericForm'
 import { FormFieldConfig } from '@/src/utils/components/Form'
 import SelectField from '@/src/utils/components/SelectField'
@@ -18,28 +19,31 @@ const BRANCH_FORM_FIELDS: FormFieldConfig<BranchFormValues>[] = [
     name: 'nombre',
     label: 'Nombre',
     placeholder: 'Ej. Sucursal Centro',
-    rules: { required: 'El nombre es obligatorio' }
+    rules: fieldRules.nombreLugar
   },
   {
     name: 'direccion',
     label: 'Dirección',
     placeholder: 'Ej. Av. Principal 123',
-    rules: { required: 'La dirección es obligatoria' }
+    rules: fieldRules.direccion
   },
   {
     name: 'codigo',
     label: 'Código',
-    placeholder: 'Ej. CENTRO-01'
+    placeholder: 'Ej. CENTRO-01',
+    rules: fieldRules.codigo
   },
   {
     name: 'telefono',
     label: 'Teléfono',
-    placeholder: 'Ej. 555 123 4567'
+    placeholder: 'Ej. 555 123 4567',
+    rules: fieldRules.telefono
   },
   {
     name: 'ciudad',
     label: 'Ciudad',
-    placeholder: 'Ej. Monterrey'
+    placeholder: 'Ej. Monterrey',
+    rules: fieldRules.ciudad
   }
 ]
 

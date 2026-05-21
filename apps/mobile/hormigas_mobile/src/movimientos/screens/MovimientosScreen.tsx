@@ -16,6 +16,7 @@ import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
 import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
 import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
+import { validateCantidad, validateReferencia } from '@/src/utils/validation'
 
 const TIPOS_SALIDA = new Set<TipoMovimiento>(['VENTA', 'MERMA', 'TRASLADO_SALIDA'])
 const esTipoSalida = (tipo: TipoMovimiento) => TIPOS_SALIDA.has(tipo)
@@ -99,6 +100,8 @@ export default function MovimientosScreen() {
   const [filterSucursalId, setFilterSucursalId] = useState<number | undefined>(undefined)
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
+  const [cantidadError, setCantidadError] = useState<string | null>(null)
+  const [referenciaError, setReferenciaError] = useState<string | null>(null)
 
   const { branches } = useBranches()
   const { movimientos, loading, error, creating, registrar } = useMovimientos(filterSucursalId)
@@ -139,23 +142,25 @@ export default function MovimientosScreen() {
   ]
 
   const handleRegistrar = async () => {
-    if (!form.sucursalId || !form.inventarioId || !form.cantidad) {
-      Alert.alert('Error', 'Sucursal, inventario y cantidad son obligatorios')
+    if (!form.sucursalId || !form.inventarioId) {
+      Alert.alert('Error', 'Selecciona sucursal e inventario')
       return
     }
-    const cantidad = parseInt(form.cantidad, 10)
-    if (isNaN(cantidad) || cantidad <= 0) {
-      Alert.alert('Error', 'Cantidad debe ser un número positivo')
-      return
-    }
+    const cantErr = validateCantidad(form.cantidad)
+    const refErr = validateReferencia(form.referencia)
+    setCantidadError(cantErr)
+    setReferenciaError(refErr)
+    if (cantErr || refErr) return
     try {
       await registrar({
         sucursalId: Number(form.sucursalId),
         inventarioId: Number(form.inventarioId),
         tipoMovimiento: form.tipo,
-        cantidad,
+        cantidad: parseInt(form.cantidad, 10),
         referencia: form.referencia || undefined,
       })
+      setCantidadError(null)
+      setReferenciaError(null)
       setForm(EMPTY_FORM)
       setModalOpen(false)
     } catch {
@@ -236,12 +241,12 @@ export default function MovimientosScreen() {
       </View>
 
       <Modal visible={modalOpen} transparent animationType='slide'>
-        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => setModalOpen(false)}>
+        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => { setModalOpen(false); setCantidadError(null); setReferenciaError(null) }}>
           <Pressable onPress={() => {}}>
             <View className='bg-white dark:bg-zinc-900 rounded-t-2xl p-6 gap-4'>
               <View className='flex-row items-center justify-between'>
                 <Text className='font-sans-bold text-xl text-zinc-900 dark:text-zinc-50'>Nuevo movimiento</Text>
-                <TouchableOpacity onPress={() => setModalOpen(false)}>
+                <TouchableOpacity onPress={() => { setModalOpen(false); setCantidadError(null); setReferenciaError(null) }}>
                   <X size={20} color='#71717a' />
                 </TouchableOpacity>
               </View>
@@ -280,6 +285,7 @@ export default function MovimientosScreen() {
                   placeholder='Ej. 10'
                   placeholderTextColor='#a1a1aa'
                 />
+                {cantidadError && <Text className='text-red-500 text-xs mt-0.5 font-sans'>{cantidadError}</Text>}
               </View>
 
               <View className='gap-1'>
@@ -288,9 +294,11 @@ export default function MovimientosScreen() {
                   className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                   value={form.referencia}
                   onChangeText={v => setForm(p => ({ ...p, referencia: v }))}
+                  maxLength={100}
                   placeholder='Ej. Compra #001'
                   placeholderTextColor='#a1a1aa'
                 />
+                {referenciaError && <Text className='text-red-500 text-xs mt-0.5 font-sans'>{referenciaError}</Text>}
               </View>
 
               <TouchableOpacity

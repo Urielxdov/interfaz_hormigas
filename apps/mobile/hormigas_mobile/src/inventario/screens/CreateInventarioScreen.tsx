@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { CreateInventarioDTO } from '@hormigas/application'
 import { getProductService } from '@/src/adapters/productServiceInstance'
+import { validateStock } from '@/src/utils/validation'
 
 interface Props {
   onSuccess: (dto: CreateInventarioDTO) => Promise<void>
@@ -23,7 +24,8 @@ export default function CreateInventarioScreen({ onSuccess }: Props) {
   const [stockMaximo, setStockMaximo] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingProductos, setLoadingProductos] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  type StockErrors = { productoId?: string; stockActual?: string; stockMinimo?: string; stockMaximo?: string }
+  const [errors, setErrors] = useState<StockErrors>({})
 
   useEffect(() => {
     let cancelled = false
@@ -37,27 +39,36 @@ export default function CreateInventarioScreen({ onSuccess }: Props) {
             .map(p => ({ id: p.categoriaId!, nombre: p.nombre }))
         )
       })
-      .catch(() => setError('No se pudieron cargar productos'))
+      .catch(() => setErrors(prev => ({ ...prev, productoId: 'No se pudieron cargar productos' })))
       .finally(() => { if (!cancelled) setLoadingProductos(false) })
     return () => { cancelled = true }
   }, [])
 
   const handleSubmit = async () => {
-    if (!productoId || !stockActual || !stockMinimo || !stockMaximo) {
-      setError('Todos los campos son obligatorios')
-      return
+    const errs: StockErrors = {
+      productoId: !productoId ? 'Selecciona un producto' : undefined,
+      stockActual: validateStock(stockActual, 'Stock inicial') ?? undefined,
+      stockMinimo: validateStock(stockMinimo, 'Stock mínimo') ?? undefined,
+      stockMaximo: validateStock(stockMaximo, 'Stock máximo') ?? undefined,
     }
+    // Cross-field: stockMinimo <= stockMaximo
+    const min = Number(stockMinimo)
+    const max = Number(stockMaximo)
+    if (!errs.stockMinimo && !errs.stockMaximo && min > max) {
+      errs.stockMinimo = 'El mínimo no puede superar al máximo'
+    }
+    setErrors(errs)
+    if (Object.values(errs).some(Boolean)) return
     setLoading(true)
-    setError(null)
     try {
       await onSuccess({
-        productoId,
+        productoId: productoId!,
         stockActual: Number(stockActual),
         stockMinimo: Number(stockMinimo),
         stockMaximo: Number(stockMaximo),
       })
     } catch {
-      setError('Error al crear inventario')
+      setErrors(prev => ({ ...prev, stockActual: 'Error al crear inventario' }))
     } finally {
       setLoading(false)
     }
@@ -91,15 +102,16 @@ export default function CreateInventarioScreen({ onSuccess }: Props) {
             <Text className="px-4 py-3 text-zinc-400">Sin productos sincronizados</Text>
           )}
         </View>
+        {errors.productoId && <Text className='text-red-500 text-xs mt-0.5'>{errors.productoId}</Text>}
       </View>
 
       {(
         [
-          { label: 'Stock inicial', value: stockActual, set: setStockActual },
-          { label: 'Stock mínimo', value: stockMinimo, set: setStockMinimo },
-          { label: 'Stock máximo', value: stockMaximo, set: setStockMaximo },
-        ] as { label: string; value: string; set: (v: string) => void }[]
-      ).map(({ label, value, set }) => (
+          { label: 'Stock inicial', value: stockActual, set: setStockActual, errKey: 'stockActual' as const },
+          { label: 'Stock mínimo', value: stockMinimo, set: setStockMinimo, errKey: 'stockMinimo' as const },
+          { label: 'Stock máximo', value: stockMaximo, set: setStockMaximo, errKey: 'stockMaximo' as const },
+        ] as { label: string; value: string; set: (v: string) => void; errKey: keyof StockErrors }[]
+      ).map(({ label, value, set, errKey }) => (
         <View key={label} className="gap-1">
           <Text className="text-sm font-sans-medium text-zinc-700 dark:text-zinc-300">{label}</Text>
           <TextInput
@@ -110,10 +122,9 @@ export default function CreateInventarioScreen({ onSuccess }: Props) {
             placeholder="0"
             placeholderTextColor="#a1a1aa"
           />
+          {errors[errKey] && <Text className='text-red-500 text-xs mt-0.5'>{errors[errKey]}</Text>}
         </View>
       ))}
-
-      {error != null && <Text className="text-red-500 text-sm">{error}</Text>}
 
       <TouchableOpacity
         onPress={handleSubmit}

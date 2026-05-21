@@ -14,9 +14,12 @@ import {
     View,
 } from 'react-native'
 import { Building2, LogOut, Plus, Power, X } from 'lucide-react-native'
+import { validateNombre, validateNombreLugar, validateEmail, validatePassword, validateRFC, validateTelefono } from '@/src/utils/validation'
 
 type EmpresaForm = { nombre: string; rfc: string; direccion: string; telefono: string }
 type AdminForm = { nombre: string; correo: string; password: string }
+type EmpresaErrors = Partial<Record<keyof EmpresaForm, string>>
+type AdminErrors = Partial<Record<keyof AdminForm, string>>
 const EMPTY_EMP: EmpresaForm = { nombre: '', rfc: '', direccion: '', telefono: '' }
 const EMPTY_ADM: AdminForm = { nombre: '', correo: '', password: '' }
 
@@ -26,6 +29,8 @@ export default function EmpresasScreen() {
     const [modal, setModal] = useState(false)
     const [empForm, setEmpForm] = useState<EmpresaForm>(EMPTY_EMP)
     const [admForm, setAdmForm] = useState<AdminForm>(EMPTY_ADM)
+    const [empErrors, setEmpErrors] = useState<EmpresaErrors>({})
+    const [admErrors, setAdmErrors] = useState<AdminErrors>({})
 
     const handleLogout = async () => {
         await logout()
@@ -33,10 +38,20 @@ export default function EmpresasScreen() {
     }
 
     const handleCrear = async () => {
-        if (!empForm.nombre || !empForm.rfc || !admForm.nombre || !admForm.correo || !admForm.password) {
-            Alert.alert('Error', 'Todos los campos son obligatorios')
-            return
+        const eErrs: EmpresaErrors = {
+            nombre: validateNombreLugar(empForm.nombre) ?? undefined,
+            rfc: validateRFC(empForm.rfc) ?? undefined,
+            direccion: empForm.direccion && empForm.direccion.length > 150 ? 'Máximo 150 caracteres' : undefined,
+            telefono: validateTelefono(empForm.telefono) ?? undefined,
         }
+        const aErrs: AdminErrors = {
+            nombre: validateNombre(admForm.nombre) ?? undefined,
+            correo: validateEmail(admForm.correo) ?? undefined,
+            password: validatePassword(admForm.password) ?? undefined,
+        }
+        setEmpErrors(eErrs)
+        setAdmErrors(aErrs)
+        if (Object.values(eErrs).some(Boolean) || Object.values(aErrs).some(Boolean)) return
         try {
             await crear({ empresa: empForm, admin: admForm })
             setEmpForm(EMPTY_EMP)
@@ -105,7 +120,7 @@ export default function EmpresasScreen() {
             </ScrollView>
 
             <Modal visible={modal} transparent animationType='slide'>
-                <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => setModal(false)}>
+                <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => { setModal(false); setEmpErrors({}); setAdmErrors({}) }}>
                     <Pressable onPress={() => {}}>
                         <ScrollView
                             className='bg-white dark:bg-zinc-900 rounded-t-2xl'
@@ -114,7 +129,7 @@ export default function EmpresasScreen() {
                         >
                             <View className='flex-row items-center justify-between'>
                                 <Text className='font-sans-bold text-xl text-zinc-900 dark:text-zinc-50'>Nueva empresa</Text>
-                                <TouchableOpacity onPress={() => setModal(false)}>
+                                <TouchableOpacity onPress={() => { setModal(false); setEmpErrors({}); setAdmErrors({}) }}>
                                     <X size={20} color='#71717a' />
                                 </TouchableOpacity>
                             </View>
@@ -130,6 +145,7 @@ export default function EmpresasScreen() {
                                         autoCapitalize={f === 'rfc' ? 'characters' : 'none'}
                                         placeholderTextColor='#a1a1aa'
                                     />
+                                    {empErrors[f] && <Text className='text-red-500 text-xs mt-0.5'>{empErrors[f]}</Text>}
                                 </View>
                             ))}
 
@@ -145,6 +161,7 @@ export default function EmpresasScreen() {
                                         autoCapitalize='none'
                                         placeholderTextColor='#a1a1aa'
                                     />
+                                    {admErrors[f] && <Text className='text-red-500 text-xs mt-0.5'>{admErrors[f]}</Text>}
                                 </View>
                             ))}
 
