@@ -7,7 +7,6 @@ import { CreateInventarioDTO } from '@hormigas/application'
 import { getProductService } from '@/src/adapters/productServiceInstance'
 
 interface Props {
-  sucursalId: number
   onSuccess: (dto: CreateInventarioDTO) => Promise<void>
 }
 
@@ -16,7 +15,7 @@ interface ProductoOption {
   nombre: string
 }
 
-export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props) {
+export default function CreateInventarioScreen({ onSuccess }: Props) {
   const [productos, setProductos] = useState<ProductoOption[]>([])
   const [productoId, setProductoId] = useState<number | null>(null)
   const [stockActual, setStockActual] = useState('')
@@ -52,7 +51,6 @@ export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props)
     setError(null)
     try {
       await onSuccess({
-        sucursalId,
         productoId,
         stockActual: Number(stockActual),
         stockMinimo: Number(stockMinimo),

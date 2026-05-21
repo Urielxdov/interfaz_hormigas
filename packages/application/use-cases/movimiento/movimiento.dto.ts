@@ -28,7 +28,6 @@ export interface MovimientoResponseDTO {
 }
 
 export interface CreateMovimientoDTO {
-  sucursalId: number
   productoId: number
   tipoMovimiento: TipoMovimiento
   cantidad: number

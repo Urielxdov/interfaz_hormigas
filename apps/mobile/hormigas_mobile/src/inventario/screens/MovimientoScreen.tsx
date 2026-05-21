@@ -10,7 +10,6 @@ import { useMotivo } from '@/src/utils/hooks/useMotivo'
 type TipoSimple = Extract<TipoMovimiento, 'COMPRA' | 'VENTA'>
 
 interface Props {
-  sucursalId: number
   inventarioId: number
   productoNombre: string
   tipoPreseleccionado?: TipoSimple
@@ -18,7 +17,6 @@ interface Props {
 }
 
 export default function MovimientoScreen({
-  sucursalId,
   inventarioId,
   productoNombre,
   tipoPreseleccionado,
@@ -38,7 +36,6 @@ export default function MovimientoScreen({
     }
     try {
       const result = await registrar({
-        sucursalId,
         inventarioId,
         tipoMovimiento: tipo,
         cantidad: n,

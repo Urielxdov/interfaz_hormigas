@@ -2,8 +2,7 @@ import { ISyncQueueRepository, SyncQueueItem } from '../sync/sync.interfaces'
 import { generateUUID } from '../utils/uuid'
 
 export interface CrearMovimientoDTO {
-  sucursalId: number
-  productoId: number
+  inventarioId: number
   tipoMovimiento: 'ENTRADA' | 'SALIDA'
   cantidad: number
   referencia?: string
@@ -49,7 +48,7 @@ export interface IInventarioLocalRepo {
     stockMinimo: number,
     stockMaximo: number
   ): Promise<void>
-  applyMovement(productoServerId: number, sucursalServerId: number, tipo: 'ENTRADA' | 'SALIDA', cantidad: number): Promise<void>
+  applyMovement(inventarioId: number, tipo: 'ENTRADA' | 'SALIDA', cantidad: number): Promise<void>
   getSucursalIds(): Promise<number[]>
   getLowStockItems(): Promise<InventarioLocalRow[]>
 }
@@ -75,12 +74,12 @@ export class MovimientoSyncService {
   async registrar(dto: CrearMovimientoDTO, isOnline: boolean): Promise<MovimientoDTO | null> {
     if (isOnline) {
       const result = await this.api.crear(dto)
-      await this.inventarioRepo.applyMovement(dto.productoId, dto.sucursalId, dto.tipoMovimiento, dto.cantidad)
+      await this.inventarioRepo.applyMovement(dto.inventarioId, dto.tipoMovimiento, dto.cantidad)
       return result
     }
 
     // Offline: update local stock and enqueue
-    await this.inventarioRepo.applyMovement(dto.productoId, dto.sucursalId, dto.tipoMovimiento, dto.cantidad)
+    await this.inventarioRepo.applyMovement(dto.inventarioId, dto.tipoMovimiento, dto.cantidad)
 
     const item: SyncQueueItem = {
       id: generateUUID(),

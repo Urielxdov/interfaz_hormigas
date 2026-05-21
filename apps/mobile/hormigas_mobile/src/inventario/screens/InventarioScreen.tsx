@@ -125,7 +125,6 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)}>
         <CreateInventarioScreen
-          sucursalId={sucursalId}
           onSuccess={async (dto) => {
             await crearInventario(dto)
             setShowCreate(false)

@@ -75,8 +75,7 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
     }
 
     async applyMovement(
-        productoServerId: number,
-        sucursalServerId: number,
+        inventarioId: number,
         tipo: 'ENTRADA' | 'SALIDA',
         cantidad: number
     ): Promise<void> {
@@ -84,8 +83,8 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
         await this.db.run(
             `UPDATE inventario
              SET stock_actual = MAX(0, stock_actual + ?)
-             WHERE producto_id = ? AND sucursal_id = ?`,
-            [delta, productoServerId, sucursalServerId]
+             WHERE id = ?`,
+            [delta, inventarioId]
         )
     }
 

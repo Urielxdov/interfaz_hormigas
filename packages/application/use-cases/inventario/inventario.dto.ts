@@ -11,7 +11,6 @@ export interface InventarioItemDTO {
 }
 
 export interface CreateInventarioDTO {
-  sucursalId: number
   productoId: number
   stockActual: number
   stockMinimo: number

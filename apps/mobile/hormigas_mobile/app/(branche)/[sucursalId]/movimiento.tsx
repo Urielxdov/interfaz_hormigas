@@ -12,7 +12,6 @@ export default function MovimientoRoute() {
 
   return (
     <MovimientoScreen
-      sucursalId={Number(params.sucursalId)}
       inventarioId={Number(params.inventarioId)}
       productoNombre={params.productoNombre ?? ''}
       tipoPreseleccionado={params.tipoPreseleccionado as Extract<TipoMovimiento, 'COMPRA' | 'VENTA'> | undefined}
