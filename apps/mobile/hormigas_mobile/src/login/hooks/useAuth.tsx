@@ -38,6 +38,10 @@ export function isSuperAdminToken(token: string): boolean {
   return getRolesFromToken(token).includes('ROLE_SUPER_ADMIN')
 }
 
+export function isAdminEmpresaToken(token: string): boolean {
+  return getRolesFromToken(token).includes('ROLE_ADMIN')
+}
+
 export const useAuth = () => {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -70,6 +74,7 @@ export const useAuth = () => {
   }
 
   const isSuperAdmin = token ? isSuperAdminToken(token) : false
+  const isAdminEmpresa = token ? isAdminEmpresaToken(token) : false
 
-  return { token, isLoading, login, logout, isSuperAdmin }
+  return { token, isLoading, login, logout, isSuperAdmin, isAdminEmpresa }
 }

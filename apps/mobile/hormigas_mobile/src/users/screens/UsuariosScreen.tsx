@@ -1,3 +1,4 @@
+import { useAuth } from '@/src/login/hooks/useAuth'
 import { useUsuarios } from '@/src/users/hooks/useUsuarios'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import { useState } from 'react'
@@ -25,6 +26,7 @@ const EMPTY: FormState = { nombre: '', correo: '', password: '', sucursalId: '' 
 
 export default function UsuariosScreen() {
     const { usuarios, loading, error, creating, crear, recargar } = useUsuarios()
+    const { isAdminEmpresa } = useAuth()
     const [modal, setModal] = useState(false)
     const [form, setForm] = useState<FormState>(EMPTY)
 
@@ -55,13 +57,15 @@ export default function UsuariosScreen() {
                         <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Usuarios</Text>
                         <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>{usuarios.length} en esta empresa</Text>
                     </View>
-                    <TouchableOpacity
-                        className='flex-row items-center gap-1 bg-indigo-500 px-4 py-2 rounded-xl'
-                        onPress={() => setModal(true)}
-                    >
-                        <UserPlus size={16} color='#fff' />
-                        <Text className='text-white font-sans-semibold'>Nuevo</Text>
-                    </TouchableOpacity>
+                    {isAdminEmpresa && (
+                        <TouchableOpacity
+                            className='flex-row items-center gap-1 bg-indigo-500 px-4 py-2 rounded-xl'
+                            onPress={() => setModal(true)}
+                        >
+                            <UserPlus size={16} color='#fff' />
+                            <Text className='text-white font-sans-semibold'>Nuevo</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {loading && <ActivityIndicator className='mt-4' />}
@@ -91,7 +95,7 @@ export default function UsuariosScreen() {
                 </ScrollView>
             </View>
 
-            <Modal visible={modal} transparent animationType='slide'>
+            <Modal visible={modal && isAdminEmpresa} transparent animationType='slide'>
                 <Pressable
                     className='flex-1 bg-black/60 justify-end'
                     onPress={() => setModal(false)}
