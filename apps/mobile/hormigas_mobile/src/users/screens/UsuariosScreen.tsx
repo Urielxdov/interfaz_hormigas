@@ -26,7 +26,8 @@ const EMPTY: FormState = { nombre: '', correo: '', password: '', sucursalId: '' 
 
 export default function UsuariosScreen() {
     const { usuarios, loading, error, creating, crear, recargar } = useUsuarios()
-    const { isAdminEmpresa } = useAuth()
+    const { isAdminEmpresa, isSuperAdmin } = useAuth()
+    const puedeCrearUsuario = isAdminEmpresa || isSuperAdmin
     const [modal, setModal] = useState(false)
     const [form, setForm] = useState<FormState>(EMPTY)
 
@@ -57,7 +58,7 @@ export default function UsuariosScreen() {
                         <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Usuarios</Text>
                         <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>{usuarios.length} en esta empresa</Text>
                     </View>
-                    {isAdminEmpresa && (
+                    {puedeCrearUsuario && (
                         <TouchableOpacity
                             className='flex-row items-center gap-1 bg-indigo-500 px-4 py-2 rounded-xl'
                             onPress={() => setModal(true)}
@@ -95,7 +96,7 @@ export default function UsuariosScreen() {
                 </ScrollView>
             </View>
 
-            <Modal visible={modal && isAdminEmpresa} transparent animationType='slide'>
+            <Modal visible={modal && puedeCrearUsuario} transparent animationType='slide'>
                 <Pressable
                     className='flex-1 bg-black/60 justify-end'
                     onPress={() => setModal(false)}
