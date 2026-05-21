@@ -24,14 +24,41 @@ export const getProductService = (): Promise<ProductService> => {
         const dbClient = new ExpoSQLiteClient(db)
         const tokenService = new TokenServiceImpl(storage)
         const httpClient = new ApiHttpClient(API_URL, tokenService)
-        console.log("guardado en local")
+
+        console.log('📦 SQLITE READY')
+
+        // 👇 VER TODO LO QUE HAY EN PRODUCTOS
+        try {
+            const productos = await db.getAllAsync(`
+                SELECT *
+                FROM productos
+            `)
+
+            console.log(
+                '📦 PRODUCTOS SQLITE:',
+                JSON.stringify(productos, null, 2)
+            )
+
+            // 👇 SOLO IDS
+            console.log(
+                '📦 IDS:',
+                productos.map((p: any) => p.id)
+            )
+
+        } catch (e) {
+            console.error('❌ ERROR LEYENDO SQLITE', e)
+        }
 
         const productRepo = new SqliteProductRepositoryImpl(dbClient)
         const syncQueueRepo = new SqliteSyncQueueRepositoryImpl(dbClient)
         const apiProductRepo = new ApiProductRepositoryImpl(httpClient)
 
+        _service = createProductService(
+            productRepo,
+            syncQueueRepo,
+            apiProductRepo
+        )
 
-        _service = createProductService(productRepo, syncQueueRepo, apiProductRepo)
         return _service
     })()
 

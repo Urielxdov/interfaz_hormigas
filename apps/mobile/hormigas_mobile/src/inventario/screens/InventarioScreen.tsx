@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router'
 import { Package, Plus } from 'lucide-react-native'
-import { InventarioItemDTO } from '@hormigas/application'
+import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 import { useInventarioSucursal } from '@/src/utils/hooks/useInventarioSucursal'
 import Modal from '@/src/utils/components/Modal'
 import CreateInventarioScreen from './CreateInventarioScreen'
@@ -24,9 +24,9 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
   const { items, loading, crearInventario, refresh } = useInventarioSucursal(sucursalId)
   const [showCreate, setShowCreate] = useState(false)
 
-  const goToMovimiento = (item: InventarioItemDTO, tipo?: 'ENTRADA' | 'SALIDA') => {
+  const goToMovimiento = (item: InventarioItemDTO, tipo?: TipoMovimiento) => {
     const params: Record<string, string> = {
-      productoId: String(item.productoId),
+      inventarioId: String(item.id),
       productoNombre: item.productoNombre,
     }
     if (tipo) params.tipoPreseleccionado = tipo
@@ -101,13 +101,13 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
 
             <View className="flex-row gap-2">
               <TouchableOpacity
-                onPress={() => goToMovimiento(item, 'SALIDA')}
+                onPress={() => goToMovimiento(item, 'VENTA')}
                 className="flex-1 bg-red-500 rounded-lg py-2 items-center"
               >
                 <Text className="text-white font-sans-semibold">Venta</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => goToMovimiento(item, 'ENTRADA')}
+                onPress={() => goToMovimiento(item, 'COMPRA')}
                 className="flex-1 bg-green-600 rounded-lg py-2 items-center"
               >
                 <Text className="text-white font-sans-semibold">Compra</Text>

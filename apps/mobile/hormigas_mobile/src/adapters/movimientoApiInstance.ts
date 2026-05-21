@@ -1,4 +1,5 @@
 import { ApiHttpClient, TokenServiceImpl } from '@hormigas/infrastructure'
+import type { TipoMovimiento } from '@hormigas/application'
 import { storage } from './AsyncStorageAdapter'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? ''
@@ -9,7 +10,7 @@ export interface MovimientoDTO {
   productoNombre: string
   sucursalId: number
   sucursalNombre: string
-  tipoMovimiento: 'ENTRADA' | 'SALIDA'
+  tipoMovimiento: TipoMovimiento
   cantidad: number
   usuarioNombre: string
   referencia?: string
@@ -18,8 +19,8 @@ export interface MovimientoDTO {
 
 export interface CrearMovimientoDTO {
   sucursalId: number
-  productoId: number
-  tipoMovimiento: 'ENTRADA' | 'SALIDA'
+  inventarioId: number
+  tipoMovimiento: TipoMovimiento
   cantidad: number
   referencia?: string
 }

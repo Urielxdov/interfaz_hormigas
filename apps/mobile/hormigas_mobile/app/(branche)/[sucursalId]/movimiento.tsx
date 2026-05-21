@@ -1,10 +1,11 @@
 import { useLocalSearchParams, router } from 'expo-router'
+import type { TipoMovimiento } from '@hormigas/application'
 import MovimientoScreen from '@/src/inventario/screens/MovimientoScreen'
 
 export default function MovimientoRoute() {
   const params = useLocalSearchParams<{
     sucursalId: string
-    productoId: string
+    inventarioId: string
     productoNombre: string
     tipoPreseleccionado?: string
   }>()
@@ -12,9 +13,9 @@ export default function MovimientoRoute() {
   return (
     <MovimientoScreen
       sucursalId={Number(params.sucursalId)}
-      productoId={Number(params.productoId)}
+      inventarioId={Number(params.inventarioId)}
       productoNombre={params.productoNombre ?? ''}
-      tipoPreseleccionado={params.tipoPreseleccionado as 'ENTRADA' | 'SALIDA' | undefined}
+      tipoPreseleccionado={params.tipoPreseleccionado as Extract<TipoMovimiento, 'COMPRA' | 'VENTA'> | undefined}
       onSuccess={() => router.back()}
     />
   )

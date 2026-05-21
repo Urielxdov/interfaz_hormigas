@@ -118,7 +118,7 @@ export function SearchableSelect<T extends string | number>({
                       </Text>
                       {item.sublabel && (
                         <Text className='font-sans text-xs text-zinc-400 dark:text-zinc-500 mt-0.5'>
-                          SKU: {item.sublabel}
+                          {item.sublabel}
                         </Text>
                       )}
                     </TouchableOpacity>

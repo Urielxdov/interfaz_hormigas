@@ -13,15 +13,16 @@ import {
 import { ChevronDown, Plus, X } from 'lucide-react-native'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
-import type { Product } from '@hormigas/domain'
-import { getProductService } from '@/src/adapters/productServiceInstance'
+import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
 import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
+import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 
-type TipoMovimiento = 'ENTRADA' | 'SALIDA'
+const TIPOS_SALIDA = new Set<TipoMovimiento>(['VENTA', 'MERMA', 'TRASLADO_SALIDA'])
+const esTipoSalida = (tipo: TipoMovimiento) => TIPOS_SALIDA.has(tipo)
 
 type FormState = {
   sucursalId: string
-  productoId: string
+  inventarioId: string
   tipo: TipoMovimiento
   cantidad: string
   referencia: string
@@ -29,8 +30,8 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   sucursalId: '',
-  productoId: '',
-  tipo: 'ENTRADA',
+  inventarioId: '',
+  tipo: 'COMPRA',
   cantidad: '',
   referencia: '',
 }
@@ -100,39 +101,46 @@ export default function MovimientosScreen() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
 
   const { branches } = useBranches()
-  const { movimientos, loading, error, creating, registrar, recargar } = useMovimientos(filterSucursalId)
+  const { movimientos, loading, error, creating, registrar } = useMovimientos(filterSucursalId)
 
-  // useProducts() exposes localId (UUID); movimientos API needs the numeric server_id via categoriaId
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [loadingProducts, setLoadingProducts] = useState(false)
+  const [inventarios, setInventarios] = useState<InventarioItemDTO[]>([])
+  const [loadingInventarios, setLoadingInventarios] = useState(false)
 
   useEffect(() => {
+    if (!form.sucursalId) {
+      setInventarios([])
+      return
+    }
     let cancelled = false
-    setLoadingProducts(true)
-    getProductService()
-      .then(svc => svc.findAll())
-      .then(data => { if (!cancelled) { setAllProducts(data); setLoadingProducts(false) } })
-      .catch(e => { if (!cancelled) { console.error('[MovimientosScreen] loadProducts:', e); setLoadingProducts(false) } })
+    setLoadingInventarios(true)
+    getInventarioRepos()
+      .then(({ api }) => api.listarPorSucursal(Number(form.sucursalId)))
+      .then(data => { if (!cancelled) { setInventarios(data); setLoadingInventarios(false) } })
+      .catch(e => { if (!cancelled) { console.error('[MovimientosScreen] loadInventarios:', e); setLoadingInventarios(false) } })
     return () => { cancelled = true }
-  }, [])
+  }, [form.sucursalId])
 
-  const productOptions = allProducts
-    .filter(p => p.categoriaId !== undefined)
-    .map(p => ({
-      label: p.nombre,
-      sublabel: p.sku,
-      value: String(p.categoriaId), // server numeric ID, round-trips correctly through Number()
+  const inventarioOptions = inventarios
+    .map(i => ({
+      label: i.productoNombre,
+      sublabel: `stock ${i.stockActual}`,
+      value: String(i.id),
     }))
 
   const branchOptions = branches.map(b => ({ label: b.nombre, value: Number(b.id) }))
   const tipoOptions: { label: string; value: TipoMovimiento }[] = [
-    { label: 'Entrada (+)', value: 'ENTRADA' },
-    { label: 'Salida (-)', value: 'SALIDA' },
+    { label: 'Compra', value: 'COMPRA' },
+    { label: 'Venta', value: 'VENTA' },
+    { label: 'Ajuste', value: 'AJUSTE' },
+    { label: 'Merma', value: 'MERMA' },
+    { label: 'Devolucion', value: 'DEVOLUCION' },
+    { label: 'Traslado salida', value: 'TRASLADO_SALIDA' },
+    { label: 'Traslado entrada', value: 'TRASLADO_ENTRADA' },
   ]
 
   const handleRegistrar = async () => {
-    if (!form.sucursalId || !form.productoId || !form.cantidad) {
-      Alert.alert('Error', 'Sucursal, producto y cantidad son obligatorios')
+    if (!form.sucursalId || !form.inventarioId || !form.cantidad) {
+      Alert.alert('Error', 'Sucursal, inventario y cantidad son obligatorios')
       return
     }
     const cantidad = parseInt(form.cantidad, 10)
@@ -143,7 +151,7 @@ export default function MovimientosScreen() {
     try {
       await registrar({
         sucursalId: Number(form.sucursalId),
-        productoId: Number(form.productoId),
+        inventarioId: Number(form.inventarioId),
         tipoMovimiento: form.tipo,
         cantidad,
         referencia: form.referencia || undefined,
@@ -199,28 +207,31 @@ export default function MovimientosScreen() {
           {movimientos.length === 0 && !loading && (
             <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-center mt-8'>Sin movimientos</Text>
           )}
-          {movimientos.map(m => (
-            <View key={m.id} className='bg-white dark:bg-zinc-900 rounded-2xl p-4 mb-2 border border-stone-100 dark:border-zinc-800'>
-              <View className='flex-row items-start justify-between'>
-                <View className='flex-1'>
-                  <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>{m.productoNombre}</Text>
-                  <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm mt-0.5'>{m.sucursalNombre}</Text>
+          {movimientos.map(m => {
+            const esSalida = esTipoSalida(m.tipoMovimiento)
+            return (
+              <View key={m.id} className='bg-white dark:bg-zinc-900 rounded-2xl p-4 mb-2 border border-stone-100 dark:border-zinc-800'>
+                <View className='flex-row items-start justify-between'>
+                  <View className='flex-1'>
+                    <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>{m.productoNombre}</Text>
+                    <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm mt-0.5'>{m.sucursalNombre}</Text>
+                  </View>
+                  <View className={`px-2 py-0.5 rounded-full ${esSalida ? 'bg-red-100' : 'bg-green-100'}`}>
+                    <Text className={`text-xs font-semibold ${esSalida ? 'text-red-700' : 'text-green-700'}`}>
+                      {esSalida ? `-${m.cantidad}` : `+${m.cantidad}`}
+                    </Text>
+                  </View>
                 </View>
-                <View className={`px-2 py-0.5 rounded-full ${m.tipoMovimiento === 'ENTRADA' ? 'bg-green-100' : 'bg-red-100'}`}>
-                  <Text className={`text-xs font-semibold ${m.tipoMovimiento === 'ENTRADA' ? 'text-green-700' : 'text-red-700'}`}>
-                    {m.tipoMovimiento === 'ENTRADA' ? `+${m.cantidad}` : `-${m.cantidad}`}
-                  </Text>
+                <View className='flex-row items-center justify-between mt-2'>
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{m.usuarioNombre}</Text>
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{formatFecha(m.fecha)}</Text>
                 </View>
+                {m.referencia && (
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs mt-1'>Ref: {m.referencia}</Text>
+                )}
               </View>
-              <View className='flex-row items-center justify-between mt-2'>
-                <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{m.usuarioNombre}</Text>
-                <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{formatFecha(m.fecha)}</Text>
-              </View>
-              {m.referencia && (
-                <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs mt-1'>Ref: {m.referencia}</Text>
-              )}
-            </View>
-          ))}
+            )
+          })}
         </ScrollView>
       </View>
 
@@ -240,16 +251,16 @@ export default function MovimientosScreen() {
                 placeholder='Seleccionar sucursal...'
                 options={branchOptions}
                 value={form.sucursalId ? Number(form.sucursalId) : ''}
-                onChange={v => setForm(p => ({ ...p, sucursalId: String(v) }))}
+                onChange={v => setForm(p => ({ ...p, sucursalId: String(v), inventarioId: '' }))}
               />
 
               <SearchableSelect
-                label='Producto'
-                placeholder='Buscar producto...'
-                options={productOptions}
-                value={form.productoId}
-                onChange={v => setForm(p => ({ ...p, productoId: String(v) }))}
-                emptyMessage={loadingProducts ? 'Cargando productos...' : 'Sin resultados'}
+                label='Inventario'
+                placeholder={form.sucursalId ? 'Buscar producto en inventario...' : 'Selecciona una sucursal primero'}
+                options={inventarioOptions}
+                value={form.inventarioId}
+                onChange={v => setForm(p => ({ ...p, inventarioId: String(v) }))}
+                emptyMessage={loadingInventarios ? 'Cargando inventario...' : 'Sin inventario para esta sucursal'}
               />
 
               <SimpleSelect

@@ -20,7 +20,15 @@ const INVENTARIO_MIGRATIONS = [
 export const initDatabase = async () => {
     try {
         const db = await getDB()
+
+        console.log('🗑️ Creando TABLA inventario')
+
+        // await db.execAsync(`
+        //     DROP TABLE IF EXISTS inventario;
+        // `)
+
         await db.execAsync(CREATE_TABLES_SQL)
+
         for (const sql of INVENTARIO_MIGRATIONS) {
             try {
                 await db.execAsync(sql)
@@ -28,7 +36,8 @@ export const initDatabase = async () => {
                 // column already exists — ignore
             }
         }
-        console.log('✅ Base de datos lista')
+
+        console.log('✅ Base de datos Creada')
     } catch (e) {
         console.error('❌ Error en initDatabase:', JSON.stringify(e))
         throw e

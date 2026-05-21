@@ -3,15 +3,15 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   ActivityIndicator, Alert
 } from 'react-native'
-import { CrearMovimientoDTO, MovimientoDTO } from '@hormigas/application'
+import type { CrearMovimientoDTO, MovimientoDTO, TipoMovimiento } from '@hormigas/application'
 import { useMovimiento } from '@/src/utils/hooks/useMovimiento'
 import { useMotivo } from '@/src/utils/hooks/useMotivo'
 
-type TipoSimple = 'ENTRADA' | 'SALIDA'
+type TipoSimple = Extract<TipoMovimiento, 'COMPRA' | 'VENTA'>
 
 interface Props {
   sucursalId: number
-  productoId: number
+  inventarioId: number
   productoNombre: string
   tipoPreseleccionado?: TipoSimple
   onSuccess: (result: MovimientoDTO | null) => void
@@ -19,12 +19,12 @@ interface Props {
 
 export default function MovimientoScreen({
   sucursalId,
-  productoId,
+  inventarioId,
   productoNombre,
   tipoPreseleccionado,
   onSuccess,
 }: Props) {
-  const [tipo, setTipo] = useState<TipoSimple>(tipoPreseleccionado ?? 'SALIDA')
+  const [tipo, setTipo] = useState<TipoSimple>(tipoPreseleccionado ?? 'VENTA')
   const [cantidad, setCantidad] = useState('')
   const [referencia, setReferencia] = useState('')
   const { registrar, loading, error } = useMovimiento()
@@ -39,7 +39,7 @@ export default function MovimientoScreen({
     try {
       const result = await registrar({
         sucursalId,
-        productoId,
+        inventarioId,
         tipoMovimiento: tipo,
         cantidad: n,
         referencia: referencia.trim() || undefined,
@@ -60,20 +60,20 @@ export default function MovimientoScreen({
         <Text className="text-zinc-500 dark:text-zinc-400">{productoNombre}</Text>
       </View>
 
-      {/* Tipo ENTRADA / SALIDA */}
+      {/* Tipo COMPRA / VENTA */}
       <View className="flex-row gap-3 px-4">
-        {(['SALIDA', 'ENTRADA'] as TipoSimple[]).map(t => (
+        {(['VENTA', 'COMPRA'] as TipoSimple[]).map(t => (
           <TouchableOpacity
             key={t}
             onPress={() => setTipo(t)}
             className={`flex-1 py-3 rounded-xl items-center border-2 ${
               tipo === t
-                ? t === 'SALIDA' ? 'bg-red-500 border-red-500' : 'bg-green-600 border-green-600'
+                ? t === 'VENTA' ? 'bg-red-500 border-red-500' : 'bg-green-600 border-green-600'
                 : 'bg-white dark:bg-zinc-900 border-stone-200 dark:border-zinc-700'
             }`}
           >
             <Text className={`font-sans-bold ${tipo === t ? 'text-white' : 'text-zinc-700 dark:text-zinc-300'}`}>
-              {t === 'SALIDA' ? 'Venta / Salida' : 'Compra / Entrada'}
+              {t === 'VENTA' ? 'Venta' : 'Compra'}
             </Text>
           </TouchableOpacity>
         ))}
