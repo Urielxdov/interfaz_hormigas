@@ -1,24 +1,22 @@
-import BranchSummaryScreen from '@/src/home/components/BranchSummaryScreen'
+import BranchMovimientosSection from '@/src/branches/components/BranchMovimientosSection'
 import CreateBranchScreen from '@/src/branches/screens/CreateBranch'
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import DataTable from '@/src/utils/components/DataTable'
 import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
-import { Building, Pencil, Power } from 'lucide-react-native'
-import { useState } from 'react'
-import { Text, TouchableOpacity, View } from 'react-native'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
 import { router } from 'expo-router'
+import { Building2, Eye, Pencil, Power } from 'lucide-react-native'
+import { useState } from 'react'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
-export default function BranchesScreen () {
+export default function BranchesScreen() {
   const [modal, setModal] = useState(false)
   const isTablet = useIsTablet()
-
   const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(null)
-
   const { branches, toggleStatus, updateBranch, createBranch } = useBranches()
 
   const mappedBranches: BranchItemTableDTO[] = branches.map(branch =>
@@ -32,18 +30,17 @@ export default function BranchesScreen () {
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-      <View className='w-11/12 self-center gap-2 pt-4'>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+        {/* Header */}
         <View
           className={`flex ${
-            isTablet
-              ? 'flex-row items-center justify-between'
-              : 'flex-col gap-2'
+            isTablet ? 'flex-row items-center justify-between' : 'flex-col gap-3'
           }`}
         >
-          <View>
+          <View className='gap-0.5'>
             <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Sucursales</Text>
-            <Text className='font-sans text-zinc-500 dark:text-zinc-400'>
-              Gestiona las sucursales de tu organizacion
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>
+              Gestiona las ubicaciones de tu organización
             </Text>
           </View>
           <ButtonCustom
@@ -55,9 +52,11 @@ export default function BranchesScreen () {
           />
         </View>
 
+        {/* Branches table */}
         <DataTable
           title='Sucursales'
-          icon={Building}
+          description={`${branches.filter(b => b.activa).length} activas de ${branches.length}`}
+          icon={Building2}
           columns={[
             {
               key: 'nombre',
@@ -71,32 +70,56 @@ export default function BranchesScreen () {
                     })
                   }
                 >
-                  <Text className="text-indigo-600 underline">{String(val)}</Text>
+                  <Text className='text-indigo-600 dark:text-indigo-400 font-sans-medium underline'>
+                    {String(val)}
+                  </Text>
                 </TouchableOpacity>
-              )
+              ),
             },
             {
               key: 'direccion',
-              label: 'Direccion'
+              label: 'Dirección',
             },
             {
               key: 'responsable',
-              label: 'Responsable'
+              label: 'Responsable',
             },
             {
               key: 'activa',
               label: 'Estado',
               render: val => (
-                <Text className={statusClass(val ? 'blue' : 'gray')}>
-                  {val ? 'Activo' : 'Inactivo'}
-                </Text>
-              )
+                <View
+                  className={`rounded-xl px-2 py-0.5 self-start ${
+                    val ? 'bg-green-100 dark:bg-green-900/30' : 'bg-zinc-100 dark:bg-zinc-800'
+                  }`}
+                >
+                  <Text
+                    className={`font-sans-semibold text-xs ${
+                      val ? 'text-green-700 dark:text-green-400' : 'text-zinc-500'
+                    }`}
+                  >
+                    {val ? 'Activa' : 'Inactiva'}
+                  </Text>
+                </View>
+              ),
             },
             {
               key: 'acciones',
               label: 'Acciones',
               render: (_, row) => (
-                <View className='flex flex-row gap-2'>
+                <View className='flex-row gap-1.5'>
+                  <ButtonCustom
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(branche)/[sucursalId]/detalle',
+                        params: { sucursalId: String(row.id), sucursalNombre: row.nombre },
+                      })
+                    }
+                    bgColor='bg-indigo-500'
+                    icon={Eye}
+                    iconSize={15}
+                    compact
+                  />
                   <ButtonCustom
                     onPress={() => {
                       setSelectedBranch(row)
@@ -104,34 +127,39 @@ export default function BranchesScreen () {
                     }}
                     bgColor='bg-blue-500'
                     icon={Pencil}
-                    iconSize={18}
+                    iconSize={15}
                     compact
                   />
                   <ButtonCustom
                     onPress={() => toggleStatus(row.id)}
-                    bgColor={`${row.activa ? 'bg-green-500' : 'bg-red-500'}`}
+                    bgColor={row.activa ? 'bg-green-500' : 'bg-red-500'}
                     icon={Power}
-                    iconSize={18}
+                    iconSize={15}
                     compact
                   />
                 </View>
-              )
-            }
+              ),
+            },
           ]}
           data={mappedBranches}
         />
 
-        <BranchSummaryScreen branches={branches} />
-      </View>
+        {/* Activity per branch */}
+        <BranchMovimientosSection branches={branches} />
+      </ScrollView>
 
       <Modal isOpen={modal} onClose={closeModal}>
         <CreateBranchScreen
-          defaultValues={selectBranch ? {
-            nombre: selectBranch.nombre,
-            direccion: selectBranch.direccion ?? '',
-            encargadoId: selectBranch.encargadoId ?? null,
-          } : undefined}
-          onSubmit={(data) => {
+          defaultValues={
+            selectBranch
+              ? {
+                  nombre: selectBranch.nombre,
+                  direccion: selectBranch.direccion ?? '',
+                  encargadoId: selectBranch.encargadoId ?? null,
+                }
+              : undefined
+          }
+          onSubmit={data => {
             if (selectBranch) {
               updateBranch({
                 id: selectBranch.id,
