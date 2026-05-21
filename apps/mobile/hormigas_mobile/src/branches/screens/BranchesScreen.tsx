@@ -1,5 +1,6 @@
 import BranchMovimientosSection from '@/src/branches/components/BranchMovimientosSection'
 import CreateBranchScreen from '@/src/branches/screens/CreateBranch'
+import { useAuth } from '@/src/login/hooks/useAuth'
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import DataTable from '@/src/utils/components/DataTable'
 import Modal from '@/src/utils/components/Modal'
@@ -18,6 +19,7 @@ export default function BranchesScreen() {
   const isTablet = useIsTablet()
   const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(null)
   const { branches, toggleStatus, updateBranch, createBranch } = useBranches()
+  const { isAdminEmpresa } = useAuth()
 
   const mappedBranches: BranchItemTableDTO[] = branches.map(branch =>
     BranchMapper.toListTable(branch)
@@ -43,13 +45,15 @@ export default function BranchesScreen() {
               Gestiona las ubicaciones de tu organización
             </Text>
           </View>
-          <ButtonCustom
-            title='+ Nueva Sucursal'
-            onPress={() => {
-              setSelectedBranch(null)
-              setModal(true)
-            }}
-          />
+          {isAdminEmpresa && (
+            <ButtonCustom
+              title='+ Nueva Sucursal'
+              onPress={() => {
+                setSelectedBranch(null)
+                setModal(true)
+              }}
+            />
+          )}
         </View>
 
         {/* Branches table */}
@@ -120,23 +124,27 @@ export default function BranchesScreen() {
                     iconSize={15}
                     compact
                   />
-                  <ButtonCustom
-                    onPress={() => {
-                      setSelectedBranch(row)
-                      setModal(true)
-                    }}
-                    bgColor='bg-blue-500'
-                    icon={Pencil}
-                    iconSize={15}
-                    compact
-                  />
-                  <ButtonCustom
-                    onPress={() => toggleStatus(row.id)}
-                    bgColor={row.activa ? 'bg-green-500' : 'bg-red-500'}
-                    icon={Power}
-                    iconSize={15}
-                    compact
-                  />
+                  {isAdminEmpresa && (
+                    <>
+                      <ButtonCustom
+                        onPress={() => {
+                          setSelectedBranch(row)
+                          setModal(true)
+                        }}
+                        bgColor='bg-blue-500'
+                        icon={Pencil}
+                        iconSize={15}
+                        compact
+                      />
+                      <ButtonCustom
+                        onPress={() => toggleStatus(row.id)}
+                        bgColor={row.activa ? 'bg-green-500' : 'bg-red-500'}
+                        icon={Power}
+                        iconSize={15}
+                        compact
+                      />
+                    </>
+                  )}
                 </View>
               ),
             },
@@ -148,7 +156,7 @@ export default function BranchesScreen() {
         <BranchMovimientosSection branches={branches} />
       </ScrollView>
 
-      <Modal isOpen={modal} onClose={closeModal}>
+      <Modal isOpen={modal && isAdminEmpresa} onClose={closeModal}>
         <CreateBranchScreen
           defaultValues={
             selectBranch
