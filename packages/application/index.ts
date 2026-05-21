@@ -23,11 +23,13 @@ export * from './sync/sync.manager'
 // Services
 export * from './services/product.service'
 export * from './services/movimiento.service'
+export * from './services/branch.service'
 
 // Factories
 export * from './factories/createUserService'
 export * from './factories/createProductService'
 export * from './factories/createMovimientoService'
+export * from './factories/createBranchService'
 
 // Utils
 export * from './utils/uuid'

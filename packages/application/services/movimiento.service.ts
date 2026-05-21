@@ -101,17 +101,23 @@ export class MovimientoSyncService {
   }
 
   async syncPending(): Promise<void> {
+    const MAX_RETRIES = 5
     const pending = await this.syncQueueRepo.findPending(50)
     for (const item of pending) {
       if (item.entity !== 'movimiento') continue
+
+      if (item.retries >= MAX_RETRIES) {
+        await this.syncQueueRepo.markAsFailed(item.id)
+        continue
+      }
+
       try {
         const dto = JSON.parse(item.payload) as CrearMovimientoDTO
         await this.api.crear(dto)
+        await this.syncQueueRepo.markAsProcessed(item.id)
       } catch {
         await this.syncQueueRepo.incrementRetries(item.id)
-        continue
       }
-      await this.syncQueueRepo.markAsProcessed(item.id)
     }
   }
 

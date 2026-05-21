@@ -75,6 +75,14 @@ export class SqliteSyncQueueRepositoryImpl implements ISyncQueueRepository {
         return true
     }
 
+    async markAsFailed(id: string): Promise<boolean> {
+        await this.db.run(
+            `UPDATE sync_queue SET status = 'FAILED', updated_at = ? WHERE id = ?`,
+            [new Date().toISOString(), id]
+        )
+        return true
+    }
+
     async incrementRetries(id: string): Promise<boolean> {
         await this.db.run(
             `UPDATE sync_queue SET retries = retries + 1, updated_at = ? WHERE id = ?`,

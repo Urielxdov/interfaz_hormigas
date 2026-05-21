@@ -15,6 +15,7 @@ export interface ISyncQueueRepository {
     findPending(limit?: number): Promise<SyncQueueItem[]>
     findByEntity(entity: string, entityId: string): Promise<SyncQueueItem[]>
     markAsProcessed(id: string): Promise<boolean>
+    markAsFailed(id: string): Promise<boolean>
     incrementRetries(id: string): Promise<boolean>
     clearProcessed(): Promise<boolean>
 }

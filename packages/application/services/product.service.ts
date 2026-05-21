@@ -66,12 +66,18 @@ export class ProductService {
     }
 
     async syncPending(): Promise<void> {
+        const MAX_RETRIES = 5
         const pending = await this.syncQueueRepo.findPending(20)
 
         for (const item of pending) {
-            try {
-                if (item.entity !== 'producto') continue
+            if (item.entity !== 'producto') continue
 
+            if (item.retries >= MAX_RETRIES) {
+                await this.syncQueueRepo.markAsFailed(item.id)
+                continue
+            }
+
+            try {
                 const payload = JSON.parse(item.payload) as NuevoProductoDTO
 
                 if (item.operation === 'CREATE') {

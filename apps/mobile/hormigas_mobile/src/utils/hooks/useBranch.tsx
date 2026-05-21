@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer } from 'react'
 import { BranchItemListDTO, CreateBranchDTO } from '@hormigas/application'
 import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
 import { getBranchRepos } from '@/src/adapters/branchRepoInstance'
+import { getBranchService } from '@/src/adapters/branchServiceInstance'
 import { branchReducer } from '../storage/branches.reducer'
 
 export function useBranches () {
@@ -39,10 +40,8 @@ export function useBranches () {
   }, [isOnline, syncFromServer])
 
   const createBranch = async (dto: CreateBranchDTO) => {
-    const { api, sqlite } = await getBranchRepos()
-    const created = isOnline
-      ? await api.crear(dto)
-      : await sqlite.save(dto)
+    const svc = await getBranchService()
+    const created = await svc.create(dto)
     dispatch({ type: 'CREATE', payload: created })
     return created
   }
