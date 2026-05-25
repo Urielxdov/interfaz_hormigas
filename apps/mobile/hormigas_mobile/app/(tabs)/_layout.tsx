@@ -1,15 +1,15 @@
-// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import React from 'react'
+import React, { useEffect } from 'react'
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 
-type IconName = React.ComponentProps<typeof Ionicons>['name'];
+type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 type TabConfig = {
-  name: string;
-  focusedIcon: IconName;
-  unfocusedIcon: IconName;
-};
+  name: string
+  focusedIcon: IconName
+  unfocusedIcon: IconName
+}
 
 const TABS: TabConfig[] = [
   { name: 'home',        focusedIcon: 'home',          unfocusedIcon: 'home-outline' },
@@ -17,7 +17,32 @@ const TABS: TabConfig[] = [
   { name: 'movimientos', focusedIcon: 'swap-vertical', unfocusedIcon: 'swap-vertical-outline' },
   { name: 'products',    focusedIcon: 'cube',          unfocusedIcon: 'cube-outline' },
   { name: 'users',       focusedIcon: 'people',        unfocusedIcon: 'people-outline' },
-];
+]
+
+interface AnimatedTabIconProps {
+  name: IconName
+  color: string
+  size: number
+  focused: boolean
+}
+
+function AnimatedTabIcon({ name, color, size, focused }: AnimatedTabIconProps) {
+  const scale = useSharedValue(1)
+
+  useEffect(() => {
+    scale.value = withSpring(focused ? 1.15 : 1, { stiffness: 200, damping: 20 })
+  }, [focused])
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }))
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Ionicons name={name} size={size} color={color} />
+    </Animated.View>
+  )
+}
 
 export default function TabLayout() {
   return (
@@ -42,10 +67,11 @@ export default function TabLayout() {
           name={name}
           options={{
             tabBarIcon: ({ focused, color, size }) => (
-              <Ionicons
+              <AnimatedTabIcon
                 name={focused ? focusedIcon : unfocusedIcon}
                 size={size}
                 color={color}
+                focused={focused}
               />
             ),
           }}
