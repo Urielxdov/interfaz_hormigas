@@ -3,9 +3,10 @@ import DataTable from '@/src/utils/components/DataTable'
 import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
-import { Package, Pencil, Power } from 'lucide-react-native'
+import { Package, Pencil, Power, BarChart2 } from 'lucide-react-native'
 import { useState } from 'react'
 import { Text, View } from 'react-native'
+import { router } from 'expo-router'
 import CreateProductoScreen from './CreateProduct'
 import InformationCard from '@/src/utils/components/InformationCard'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
@@ -126,6 +127,13 @@ export default function ProductHomeScreen () {
               label: 'Acciones',
               render: (_, row) => (
                 <View className='flex flex-row gap-2'>
+                  <ButtonCustom
+                    onPress={() => router.push(`/(product-detail)/${row.id}`)}
+                    bgColor='bg-blue-500'
+                    icon={BarChart2}
+                    iconSize={16}
+                    compact
+                  />
                   <ButtonCustom
                     onPress={() => {
                       setSelectedProduct(row)
