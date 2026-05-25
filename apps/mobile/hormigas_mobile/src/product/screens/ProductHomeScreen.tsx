@@ -3,9 +3,10 @@ import DataTable from '@/src/utils/components/DataTable'
 import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { Package, Pencil, Power, BarChart2 } from 'lucide-react-native'
 import { useState } from 'react'
-import { Text, View } from 'react-native'
+import { ScrollView, Text, View } from 'react-native'
 import { router } from 'expo-router'
 import CreateProductoScreen from './CreateProduct'
 import InformationCard from '@/src/utils/components/InformationCard'
@@ -37,6 +38,8 @@ export default function ProductHomeScreen () {
   const { products, toggleStatus, updateProduct, createProduct } = useProducts()
 
   const isTablet = useIsTablet()
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+  const paddingH = useResponsiveValue(16, 24, 32)
   const stockTotal = products.reduce((acc, s) => acc + s.stock, 0)
 
   const filterSku = watch('titleSku')
@@ -52,7 +55,8 @@ export default function ProductHomeScreen () {
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-      <View className='w-11/12 self-center gap-2 pt-4'>
+      <ScrollView>
+      <View style={{ maxWidth, alignSelf: 'center', width: '100%', paddingHorizontal: paddingH, paddingTop: 16, gap: 8 }}>
         <View
           className={`flex ${
             isTablet
@@ -158,8 +162,9 @@ export default function ProductHomeScreen () {
           data={leakedProducts}
         />
 
-        
+
       </View>
+      </ScrollView>
 
       <Modal
         isOpen={modal}
