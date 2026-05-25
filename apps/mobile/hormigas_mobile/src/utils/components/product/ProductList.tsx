@@ -31,7 +31,7 @@ export default function ProductList({
                 data={products}
                 keyExtractor={item => item.sku}
                 scrollEnabled={false}
-                renderItem={({item}) => <ProductCard {...item}/>}
+                renderItem={({ item, index }) => <ProductCard {...item} index={index} />}
             />
         </View>
     )
