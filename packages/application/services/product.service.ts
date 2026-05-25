@@ -43,6 +43,7 @@ export class ProductService {
                 sku: dto.sku,
                 descripcion: dto.descripcion,
                 precio: dto.precio,
+                categoria: dto.categoria,
             } satisfies NuevoProductoDTO),
             status: 'PENDING',
             retries: 0,

@@ -3,6 +3,7 @@ export interface NuevoProductoDTO {
     descripcion?: string
     sku: string
     precio?: number
+    categoria?: string
 }
 
 export interface ApiProductResponseDTO {
