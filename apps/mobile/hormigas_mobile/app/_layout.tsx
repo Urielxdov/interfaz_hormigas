@@ -36,12 +36,14 @@ export default function RootLayout () {
     <SafeAreaProvider>
       <Stack
         screenOptions={{
-          header: () => <Header />
+          animation: 'fade_from_bottom',
+          animationDuration: 280,
+          header: () => <Header />,
         }}
       >
-        <Stack.Screen name='(login)' options={{ headerShown: false }} />
+        <Stack.Screen name='(login)' options={{ headerShown: false, animation: 'fade' }} />
         <Stack.Screen name='(tabs)' options={{ headerShown: true }} />
-        <Stack.Screen name='(superadmin)' options={{ headerShown: false }} />
+        <Stack.Screen name='(superadmin)' options={{ headerShown: false, animation: 'fade' }} />
       </Stack>
     </SafeAreaProvider>
   )
