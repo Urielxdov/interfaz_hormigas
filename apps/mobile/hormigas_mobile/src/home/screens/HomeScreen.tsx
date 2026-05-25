@@ -7,6 +7,7 @@ import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useSyncQueueStatus } from '@/src/utils/hooks/useSyncQueueStatus'
 import { useInventario } from '@/src/utils/hooks/useInventario'
 import { useSyncManager } from '@/src/utils/hooks/useSyncManager'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { router } from 'expo-router'
 import { LogOut, RefreshCw, CheckCircle } from 'lucide-react-native'
 import { useCallback, useState } from 'react'
@@ -21,6 +22,9 @@ export default function HomeScreen() {
   const { lowStockItems, loading: loadingStock, refresh: refreshStock } = useInventario()
   const { isSyncing, lastSync, triggerSync } = useSyncManager()
   const [syncedMsg, setSyncedMsg] = useState(false)
+
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+  const padding = useResponsiveValue(16, 24, 32)
 
   useFocusEffect(useCallback(() => { refreshStock() }, [refreshStock]))
 
@@ -71,14 +75,16 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
-        <MetricsSection
-          totalProductos={products.filter(p => p.estado).length}
-          totalSucursales={branches.filter(b => b.activa).length}
-          pendienteSync={pendingCount}
-        />
-        <LowStockSection items={lowStockItems} loading={loadingStock} />
-        <BranchSummaryScreen branches={branches} />
+      <ScrollView>
+        <View style={{ maxWidth, alignSelf: 'center', width: '100%', padding, gap: 16 }}>
+          <MetricsSection
+            totalProductos={products.filter(p => p.estado).length}
+            totalSucursales={branches.filter(b => b.activa).length}
+            pendienteSync={pendingCount}
+          />
+          <LowStockSection items={lowStockItems} loading={loadingStock} />
+          <BranchSummaryScreen branches={branches} />
+        </View>
       </ScrollView>
     </View>
   )
