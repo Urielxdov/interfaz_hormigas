@@ -14,6 +14,7 @@ import {
     View,
 } from 'react-native'
 import { UserPlus, Users, X } from 'lucide-react-native'
+import { useBreakpoint, useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 
 type FormState = {
     nombre: string
@@ -27,6 +28,9 @@ const EMPTY: FormState = { nombre: '', correo: '', password: '', sucursalId: '' 
 export default function UsuariosScreen() {
     const { usuarios, loading, error, creating, crear, recargar } = useUsuarios()
     const { isAdminEmpresa, isSuperAdmin } = useAuth()
+    const isPhone = useBreakpoint() === 'phone'
+    const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+    const paddingH = useResponsiveValue(16, 24, 32)
     const puedeCrearUsuario = isAdminEmpresa || isSuperAdmin
     const [modal, setModal] = useState(false)
     const [form, setForm] = useState<FormState>(EMPTY)
@@ -52,7 +56,7 @@ export default function UsuariosScreen() {
 
     return (
         <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-            <View className='w-11/12 self-center mt-4 gap-2'>
+            <View style={{ maxWidth, alignSelf: 'center', width: '100%', paddingHorizontal: paddingH }} className='flex-1 mt-4 gap-2'>
                 <View className='flex-row items-center justify-between'>
                     <View>
                         <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Usuarios</Text>
@@ -73,10 +77,12 @@ export default function UsuariosScreen() {
                 {error && <Text className='text-red-500 text-sm font-sans mt-2'>{error}</Text>}
 
                 <ScrollView className='mt-2' showsVerticalScrollIndicator={false}>
+                    <View style={isPhone ? { gap: 12 } : { flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                     {usuarios.map(u => (
                         <View
                             key={u.id}
-                            className='bg-white dark:bg-zinc-900 rounded-2xl p-4 mb-3 border border-stone-100 dark:border-zinc-800'
+                            style={isPhone ? undefined : { width: '48%' }}
+                            className='bg-white dark:bg-zinc-900 rounded-2xl p-4 border border-stone-100 dark:border-zinc-800'
                         >
                             <View className='flex-row items-center justify-between'>
                                 <View className='flex-row items-center gap-2'>
@@ -93,6 +99,7 @@ export default function UsuariosScreen() {
                             )}
                         </View>
                     ))}
+                    </View>
                 </ScrollView>
             </View>
 
