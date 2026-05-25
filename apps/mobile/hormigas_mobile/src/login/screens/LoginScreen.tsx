@@ -9,6 +9,7 @@ import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { router } from 'expo-router'
 import { useForm } from 'react-hook-form'
 import { Text, View } from 'react-native'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { Package } from 'lucide-react-native'
 
@@ -36,6 +37,8 @@ const LOGIN_FIELDS: FormFieldConfig<LoginFormValues>[] = [
 
 export default function LoginScreen () {
   const { login } = useAuth()
+  const cardMaxWidth = useResponsiveValue<number | undefined>(undefined, 440, 440)
+
   const {
     control,
     handleSubmit,
@@ -63,7 +66,10 @@ export default function LoginScreen () {
       extraScrollHeight={20}
       className='bg-stone-50 dark:bg-zinc-950'
     >
-      <View className='w-11/12 self-center rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm'>
+      <View
+        style={{ width: '91.67%', maxWidth: cardMaxWidth }}
+        className='self-center rounded-2xl border border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 shadow-sm'
+      >
         <View className='flex flex-col gap-4'>
           <View className='items-center mb-2'>
             <View className='bg-indigo-500 p-4 rounded-2xl mb-4'>
