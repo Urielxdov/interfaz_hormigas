@@ -2,6 +2,7 @@ export interface CreateProductDTO {
   nombre: string
   sku: string
   categoria: string
+  categoriaId?: number
   precio: number
   estado: boolean
   control: boolean

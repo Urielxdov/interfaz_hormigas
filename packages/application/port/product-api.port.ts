@@ -4,6 +4,7 @@ export interface NuevoProductoDTO {
     sku: string
     precio?: number
     categoria?: string
+    categoriaId?: number
 }
 
 export interface ApiProductResponseDTO {

@@ -14,8 +14,8 @@ import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { useForm } from 'react-hook-form'
 import { ProductViewModel } from '@/interfaces/Product'
 import { useProducts } from '@/src/utils/hooks/useProducts'
-
-
+import { useAuth } from '@/src/login/hooks/useAuth'
+import { Tag } from 'lucide-react-native'
 
 type FilterFormValues = {
   titleSku: string
@@ -37,6 +37,7 @@ export default function ProductHomeScreen () {
   const [selectedProduct, setSelectedProduct] = useState<ProductViewModel | null>(null)
   const [page, setPage] = useState(0)
   const { products, toggleStatus, updateProduct, createProduct } = useProducts()
+  const { isAdminEmpresa } = useAuth()
 
   const isTablet = useIsTablet()
   const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
@@ -86,13 +87,24 @@ export default function ProductHomeScreen () {
               Gestiona tu catálogo de productos
             </Text>
           </View>
-          <ButtonCustom
-            title='+ Nuevo Producto'
-            onPress={() => {
-              setSelectedProduct(null)
-              setModal(true)
-            }}
-          />
+          <View className='flex-row gap-2 items-center'>
+            {isAdminEmpresa && (
+              <TouchableOpacity
+                onPress={() => router.push('/categorias')}
+                className='flex-row items-center gap-1.5 px-4 py-3 rounded-xl bg-stone-200 dark:bg-zinc-700 active:opacity-75'
+              >
+                <Tag size={15} color='#71717a' />
+                <Text className='font-sans-semibold text-zinc-700 dark:text-zinc-200 text-base'>Categorías</Text>
+              </TouchableOpacity>
+            )}
+            <ButtonCustom
+              title='+ Nuevo Producto'
+              onPress={() => {
+                setSelectedProduct(null)
+                setModal(true)
+              }}
+            />
+          </View>
         </View>
         
         <InformationCard

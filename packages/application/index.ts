@@ -6,6 +6,7 @@ export * from './port/empresa-api.port'
 export * from './port/token.port'
 export * from './port/product-api.port'
 export * from './port/branch-api.port'
+export * from './port/categoria-api.port'
 
 // DTOs / use-cases
 export * from './use-cases/user/request.user.dto'

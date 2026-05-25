@@ -50,3 +50,6 @@ export * from './src/motivo/ApiMotivoRepositoryImpl'
 
 // Reporte repositories
 export * from './src/reporte/ApiReporteRepositoryImpl'
+
+// Categoria repositories
+export * from './src/categoria/ApiCategoriaRepositoryImpl'

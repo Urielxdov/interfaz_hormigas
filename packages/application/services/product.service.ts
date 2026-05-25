@@ -44,6 +44,7 @@ export class ProductService {
                 descripcion: dto.descripcion,
                 precio: dto.precio,
                 categoria: dto.categoria,
+                categoriaId: dto.categoriaId,
             } satisfies NuevoProductoDTO),
             status: 'PENDING',
             retries: 0,
