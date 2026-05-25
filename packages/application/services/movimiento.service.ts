@@ -16,11 +16,13 @@ export interface MovimientoDTO {
   productoNombre: string
   sucursalId: number
   sucursalNombre: string
-  tipoMovimiento: 'ENTRADA' | 'SALIDA'
+  tipoMovimiento: string
   cantidad: number
   usuarioNombre: string
   referencia?: string
   fecha: string
+  stockAnterior?: number
+  stockNuevo?: number
 }
 
 export interface InventarioResponseDTO {
@@ -39,6 +41,7 @@ export interface IMovimientoApi {
   listar(sucursalId?: number): Promise<MovimientoDTO[]>
   stockBajo(): Promise<InventarioResponseDTO[]>
   inventarioPorSucursal(sucursalId: number): Promise<InventarioResponseDTO[]>
+  buscarPorProducto(productoId: number, sucursalId?: number): Promise<MovimientoDTO[]>
 }
 
 export interface IInventarioLocalRepo {
@@ -156,5 +159,9 @@ export class MovimientoSyncService {
 
   async getLowStockItems(): Promise<InventarioLocalRow[]> {
     return this.inventarioRepo.getLowStockItems()
+  }
+
+  async buscarPorProducto(productoId: number, sucursalId?: number): Promise<MovimientoDTO[]> {
+    return this.api.buscarPorProducto(productoId, sucursalId)
   }
 }
