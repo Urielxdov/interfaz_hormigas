@@ -6,6 +6,7 @@ import DataTable from '@/src/utils/components/DataTable'
 import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
@@ -17,6 +18,8 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 export default function BranchesScreen() {
   const [modal, setModal] = useState(false)
   const isTablet = useIsTablet()
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+  const padding = useResponsiveValue(16, 24, 32)
   const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(null)
   const { branches, toggleStatus, updateBranch, createBranch } = useBranches()
   const { isAdminEmpresa } = useAuth()
@@ -32,7 +35,8 @@ export default function BranchesScreen() {
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <ScrollView>
+        <View style={{ maxWidth, alignSelf: 'center', width: '100%', padding, gap: 16 }}>
         {/* Header */}
         <View
           className={`flex ${
@@ -154,6 +158,7 @@ export default function BranchesScreen() {
 
         {/* Activity per branch */}
         <BranchMovimientosSection branches={branches} />
+        </View>
       </ScrollView>
 
       <Modal isOpen={modal && isAdminEmpresa} onClose={closeModal}>
