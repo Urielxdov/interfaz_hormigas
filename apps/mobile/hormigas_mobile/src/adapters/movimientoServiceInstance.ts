@@ -34,6 +34,11 @@ export const getMovimientoService = (): Promise<MovimientoSyncService> => {
         http.get<InventarioResponseDTO[]>('/api/inventario/stockBajo'),
       inventarioPorSucursal: (sucursalId: number) =>
         http.get<InventarioResponseDTO[]>(`/api/inventario/porSucursal?sucursalId=${sucursalId}`),
+      buscarPorProducto: (productoId: number, sucursalId?: number) => {
+        const params = new URLSearchParams({ productoId: String(productoId) })
+        if (sucursalId != null) params.set('sucursalId', String(sucursalId))
+        return http.get<MovimientoDTO[]>(`/api/movimiento/buscar?${params}`)
+      },
     }
 
     _service = createMovimientoService(syncQueueRepo, inventarioRepo, api)
