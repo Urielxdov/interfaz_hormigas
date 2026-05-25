@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react'
 import useIsTablet from '../hooks/useIsTablet'
 import { ScrollView, View, LayoutChangeEvent } from 'react-native'
 import { Text } from 'react-native'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 
 export interface Column<T> {
   key: keyof T
@@ -84,8 +85,9 @@ export default function DataTable<T>({
           </View>
 
           {data.map((row, i) => (
-            <View
+            <Animated.View
               key={i}
+              entering={FadeInDown.delay(Math.min(i * 50, 300)).duration(260)}
               className={`flex-row border-t border-stone-100 dark:border-zinc-800 px-3 py-3 ${
                 i % 2 === 0 ? '' : 'bg-stone-50 dark:bg-zinc-800/40'
               }`}
@@ -106,7 +108,7 @@ export default function DataTable<T>({
                   </View>
                 )
               })}
-            </View>
+            </Animated.View>
           ))}
         </View>
       </ScrollView>
