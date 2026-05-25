@@ -4,7 +4,6 @@ import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import { useState } from 'react'
 import {
     ActivityIndicator,
-    Alert,
     Modal,
     Pressable,
     ScrollView,
@@ -15,6 +14,7 @@ import {
 } from 'react-native'
 import { UserPlus, Users, X } from 'lucide-react-native'
 import { useBreakpoint, useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
+import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 
 type FormState = {
     nombre: string
@@ -34,10 +34,11 @@ export default function UsuariosScreen() {
     const puedeCrearUsuario = isAdminEmpresa || isSuperAdmin
     const [modal, setModal] = useState(false)
     const [form, setForm] = useState<FormState>(EMPTY)
+    const { showError, errorModal } = useErrorModal()
 
     const handleCrear = async () => {
         if (!form.nombre || !form.correo || !form.password) {
-            Alert.alert('Error', 'Nombre, correo y contraseña son obligatorios')
+            showError('Nombre, correo y contraseña son obligatorios')
             return
         }
         try {
@@ -50,7 +51,7 @@ export default function UsuariosScreen() {
             setForm(EMPTY)
             setModal(false)
         } catch (e) {
-            Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo crear el usuario')
+            showError(e instanceof Error ? e.message : 'No se pudo crear el usuario')
         }
     }
 
@@ -149,6 +150,7 @@ export default function UsuariosScreen() {
                     </Pressable>
                 </Pressable>
             </Modal>
+            {errorModal}
         </View>
     )
 }

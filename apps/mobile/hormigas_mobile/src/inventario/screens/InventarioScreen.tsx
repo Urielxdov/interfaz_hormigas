@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router'
 import { Package, Plus } from 'lucide-react-native'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 import { useInventarioSucursal } from '@/src/utils/hooks/useInventarioSucursal'
+import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 import Modal from '@/src/utils/components/Modal'
 import CreateInventarioScreen from './CreateInventarioScreen'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
@@ -24,6 +25,7 @@ function StockBadge({ item }: { item: InventarioItemDTO }) {
 export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) {
   const { items, loading, crearInventario, refresh } = useInventarioSucursal(sucursalId)
   const [showCreate, setShowCreate] = useState(false)
+  const { showError, errorModal } = useErrorModal()
   const numColumns = useResponsiveValue(1, 2, 2)
   const padding = useResponsiveValue(16, 24, 32)
   const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
@@ -141,11 +143,12 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
               await crearInventario(dto)
               setShowCreate(false)
             } catch (e) {
-              Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo agregar el producto')
+              showError(e instanceof Error ? e.message : 'No se pudo agregar el producto')
             }
           }}
         />
       </Modal>
+      {errorModal}
     </View>
   )
 }

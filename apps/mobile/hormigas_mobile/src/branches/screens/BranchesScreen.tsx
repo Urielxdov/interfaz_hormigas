@@ -8,12 +8,13 @@ import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { useBranches } from '@/src/utils/hooks/useBranch'
+import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
 import { router } from 'expo-router'
 import { Building2, Eye, Pencil, Power } from 'lucide-react-native'
 import { useState } from 'react'
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 export default function BranchesScreen() {
   const [modal, setModal] = useState(false)
@@ -23,6 +24,7 @@ export default function BranchesScreen() {
   const [selectBranch, setSelectedBranch] = useState<BranchItemTableDTO | null>(null)
   const { branches, toggleStatus, updateBranch, createBranch } = useBranches()
   const { isAdminEmpresa } = useAuth()
+  const { showError, errorModal } = useErrorModal()
 
   const mappedBranches: BranchItemTableDTO[] = branches.map(branch =>
     BranchMapper.toListTable(branch)
@@ -192,11 +194,12 @@ export default function BranchesScreen() {
               }
               closeModal()
             } catch (e) {
-              Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo guardar la sucursal')
+              showError(e instanceof Error ? e.message : 'No se pudo guardar la sucursal')
             }
           }}
         />
       </Modal>
+      {errorModal}
     </View>
   )
 }

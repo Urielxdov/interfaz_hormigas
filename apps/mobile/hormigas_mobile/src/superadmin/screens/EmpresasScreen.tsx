@@ -4,7 +4,6 @@ import { router } from 'expo-router'
 import { useState } from 'react'
 import {
     ActivityIndicator,
-    Alert,
     Modal,
     Pressable,
     ScrollView,
@@ -15,6 +14,7 @@ import {
 } from 'react-native'
 import { Building2, LogOut, Plus, Power, X } from 'lucide-react-native'
 import { validateNombre, validateNombreLugar, validateEmail, validatePassword, validateRFC, validateTelefono } from '@/src/utils/validation'
+import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 
 type EmpresaForm = { nombre: string; rfc: string; direccion: string; telefono: string }
 type AdminForm = { nombre: string; correo: string; password: string }
@@ -31,6 +31,7 @@ export default function EmpresasScreen() {
     const [admForm, setAdmForm] = useState<AdminForm>(EMPTY_ADM)
     const [empErrors, setEmpErrors] = useState<EmpresaErrors>({})
     const [admErrors, setAdmErrors] = useState<AdminErrors>({})
+    const { showError, errorModal } = useErrorModal()
 
     const handleLogout = async () => {
         await logout()
@@ -58,7 +59,7 @@ export default function EmpresasScreen() {
             setAdmForm(EMPTY_ADM)
             setModal(false)
         } catch (e) {
-            Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo crear la empresa')
+            showError(e instanceof Error ? e.message : 'No se pudo crear la empresa')
         }
     }
 
@@ -180,6 +181,7 @@ export default function EmpresasScreen() {
                     </Pressable>
                 </Pressable>
             </Modal>
+            {errorModal}
         </View>
     )
 }

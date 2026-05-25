@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -18,6 +17,7 @@ import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
 import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 import { validateCantidad, validateReferencia } from '@/src/utils/validation'
+import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 
 const TIPOS_SALIDA = new Set<TipoMovimiento>([
   'SALIDA',
@@ -135,6 +135,7 @@ export default function MovimientosScreen () {
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [cantidadError, setCantidadError] = useState<string | null>(null)
   const [referenciaError, setReferenciaError] = useState<string | null>(null)
+  const { showError, errorModal } = useErrorModal()
 
   const { branches } = useBranches()
   const { movimientos, loading, error, creating, registrar } =
@@ -198,7 +199,7 @@ export default function MovimientosScreen () {
     )
 
     if (!form.sucursalId || !selectedInventario) {
-      Alert.alert('Error', 'Selecciona sucursal e inventario')
+      showError('Selecciona sucursal e inventario')
       return
     }
     const cantErr = validateCantidad(form.cantidad)
@@ -220,7 +221,7 @@ export default function MovimientosScreen () {
       setForm(EMPTY_FORM)
       setModalOpen(false)
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo registrar el movimiento')
+      showError(e instanceof Error ? e.message : 'No se pudo registrar el movimiento')
     }
   }
 
@@ -456,6 +457,7 @@ export default function MovimientosScreen () {
           </Pressable>
         </Pressable>
       </Modal>
+      {errorModal}
     </View>
   )
 }
