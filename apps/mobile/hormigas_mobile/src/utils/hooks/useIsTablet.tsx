@@ -1,7 +1,5 @@
-import { useWindowDimensions } from "react-native";
+import { useBreakpoint } from './useBreakpoint'
 
-
-export default function useIsTablet() {
-  const { width } = useWindowDimensions()
-  return width >= 768
+export default function useIsTablet(): boolean {
+  return useBreakpoint() !== 'phone'
 }
