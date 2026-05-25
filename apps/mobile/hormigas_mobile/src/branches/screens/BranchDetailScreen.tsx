@@ -12,6 +12,7 @@ import {
   TrendingUp,
 } from 'lucide-react-native'
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 
 interface Props {
   sucursalId: number
@@ -29,6 +30,9 @@ const formatFecha = (fecha: string) => {
 export default function BranchDetailScreen({ sucursalId, sucursalNombre }: Props) {
   const { movimientos, loading: loadingMov } = useMovimientos(sucursalId)
   const { items: inventario, loading: loadingInv } = useInventarioSucursal(sucursalId)
+
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+  const padding = useResponsiveValue(16, 24, 32)
 
   const entradas = movimientos.filter(m => m.tipoMovimiento === 'ENTRADA').length
   const salidas = movimientos.filter(m => m.tipoMovimiento === 'SALIDA').length
@@ -49,7 +53,8 @@ export default function BranchDetailScreen({ sucursalId, sucursalNombre }: Props
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ gap: 16, padding: 16 }}>
+      <ScrollView>
+        <View style={{ maxWidth, alignSelf: 'center', width: '100%', padding, gap: 16 }}>
         {/* Stats */}
         <View className='flex-row gap-3'>
           <View className='flex-1 bg-white dark:bg-zinc-900 rounded-2xl p-4 border border-stone-100 dark:border-zinc-800 items-center gap-1.5'>
@@ -176,6 +181,7 @@ export default function BranchDetailScreen({ sucursalId, sucursalNombre }: Props
               </View>
             </View>
           ))}
+        </View>
         </View>
       </ScrollView>
     </View>
