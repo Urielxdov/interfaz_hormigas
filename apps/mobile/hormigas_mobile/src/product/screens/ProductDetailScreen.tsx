@@ -5,6 +5,7 @@ import SelectField from '@/src/utils/components/SelectField'
 import BranchProductCard from '../components/BranchProductCard'
 import { useProductDetail } from '../hooks/useProductDetail'
 import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
+import { useBreakpoint, useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 
 interface Props {
   localId: string
@@ -23,6 +24,9 @@ export default function ProductDetailScreen({ localId }: Props) {
     setSelectedBranchId,
   } = useProductDetail(localId)
   const { isOnline } = useNetwork()
+  const isPhone = useBreakpoint() === 'phone'
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+  const padding = useResponsiveValue(16, 24, 32)
 
   const branchOptions = [
     { label: 'Todas las sucursales', value: 'todas' as string | number },
@@ -57,7 +61,8 @@ export default function ProductDetailScreen({ localId }: Props) {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+      <ScrollView>
+        <View style={{ maxWidth, alignSelf: 'center', width: '100%', padding, gap: 12 }}>
         {/* No sincronizado */}
         {notSynced && (
           <View className='bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-4 border border-amber-200 dark:border-amber-800 flex-row items-start gap-3'>
@@ -100,15 +105,22 @@ export default function ProductDetailScreen({ localId }: Props) {
           </Text>
         )}
 
-        {/* Vista "todas" — una card por sucursal */}
-        {!loading && selectedBranchId === 'todas' &&
-          branchGroups.map(({ branch, movimientos: branchMovs }) => (
-            <BranchProductCard
-              key={String(branch.id)}
-              sucursalNombre={branch.nombre}
-              movimientos={branchMovs}
-            />
-          ))}
+        {/* Vista "todas" — 2 cols en tablet+ */}
+        {!loading && selectedBranchId === 'todas' && (
+          <View style={isPhone ? { gap: 12 } : { flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+            {branchGroups.map(({ branch, movimientos: branchMovs }) => (
+              <View
+                key={String(branch.id)}
+                style={isPhone ? undefined : { width: '48%' }}
+              >
+                <BranchProductCard
+                  sucursalNombre={branch.nombre}
+                  movimientos={branchMovs}
+                />
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Vista sucursal específica */}
         {!loading && selectedBranchId !== 'todas' && movimientos.length > 0 && (
@@ -119,6 +131,7 @@ export default function ProductDetailScreen({ localId }: Props) {
             movimientos={movimientos}
           />
         )}
+        </View>
       </ScrollView>
     </View>
   )
