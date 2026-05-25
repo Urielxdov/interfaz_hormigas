@@ -6,6 +6,7 @@ import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 import { useInventarioSucursal } from '@/src/utils/hooks/useInventarioSucursal'
 import Modal from '@/src/utils/components/Modal'
 import CreateInventarioScreen from './CreateInventarioScreen'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 
 interface Props {
   sucursalId: number
@@ -23,6 +24,9 @@ function StockBadge({ item }: { item: InventarioItemDTO }) {
 export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) {
   const { items, loading, crearInventario, refresh } = useInventarioSucursal(sucursalId)
   const [showCreate, setShowCreate] = useState(false)
+  const numColumns = useResponsiveValue(1, 2, 2)
+  const padding = useResponsiveValue(16, 24, 32)
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
 
   const goToMovimiento = (item: InventarioItemDTO, tipo?: TipoMovimiento) => {
     const params: Record<string, string> = {
@@ -61,10 +65,14 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
         </TouchableOpacity>
       </View>
 
+      <View style={{ flex: 1, maxWidth, alignSelf: 'center', width: '100%' }}>
       <FlatList
+        key={String(numColumns)}
         data={items}
         keyExtractor={i => String(i.id)}
-        contentContainerStyle={{ padding: 16, gap: 8 }}
+        numColumns={numColumns}
+        contentContainerStyle={{ padding, gap: 8 }}
+        columnWrapperStyle={numColumns > 1 ? { gap: 8 } : undefined}
         onRefresh={refresh}
         refreshing={loading}
         ListEmptyComponent={
@@ -74,7 +82,7 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
           </View>
         }
         renderItem={({ item }) => (
-          <View className="bg-white dark:bg-zinc-900 rounded-xl border border-stone-200 dark:border-zinc-800 p-4 gap-3">
+          <View style={numColumns > 1 ? { flex: 1 } : undefined} className="bg-white dark:bg-zinc-900 rounded-xl border border-stone-200 dark:border-zinc-800 p-4 gap-3">
             <View className="flex-row items-start justify-between">
               <View className="flex-1">
                 <Text className="font-sans-semibold text-zinc-900 dark:text-zinc-50">{item.productoNombre}</Text>
@@ -123,6 +131,7 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
           </View>
         )}
       />
+      </View>
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)}>
         <CreateInventarioScreen
