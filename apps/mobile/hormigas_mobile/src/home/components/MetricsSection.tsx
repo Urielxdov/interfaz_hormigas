@@ -1,4 +1,5 @@
 import InformationCard from '@/src/utils/components/InformationCard'
+import { useBreakpoint } from '@/src/utils/hooks/useBreakpoint'
 import { Building2, Package, RefreshCw } from 'lucide-react-native'
 import { View, Text } from 'react-native'
 
@@ -9,6 +10,17 @@ interface MetricsSectionProps {
 }
 
 export default function MetricsSection({ totalProductos, totalSucursales, pendienteSync }: MetricsSectionProps) {
+  const isPhone = useBreakpoint() === 'phone'
+
+  const syncCard = (
+    <InformationCard
+      title='Pendientes de sync'
+      description={pendienteSync > 0 ? `${pendienteSync} movimiento(s)` : 'Todo sincronizado'}
+      icon={RefreshCw}
+      iconBgColor={pendienteSync > 0 ? 'yellow' : 'green'}
+    />
+  )
+
   return (
     <View className='gap-3'>
       <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50 text-base'>Resumen</Text>
@@ -29,13 +41,9 @@ export default function MetricsSection({ totalProductos, totalSucursales, pendie
             iconBgColor='green'
           />
         </View>
+        {!isPhone && <View className='flex-1'>{syncCard}</View>}
       </View>
-      <InformationCard
-        title='Pendientes de sync'
-        description={pendienteSync > 0 ? `${pendienteSync} movimiento(s)` : 'Todo sincronizado'}
-        icon={RefreshCw}
-        iconBgColor={pendienteSync > 0 ? 'yellow' : 'green'}
-      />
+      {isPhone && syncCard}
     </View>
   )
 }
