@@ -6,7 +6,7 @@ import useIsTablet from '@/src/utils/hooks/useIsTablet'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { ChevronLeft, ChevronRight, Package, Pencil, Power, BarChart2 } from 'lucide-react-native'
 import { useEffect, useMemo, useState } from 'react'
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, TouchableOpacity, View, FlatList } from 'react-native'
 import { router } from 'expo-router'
 import CreateProductoScreen from './CreateProduct'
 import InformationCard from '@/src/utils/components/InformationCard'
@@ -15,6 +15,7 @@ import { useForm } from 'react-hook-form'
 import { ProductViewModel } from '@/interfaces/Product'
 import { useProducts } from '@/src/utils/hooks/useProducts'
 import { useAuth } from '@/src/login/hooks/useAuth'
+import { useCategorias } from '@/src/utils/hooks/useCategorias'
 import { Tag } from 'lucide-react-native'
 
 type FilterFormValues = {
@@ -38,6 +39,8 @@ export default function ProductHomeScreen () {
   const [page, setPage] = useState(0)
   const { products, toggleStatus, updateProduct, createProduct } = useProducts()
   const { isAdminEmpresa } = useAuth()
+  const { categorias } = useCategorias()
+  const [filterCat, setFilterCat] = useState<string | null>(null)
 
   const isTablet = useIsTablet()
   const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
@@ -47,13 +50,19 @@ export default function ProductHomeScreen () {
   const filterSku = watch('titleSku')
 
   const filteredProducts = useMemo(() => {
-    if (!filterSku) return products
-    const search = filterSku.toLowerCase()
-    return products.filter(p =>
-      p.nombre.toLocaleLowerCase().includes(search) ||
-      p.sku.toLocaleLowerCase().includes(search)
-    )
-  }, [products, filterSku])
+    let result = products
+    if (filterSku) {
+      const search = filterSku.toLowerCase()
+      result = result.filter(p =>
+        p.nombre.toLocaleLowerCase().includes(search) ||
+        p.sku.toLocaleLowerCase().includes(search)
+      )
+    }
+    if (filterCat) {
+      result = result.filter(p => p.categoria === filterCat)
+    }
+    return result
+  }, [products, filterSku, filterCat])
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE)),
@@ -68,7 +77,7 @@ export default function ProductHomeScreen () {
   const goNext = () => setPage(p => Math.min(p + 1, totalPages - 1))
   const goPrev = () => setPage(p => Math.max(p - 1, 0))
 
-  useEffect(() => { setPage(0) }, [filterSku])
+  useEffect(() => { setPage(0) }, [filterSku, filterCat])
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
@@ -120,6 +129,29 @@ export default function ProductHomeScreen () {
           fields={FILTERS_FORM_FIELDS}
           scrollable={false}
         />
+
+        {categorias.length > 0 && (
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={[{ id: null, nombre: 'Todas' }, ...categorias]}
+            keyExtractor={item => String(item.id)}
+            contentContainerStyle={{ gap: 6 }}
+            renderItem={({ item }) => {
+              const active = item.id === null ? filterCat === null : filterCat === item.nombre
+              return (
+                <TouchableOpacity
+                  onPress={() => setFilterCat(item.id === null ? null : item.nombre)}
+                  className={`px-3 py-1.5 rounded-full border ${active ? 'bg-indigo-500 border-indigo-500' : 'bg-white dark:bg-zinc-900 border-stone-200 dark:border-zinc-700'}`}
+                >
+                  <Text className={`font-sans-medium text-sm ${active ? 'text-white' : 'text-zinc-600 dark:text-zinc-300'}`}>
+                    {item.nombre}
+                  </Text>
+                </TouchableOpacity>
+              )
+            }}
+          />
+        )}
 
         <DataTable
           title='Productos'
