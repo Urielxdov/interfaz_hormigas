@@ -6,7 +6,7 @@ import {
     TokenServiceImpl,
 } from '@hormigas/infrastructure'
 import { createProductService, ProductService } from '@hormigas/application'
-import { getDB } from '@/db/DataBase'
+import { getDB, initDatabase } from '@/db/DataBase'
 import { ExpoSQLiteClient } from './ExpoSQLiteClient'
 import { storage } from './AsyncStorageAdapter'
 
@@ -20,6 +20,7 @@ export const getProductService = (): Promise<ProductService> => {
     if (_initPromise) return _initPromise
 
     _initPromise = (async () => {
+        await initDatabase()
         const db = await getDB()
         const dbClient = new ExpoSQLiteClient(db)
         const tokenService = new TokenServiceImpl(storage)
@@ -31,7 +32,7 @@ export const getProductService = (): Promise<ProductService> => {
         try {
             const productos = await db.getAllAsync(`
                 SELECT *
-                FROM productos
+                FROM producto
             `)
 
             console.log(
@@ -42,7 +43,7 @@ export const getProductService = (): Promise<ProductService> => {
             // 👇 SOLO IDS
             console.log(
                 '📦 IDS:',
-                productos.map((p: any) => p.id)
+                productos.map((p: any) => p.local_id)
             )
 
         } catch (e) {

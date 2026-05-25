@@ -8,7 +8,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native'
 import { ChevronDown, Plus, X } from 'lucide-react-native'
 import { useBranches } from '@/src/utils/hooks/useBranch'
@@ -18,13 +18,19 @@ import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 import { validateCantidad, validateReferencia } from '@/src/utils/validation'
 
-const TIPOS_SALIDA = new Set<TipoMovimiento>(['VENTA', 'MERMA', 'TRASLADO_SALIDA'])
+const TIPOS_SALIDA = new Set<TipoMovimiento>([
+  'SALIDA',
+  'VENTA',
+  'MERMA',
+  'TRASLADO_SALIDA'
+])
 const esTipoSalida = (tipo: TipoMovimiento) => TIPOS_SALIDA.has(tipo)
+type TipoRegistroMovimiento = Extract<TipoMovimiento, 'ENTRADA' | 'SALIDA'>
 
 type FormState = {
   sucursalId: string
   inventarioId: string
-  tipo: TipoMovimiento
+  tipo: TipoRegistroMovimiento
   cantidad: string
   referencia: string
 }
@@ -32,17 +38,17 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   sucursalId: '',
   inventarioId: '',
-  tipo: 'COMPRA',
+  tipo: 'ENTRADA',
   cantidad: '',
-  referencia: '',
+  referencia: ''
 }
 
-function SimpleSelect<T extends string | number>({
+function SimpleSelect<T extends string | number> ({
   label,
   value,
   options,
   onChange,
-  placeholder,
+  placeholder
 }: {
   label: string
   value: T | ''
@@ -55,22 +61,33 @@ function SimpleSelect<T extends string | number>({
 
   return (
     <View className='gap-1'>
-      <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>{label}</Text>
+      <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>
+        {label}
+      </Text>
       <TouchableOpacity
         className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3.5 py-3 flex-row items-center justify-between bg-white dark:bg-zinc-800'
         onPress={() => setOpen(true)}
       >
-        <Text className={`font-sans ${selected ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-400'}`}>
+        <Text
+          className={`font-sans ${
+            selected ? 'text-zinc-900 dark:text-zinc-50' : 'text-zinc-400'
+          }`}
+        >
           {selected ? selected.label : placeholder ?? 'Seleccionar...'}
         </Text>
         <ChevronDown size={14} color='#a1a1aa' />
       </TouchableOpacity>
       <Modal visible={open} transparent animationType='slide'>
-        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => setOpen(false)}>
+        <Pressable
+          className='flex-1 bg-black/60 justify-end'
+          onPress={() => setOpen(false)}
+        >
           <Pressable onPress={() => {}}>
             <View className='bg-white dark:bg-zinc-900 rounded-t-2xl max-h-64'>
               <View className='flex-row items-center justify-between px-4 py-3 border-b border-stone-100 dark:border-zinc-800'>
-                <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>{label}</Text>
+                <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>
+                  {label}
+                </Text>
                 <TouchableOpacity onPress={() => setOpen(false)}>
                   <X size={18} color='#71717a' />
                 </TouchableOpacity>
@@ -79,10 +96,23 @@ function SimpleSelect<T extends string | number>({
                 {options.map(opt => (
                   <TouchableOpacity
                     key={String(opt.value)}
-                    className={`px-4 py-3 border-b border-stone-50 dark:border-zinc-800 ${opt.value === value ? 'bg-indigo-50 dark:bg-indigo-900/30' : ''}`}
-                    onPress={() => { onChange(opt.value); setOpen(false) }}
+                    className={`px-4 py-3 border-b border-stone-50 dark:border-zinc-800 ${
+                      opt.value === value
+                        ? 'bg-indigo-50 dark:bg-indigo-900/30'
+                        : ''
+                    }`}
+                    onPress={() => {
+                      onChange(opt.value)
+                      setOpen(false)
+                    }}
                   >
-                    <Text className={`font-sans ${opt.value === value ? 'font-sans-semibold text-indigo-600 dark:text-indigo-400' : 'text-zinc-700 dark:text-zinc-300'}`}>
+                    <Text
+                      className={`font-sans ${
+                        opt.value === value
+                          ? 'font-sans-semibold text-indigo-600 dark:text-indigo-400'
+                          : 'text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
                       {opt.label}
                     </Text>
                   </TouchableOpacity>
@@ -96,15 +126,18 @@ function SimpleSelect<T extends string | number>({
   )
 }
 
-export default function MovimientosScreen() {
-  const [filterSucursalId, setFilterSucursalId] = useState<number | undefined>(undefined)
+export default function MovimientosScreen () {
+  const [filterSucursalId, setFilterSucursalId] = useState<number | undefined>(
+    undefined
+  )
   const [modalOpen, setModalOpen] = useState(false)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [cantidadError, setCantidadError] = useState<string | null>(null)
   const [referenciaError, setReferenciaError] = useState<string | null>(null)
 
   const { branches } = useBranches()
-  const { movimientos, loading, error, creating, registrar } = useMovimientos(filterSucursalId)
+  const { movimientos, loading, error, creating, registrar } =
+    useMovimientos(filterSucursalId)
 
   const [inventarios, setInventarios] = useState<InventarioItemDTO[]>([])
   const [loadingInventarios, setLoadingInventarios] = useState(false)
@@ -118,31 +151,49 @@ export default function MovimientosScreen() {
     setLoadingInventarios(true)
     getInventarioRepos()
       .then(({ api }) => api.listarPorSucursal(Number(form.sucursalId)))
-      .then(data => { if (!cancelled) { setInventarios(data); setLoadingInventarios(false) } })
-      .catch(e => { if (!cancelled) { console.error('[MovimientosScreen] loadInventarios:', e); setLoadingInventarios(false) } })
-    return () => { cancelled = true }
+      .then(data => {
+        if (!cancelled) {
+          setInventarios(data)
+          setLoadingInventarios(false)
+        }
+      })
+      .catch(e => {
+        if (!cancelled) {
+          console.error('[MovimientosScreen] loadInventarios:', e)
+          setLoadingInventarios(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
   }, [form.sucursalId])
 
-  const inventarioOptions = inventarios
-    .map(i => ({
-      label: i.productoNombre,
-      sublabel: `stock ${i.stockActual}`,
-      value: String(i.id),
-    }))
+  const inventarioOptions = inventarios.map(i => ({
+    label: i.productoNombre,
+    sublabel: `stock ${i.stockActual}`,
+    value: String(i.id)
+  }))
 
-  const branchOptions = branches.map(b => ({ label: b.nombre, value: Number(b.id) }))
-  const tipoOptions: { label: string; value: TipoMovimiento }[] = [
-    { label: 'Compra', value: 'COMPRA' },
+  const branchOptions = branches.map(b => ({
+    label: b.nombre,
+    value: Number(b.id)
+  }))
+  const tipoOptions: { label: string; value: string }[] = [
     { label: 'Venta', value: 'VENTA' },
-    { label: 'Ajuste', value: 'AJUSTE' },
+    { label: 'Compra', value: 'COMPRA' },
     { label: 'Merma', value: 'MERMA' },
-    { label: 'Devolucion', value: 'DEVOLUCION' },
-    { label: 'Traslado salida', value: 'TRASLADO_SALIDA' },
-    { label: 'Traslado entrada', value: 'TRASLADO_ENTRADA' },
+    { label: 'Devolución', value: 'DEVOLUCION' },
+    { label: 'Ajuste', value: 'AJUSTE' },
+    { label: 'Traslado (Entrada)', value: 'TRASLADO_ENTRADA' },
+    { label: 'Traslado (Salida)', value: 'TRASLADO_SALIDA' }
   ]
 
   const handleRegistrar = async () => {
-    if (!form.sucursalId || !form.inventarioId) {
+    const selectedInventario = inventarios.find(
+      i => String(i.id) === form.inventarioId
+    )
+
+    if (!form.sucursalId || !selectedInventario) {
       Alert.alert('Error', 'Selecciona sucursal e inventario')
       return
     }
@@ -154,10 +205,11 @@ export default function MovimientosScreen() {
     try {
       await registrar({
         sucursalId: Number(form.sucursalId),
-        inventarioId: Number(form.inventarioId),
+        productoId: selectedInventario.productoId,
+        inventarioId: selectedInventario.id,
         tipoMovimiento: form.tipo,
         cantidad: parseInt(form.cantidad, 10),
-        referencia: form.referencia || undefined,
+        referencia: form.referencia || undefined
       })
       setCantidadError(null)
       setReferenciaError(null)
@@ -170,8 +222,14 @@ export default function MovimientosScreen() {
 
   const formatFecha = (fecha: string) => {
     try {
-      return new Date(fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
-    } catch { return fecha }
+      return new Date(fecha).toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      })
+    } catch {
+      return fecha
+    }
   }
 
   return (
@@ -179,8 +237,12 @@ export default function MovimientosScreen() {
       <View className='w-11/12 self-center mt-4 gap-3'>
         <View className='flex-row items-center justify-between'>
           <View>
-            <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Movimientos</Text>
-            <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>Historial de entradas y salidas</Text>
+            <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>
+              Movimientos
+            </Text>
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>
+              Historial de entradas y salidas
+            </Text>
           </View>
           <TouchableOpacity
             className='flex-row items-center gap-1 bg-indigo-500 px-4 py-2 rounded-xl'
@@ -201,38 +263,65 @@ export default function MovimientosScreen() {
 
         {filterSucursalId != null && (
           <TouchableOpacity onPress={() => setFilterSucursalId(undefined)}>
-            <Text className='text-indigo-500 dark:text-indigo-400 text-sm font-sans'>Ver todas</Text>
+            <Text className='text-indigo-500 dark:text-indigo-400 text-sm font-sans'>
+              Ver todas
+            </Text>
           </TouchableOpacity>
         )}
 
         {loading && <ActivityIndicator className='mt-4' />}
-        {error && <Text className='text-red-500 text-sm font-sans'>{error}</Text>}
+        {error && (
+          <Text className='text-red-500 text-sm font-sans'>{error}</Text>
+        )}
 
         <ScrollView showsVerticalScrollIndicator={false} className='mb-4'>
           {movimientos.length === 0 && !loading && (
-            <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-center mt-8'>Sin movimientos</Text>
+            <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-center mt-8'>
+              Sin movimientos
+            </Text>
           )}
           {movimientos.map(m => {
             const esSalida = esTipoSalida(m.tipoMovimiento)
             return (
-              <View key={m.id} className='bg-white dark:bg-zinc-900 rounded-2xl p-4 mb-2 border border-stone-100 dark:border-zinc-800'>
+              <View
+                key={m.id}
+                className='bg-white dark:bg-zinc-900 rounded-2xl p-4 mb-2 border border-stone-100 dark:border-zinc-800'
+              >
                 <View className='flex-row items-start justify-between'>
                   <View className='flex-1'>
-                    <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>{m.productoNombre}</Text>
-                    <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm mt-0.5'>{m.sucursalNombre}</Text>
+                    <Text className='font-sans-semibold text-zinc-900 dark:text-zinc-50'>
+                      {m.productoNombre}
+                    </Text>
+                    <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm mt-0.5'>
+                      {m.sucursalNombre}
+                    </Text>
                   </View>
-                  <View className={`px-2 py-0.5 rounded-full ${esSalida ? 'bg-red-100' : 'bg-green-100'}`}>
-                    <Text className={`text-xs font-semibold ${esSalida ? 'text-red-700' : 'text-green-700'}`}>
+                  <View
+                    className={`px-2 py-0.5 rounded-full ${
+                      esSalida ? 'bg-red-100' : 'bg-green-100'
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-semibold ${
+                        esSalida ? 'text-red-700' : 'text-green-700'
+                      }`}
+                    >
                       {esSalida ? `-${m.cantidad}` : `+${m.cantidad}`}
                     </Text>
                   </View>
                 </View>
                 <View className='flex-row items-center justify-between mt-2'>
-                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{m.usuarioNombre}</Text>
-                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>{formatFecha(m.fecha)}</Text>
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>
+                    {m.usuarioNombre}
+                  </Text>
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs'>
+                    {formatFecha(m.fecha)}
+                  </Text>
                 </View>
                 {m.referencia && (
-                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs mt-1'>Ref: {m.referencia}</Text>
+                  <Text className='font-sans text-zinc-400 dark:text-zinc-500 text-xs mt-1'>
+                    Ref: {m.referencia}
+                  </Text>
                 )}
               </View>
             )
@@ -241,12 +330,27 @@ export default function MovimientosScreen() {
       </View>
 
       <Modal visible={modalOpen} transparent animationType='slide'>
-        <Pressable className='flex-1 bg-black/60 justify-end' onPress={() => { setModalOpen(false); setCantidadError(null); setReferenciaError(null) }}>
+        <Pressable
+          className='flex-1 bg-black/60 justify-end'
+          onPress={() => {
+            setModalOpen(false)
+            setCantidadError(null)
+            setReferenciaError(null)
+          }}
+        >
           <Pressable onPress={() => {}}>
             <View className='bg-white dark:bg-zinc-900 rounded-t-2xl p-6 gap-4'>
               <View className='flex-row items-center justify-between'>
-                <Text className='font-sans-bold text-xl text-zinc-900 dark:text-zinc-50'>Nuevo movimiento</Text>
-                <TouchableOpacity onPress={() => { setModalOpen(false); setCantidadError(null); setReferenciaError(null) }}>
+                <Text className='font-sans-bold text-xl text-zinc-900 dark:text-zinc-50'>
+                  Nuevo movimiento
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setModalOpen(false)
+                    setCantidadError(null)
+                    setReferenciaError(null)
+                  }}
+                >
                   <X size={20} color='#71717a' />
                 </TouchableOpacity>
               </View>
@@ -256,27 +360,47 @@ export default function MovimientosScreen() {
                 placeholder='Seleccionar sucursal...'
                 options={branchOptions}
                 value={form.sucursalId ? Number(form.sucursalId) : ''}
-                onChange={v => setForm(p => ({ ...p, sucursalId: String(v), inventarioId: '' }))}
+                onChange={v =>
+                  setForm(p => ({
+                    ...p,
+                    sucursalId: String(v),
+                    inventarioId: ''
+                  }))
+                }
               />
 
               <SearchableSelect
                 label='Inventario'
-                placeholder={form.sucursalId ? 'Buscar producto en inventario...' : 'Selecciona una sucursal primero'}
+                placeholder={
+                  form.sucursalId
+                    ? 'Buscar producto en inventario...'
+                    : 'Selecciona una sucursal primero'
+                }
                 options={inventarioOptions}
                 value={form.inventarioId}
-                onChange={v => setForm(p => ({ ...p, inventarioId: String(v) }))}
-                emptyMessage={loadingInventarios ? 'Cargando inventario...' : 'Sin inventario para esta sucursal'}
+                onChange={v =>
+                  setForm(p => ({ ...p, inventarioId: String(v) }))
+                }
+                emptyMessage={
+                  loadingInventarios
+                    ? 'Cargando inventario...'
+                    : 'Sin inventario para esta sucursal'
+                }
               />
 
               <SimpleSelect
                 label='Tipo de movimiento'
                 options={tipoOptions}
                 value={form.tipo}
-                onChange={v => setForm(p => ({ ...p, tipo: v as TipoMovimiento }))}
+                onChange={v =>
+                  setForm(p => ({ ...p, tipo: v as TipoRegistroMovimiento }))
+                }
               />
 
               <View className='gap-1'>
-                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Cantidad</Text>
+                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>
+                  Cantidad
+                </Text>
                 <TextInput
                   className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                   value={form.cantidad}
@@ -285,11 +409,17 @@ export default function MovimientosScreen() {
                   placeholder='Ej. 10'
                   placeholderTextColor='#a1a1aa'
                 />
-                {cantidadError && <Text className='text-red-500 text-xs mt-0.5 font-sans'>{cantidadError}</Text>}
+                {cantidadError && (
+                  <Text className='text-red-500 text-xs mt-0.5 font-sans'>
+                    {cantidadError}
+                  </Text>
+                )}
               </View>
 
               <View className='gap-1'>
-                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Referencia (opcional)</Text>
+                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>
+                  Referencia (opcional)
+                </Text>
                 <TextInput
                   className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                   value={form.referencia}
@@ -298,7 +428,11 @@ export default function MovimientosScreen() {
                   placeholder='Ej. Compra #001'
                   placeholderTextColor='#a1a1aa'
                 />
-                {referenciaError && <Text className='text-red-500 text-xs mt-0.5 font-sans'>{referenciaError}</Text>}
+                {referenciaError && (
+                  <Text className='text-red-500 text-xs mt-0.5 font-sans'>
+                    {referenciaError}
+                  </Text>
+                )}
               </View>
 
               <TouchableOpacity
@@ -309,7 +443,9 @@ export default function MovimientosScreen() {
                 {creating ? (
                   <ActivityIndicator color='#fff' />
                 ) : (
-                  <Text className='text-white font-sans-semibold text-base'>Registrar movimiento</Text>
+                  <Text className='text-white font-sans-semibold text-base'>
+                    Registrar movimiento
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>

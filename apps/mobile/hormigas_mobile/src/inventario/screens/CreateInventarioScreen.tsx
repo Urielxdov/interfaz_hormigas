@@ -8,6 +8,7 @@ import { getProductService } from '@/src/adapters/productServiceInstance'
 import { validateStock } from '@/src/utils/validation'
 
 interface Props {
+  sucursalId: number
   onSuccess: (dto: CreateInventarioDTO) => Promise<void>
 }
 
@@ -16,7 +17,7 @@ interface ProductoOption {
   nombre: string
 }
 
-export default function CreateInventarioScreen({ onSuccess }: Props) {
+export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props) {
   const [productos, setProductos] = useState<ProductoOption[]>([])
   const [productoId, setProductoId] = useState<number | null>(null)
   const [stockActual, setStockActual] = useState('')
@@ -30,7 +31,12 @@ export default function CreateInventarioScreen({ onSuccess }: Props) {
   useEffect(() => {
     let cancelled = false
     getProductService()
-      .then(svc => svc.findAll())
+      .then(async svc => {
+        await svc.pullFromServer().catch(e => {
+          console.warn('[CreateInventarioScreen] pullFromServer:', e)
+        })
+        return svc.findActive()
+      })
       .then(ps => {
         if (cancelled) return
         setProductos(
@@ -62,6 +68,7 @@ export default function CreateInventarioScreen({ onSuccess }: Props) {
     setLoading(true)
     try {
       await onSuccess({
+        sucursalId,
         productoId: productoId!,
         stockActual: Number(stockActual),
         stockMinimo: Number(stockMinimo),

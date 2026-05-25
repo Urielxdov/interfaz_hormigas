@@ -26,6 +26,7 @@ export function useSyncManager() {
       ])
 
       await productSvc.syncPending()
+      await productSvc.pullFromServer()
       await branchSvc.syncPending()
       await movimientoSvc.syncPending()
       await movimientoSvc.pullFromServer()

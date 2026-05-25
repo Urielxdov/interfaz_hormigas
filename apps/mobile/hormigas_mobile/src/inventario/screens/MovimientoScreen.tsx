@@ -8,22 +8,26 @@ import { useMovimiento } from '@/src/utils/hooks/useMovimiento'
 import { useMotivo } from '@/src/utils/hooks/useMotivo'
 import { validateCantidad, validateReferencia } from '@/src/utils/validation'
 
-type TipoSimple = Extract<TipoMovimiento, 'COMPRA' | 'VENTA'>
+type TipoSimple = Extract<TipoMovimiento, 'ENTRADA' | 'SALIDA'>
 
 interface Props {
+  sucursalId: number
   inventarioId: number
+  productoId: number
   productoNombre: string
   tipoPreseleccionado?: TipoSimple
   onSuccess: (result: MovimientoDTO | null) => void
 }
 
 export default function MovimientoScreen({
+  sucursalId,
   inventarioId,
+  productoId,
   productoNombre,
   tipoPreseleccionado,
   onSuccess,
 }: Props) {
-  const [tipo, setTipo] = useState<TipoSimple>(tipoPreseleccionado ?? 'VENTA')
+  const [tipo, setTipo] = useState<TipoSimple>(tipoPreseleccionado ?? 'SALIDA')
   const [cantidad, setCantidad] = useState('')
   const [referencia, setReferencia] = useState('')
   const { registrar, loading, error } = useMovimiento()
@@ -39,6 +43,8 @@ export default function MovimientoScreen({
     if (cantErr || refErr) return
     try {
       const result = await registrar({
+        sucursalId,
+        productoId,
         inventarioId,
         tipoMovimiento: tipo,
         cantidad: parseInt(cantidad, 10),
@@ -60,20 +66,20 @@ export default function MovimientoScreen({
         <Text className="text-zinc-500 dark:text-zinc-400">{productoNombre}</Text>
       </View>
 
-      {/* Tipo COMPRA / VENTA */}
+      {/* Tipo ENTRADA / SALIDA */}
       <View className="flex-row gap-3 px-4">
-        {(['VENTA', 'COMPRA'] as TipoSimple[]).map(t => (
+        {(['SALIDA', 'ENTRADA'] as TipoSimple[]).map(t => (
           <TouchableOpacity
             key={t}
             onPress={() => setTipo(t)}
             className={`flex-1 py-3 rounded-xl items-center border-2 ${
               tipo === t
-                ? t === 'VENTA' ? 'bg-red-500 border-red-500' : 'bg-green-600 border-green-600'
+                ? t === 'SALIDA' ? 'bg-red-500 border-red-500' : 'bg-green-600 border-green-600'
                 : 'bg-white dark:bg-zinc-900 border-stone-200 dark:border-zinc-700'
             }`}
           >
             <Text className={`font-sans-bold ${tipo === t ? 'text-white' : 'text-zinc-700 dark:text-zinc-300'}`}>
-              {t === 'VENTA' ? 'Venta' : 'Compra'}
+              {t === 'SALIDA' ? 'Salida' : 'Entrada'}
             </Text>
           </TouchableOpacity>
         ))}

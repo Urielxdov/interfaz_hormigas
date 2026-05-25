@@ -40,9 +40,12 @@ export function useProducts () {
   useEffect(() => {
     if (!isOnline) return
     getProductService()
-      .then(svc => svc.syncPending())
+      .then(async svc => {
+        await svc.syncPending()
+        await svc.pullFromServer()
+      })
       .then(loadLocal)
-      .catch(e => console.warn('[useProducts] syncPending:', e))
+      .catch(e => console.warn('[useProducts] sync products:', e))
   }, [isOnline, loadLocal])
 
   const createProduct = async (dto: CreateProductDTO) => {

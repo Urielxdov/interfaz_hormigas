@@ -97,8 +97,9 @@ export class ProductService {
         const serverProducts = await this.apiRepo.findAll()
 
         for (const sp of serverProducts) {
+            const existing = await this.localRepo.findBySku(sp.sku)
             const product: Product = {
-                localId: generateUUID(),
+                localId: existing?.localId ?? generateUUID(),
                 nombre: sp.nombre,
                 sku: sp.sku,
                 descripcion: sp.descripcion,
@@ -107,12 +108,8 @@ export class ProductService {
                 categoria: sp.categoria,
                 categoriaId: sp.id,
             }
-            const existing = await this.localRepo.findBySku(sp.sku)
-            if (existing) {
-                await this.localRepo.markAsSynced(existing.localId, sp.id)
-            } else {
-                await this.localRepo.save(product, true)
-            }
+
+            await this.localRepo.save(product, true)
         }
     }
 }

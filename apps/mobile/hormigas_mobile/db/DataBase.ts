@@ -2,6 +2,7 @@ import * as SQLite from 'expo-sqlite'
 import { CREATE_TABLES_SQL } from '@hormigas/domain'
 
 let db: SQLite.SQLiteDatabase | null = null
+let initPromise: Promise<void> | null = null
 
 export const getDB = async (): Promise<SQLite.SQLiteDatabase> => {
     if (!db) {
@@ -17,7 +18,7 @@ const INVENTARIO_MIGRATIONS = [
     `ALTER TABLE inventario ADD COLUMN synced_at INTEGER NOT NULL DEFAULT 0`,
 ]
 
-export const initDatabase = async () => {
+const runDatabaseInit = async () => {
     try {
         const db = await getDB()
 
@@ -42,4 +43,15 @@ export const initDatabase = async () => {
         console.error('❌ Error en initDatabase:', JSON.stringify(e))
         throw e
     }
+}
+
+export const initDatabase = async () => {
+    if (!initPromise) {
+        initPromise = runDatabaseInit().catch((e) => {
+            initPromise = null
+            throw e
+        })
+    }
+
+    return initPromise
 }

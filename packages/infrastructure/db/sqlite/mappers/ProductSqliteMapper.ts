@@ -35,6 +35,7 @@ export class ProductSqliteMapper {
             precio: product.precio,
             activo: product.activo ? 1 : 0,
             categoria: product.categoria,
+            server_id: product.categoriaId,
             synced,
         }
     }

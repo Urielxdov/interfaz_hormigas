@@ -27,6 +27,7 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
   const goToMovimiento = (item: InventarioItemDTO, tipo?: TipoMovimiento) => {
     const params: Record<string, string> = {
       inventarioId: String(item.id),
+      productoId: String(item.productoId),
       productoNombre: item.productoNombre,
     }
     if (tipo) params.tipoPreseleccionado = tipo
@@ -101,13 +102,13 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
 
             <View className="flex-row gap-2">
               <TouchableOpacity
-                onPress={() => goToMovimiento(item, 'VENTA')}
+                onPress={() => goToMovimiento(item, 'SALIDA')}
                 className="flex-1 bg-red-500 rounded-lg py-2 items-center"
               >
                 <Text className="text-white font-sans-semibold">Venta</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => goToMovimiento(item, 'COMPRA')}
+                onPress={() => goToMovimiento(item, 'ENTRADA')}
                 className="flex-1 bg-green-600 rounded-lg py-2 items-center"
               >
                 <Text className="text-white font-sans-semibold">Compra</Text>
@@ -125,6 +126,7 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)}>
         <CreateInventarioScreen
+          sucursalId={sucursalId}
           onSuccess={async (dto) => {
             await crearInventario(dto)
             setShowCreate(false)

@@ -30,8 +30,10 @@ function toDTO(s: ServerInventarioDTO): InventarioItemDTO {
 export class ApiInventarioRepositoryImpl implements IApiInventarioRepository {
   constructor(private http: ApiHttpClient) {}
 
-  async listarPorSucursal(_sucursalId: number): Promise<InventarioItemDTO[]> {
-    const rows = await this.http.get<ServerInventarioDTO[]>('/api/inventario/porSucursal')
+  async listarPorSucursal(sucursalId: number): Promise<InventarioItemDTO[]> {
+    const rows = await this.http.get<ServerInventarioDTO[]>(
+      `/api/inventario/porSucursal?sucursalId=${sucursalId}`
+    )
     return rows.map(toDTO)
   }
 

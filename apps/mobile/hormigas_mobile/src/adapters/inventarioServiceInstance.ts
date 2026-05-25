@@ -4,7 +4,7 @@ import {
   SqliteInventarioRepositoryImpl,
   TokenServiceImpl,
 } from '@hormigas/infrastructure'
-import { getDB } from '@/db/DataBase'
+import { getDB, initDatabase } from '@/db/DataBase'
 import { ExpoSQLiteClient } from './ExpoSQLiteClient'
 import { storage } from './AsyncStorageAdapter'
 
@@ -23,6 +23,7 @@ export const getInventarioRepos = (): Promise<InventarioRepos> => {
   if (_initPromise) return _initPromise
 
   _initPromise = (async () => {
+    await initDatabase()
     const db = await getDB()
     const dbClient = new ExpoSQLiteClient(db)
     const tokenService = new TokenServiceImpl(storage)

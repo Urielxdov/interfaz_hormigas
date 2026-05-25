@@ -1,8 +1,13 @@
 export type TipoMovimiento =
+  | 'ENTRADA'
+  | 'SALIDA'
   | 'COMPRA'
   | 'VENTA'
   | 'AJUSTE'
   | 'MERMA'
+  | 'DEVOLUCION'
+  | 'TRASLADO_ENTRADA'
+  | 'TRASLADO_SALIDA'
   | 'DEVOLUCION_CLIENTE'
   | 'DEVOLUCION_PROVEEDOR'
 
@@ -28,6 +33,7 @@ export interface MovimientoResponseDTO {
 }
 
 export interface CreateMovimientoDTO {
+  sucursalId: number
   productoId: number
   tipoMovimiento: TipoMovimiento
   cantidad: number
