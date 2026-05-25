@@ -1,5 +1,6 @@
 import { type LucideIcon } from 'lucide-react-native'
 import { Text, View } from 'react-native'
+import Animated, { FadeIn } from 'react-native-reanimated'
 import useIsTablet from '../hooks/useIsTablet'
 import { Color } from '../constants/Colors'
 import { bgClass } from '../helpers/ColorHerlper'
@@ -15,11 +16,12 @@ export default function InformationCard ({
   title,
   description,
   icon: Icon,
-  iconBgColor
+  iconBgColor,
 }: InformationCardProps) {
   const isTablet = useIsTablet()
   return (
-    <View
+    <Animated.View
+      entering={FadeIn.duration(300)}
       className={`flex-row gap-8 p-4 border items-center rounded-2xl border-stone-200 dark:border-zinc-800 bg-white dark:bg-zinc-900
         ${isTablet ? 'w-4/12' : 'w-10/12'} justify-between self-center`}
     >
@@ -30,6 +32,6 @@ export default function InformationCard ({
       <View className={`${bgClass(iconBgColor, 600)} p-3 rounded-xl`}>
         <Icon size={36} color='white' />
       </View>
-    </View>
+    </Animated.View>
   )
 }
