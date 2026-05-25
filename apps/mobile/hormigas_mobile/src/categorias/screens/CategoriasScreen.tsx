@@ -23,13 +23,24 @@ export default function CategoriasScreen() {
     const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
     const paddingH = useResponsiveValue(16, 24, 32)
 
+    const NOMBRE_MAX = 50
+    const DESC_MAX = 200
+    const NOMBRE_PATTERN = /^[\p{L}\p{N}\s\-_&/.]+$/u
+
+    const nombreTrimmed = nombre.trim()
+    const nombreError =
+        !nombreTrimmed ? 'El nombre es obligatorio' :
+        nombreTrimmed.length < 2 ? 'Mínimo 2 caracteres' :
+        !NOMBRE_PATTERN.test(nombreTrimmed) ? 'Solo letras, números y los caracteres -_&/.' :
+        null
+
     const handleCrear = async () => {
-        if (!nombre.trim()) {
-            showError('El nombre es obligatorio')
+        if (nombreError) {
+            showError(nombreError)
             return
         }
         try {
-            await crear({ nombre: nombre.trim(), descripcion: descripcion.trim() || undefined })
+            await crear({ nombre: nombreTrimmed, descripcion: descripcion.trim() || undefined })
             setNombre('')
             setDescripcion('')
             setModal(false)
@@ -119,31 +130,49 @@ export default function CategoriasScreen() {
                             </View>
 
                             <View className='gap-1'>
-                                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Nombre *</Text>
+                                <View className='flex-row justify-between items-center'>
+                                    <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Nombre *</Text>
+                                    <Text className={`text-xs font-sans ${nombre.length > NOMBRE_MAX ? 'text-red-500' : 'text-zinc-400'}`}>
+                                        {nombre.length}/{NOMBRE_MAX}
+                                    </Text>
+                                </View>
                                 <TextInput
-                                    className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
+                                    className={`border rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans ${nombre.length > 0 && nombreError ? 'border-red-400' : 'border-stone-200 dark:border-zinc-700'}`}
                                     value={nombre}
-                                    onChangeText={setNombre}
+                                    onChangeText={t => setNombre(t.slice(0, NOMBRE_MAX))}
                                     placeholder='Ej. Electrónica'
                                     placeholderTextColor='#a1a1aa'
+                                    maxLength={NOMBRE_MAX}
+                                    autoCapitalize='words'
                                 />
+                                {nombre.length > 0 && nombreError ? (
+                                    <Text className='text-red-500 text-xs font-sans'>{nombreError}</Text>
+                                ) : null}
                             </View>
 
                             <View className='gap-1'>
-                                <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Descripción (opcional)</Text>
+                                <View className='flex-row justify-between items-center'>
+                                    <Text className='font-sans-medium text-zinc-700 dark:text-zinc-300 text-xs'>Descripción (opcional)</Text>
+                                    <Text className={`text-xs font-sans ${descripcion.length > DESC_MAX ? 'text-red-500' : 'text-zinc-400'}`}>
+                                        {descripcion.length}/{DESC_MAX}
+                                    </Text>
+                                </View>
                                 <TextInput
                                     className='border border-stone-200 dark:border-zinc-700 rounded-xl px-3 py-3 text-zinc-900 dark:text-zinc-50 bg-white dark:bg-zinc-800 font-sans'
                                     value={descripcion}
-                                    onChangeText={setDescripcion}
+                                    onChangeText={t => setDescripcion(t.slice(0, DESC_MAX))}
                                     placeholder='Ej. Dispositivos electrónicos'
                                     placeholderTextColor='#a1a1aa'
+                                    maxLength={DESC_MAX}
+                                    multiline
+                                    numberOfLines={2}
                                 />
                             </View>
 
                             <TouchableOpacity
-                                className='bg-indigo-500 rounded-xl py-3.5 items-center mt-1'
+                                className={`rounded-xl py-3.5 items-center mt-1 ${saving || !!nombreError || descripcion.length > DESC_MAX ? 'bg-indigo-300 dark:bg-indigo-800' : 'bg-indigo-500'}`}
                                 onPress={handleCrear}
-                                disabled={saving}
+                                disabled={saving || !!nombreError || descripcion.length > DESC_MAX}
                             >
                                 {saving ? (
                                     <ActivityIndicator color='#fff' />
