@@ -1,6 +1,6 @@
 import { LucideIcon } from 'lucide-react-native'
 import React, { useState, useCallback } from 'react'
-import useIsTablet from '../hooks/useIsTablet'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 import { ScrollView, View, LayoutChangeEvent } from 'react-native'
 import { Text } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
@@ -26,7 +26,10 @@ export default function DataTable<T>({
   description,
   icon: Icon
 }: DataTableProps<T>) {
-  const isTablet = useIsTablet()
+  const bp = useBreakpoint()
+  const isTablet = bp !== 'phone'
+  const isLarge = bp === 'large'
+  const cellPadding = isLarge ? 'pr-6' : 'pr-4'
   const totalCells = (data.length + 1) * columns.length
 
   const [colWidths, setColWidths] = useState<Record<string, number>>({})
@@ -74,7 +77,7 @@ export default function DataTable<T>({
                   key={key}
                   style={getCellStyle(key)}
                   onLayout={e => handleLayout(key, e)}
-                  className='pr-4'
+                  className={cellPadding}
                 >
                   <Text className='font-sans-semibold text-xs text-zinc-500 dark:text-zinc-400 uppercase text-center tracking-wide'>
                     {col.label}
@@ -99,7 +102,7 @@ export default function DataTable<T>({
                     key={key}
                     style={getCellStyle(key)}
                     onLayout={e => handleLayout(key, e)}
-                    className='pr-4'
+                    className={cellPadding}
                   >
                     {col.render
                       ? col.render(row[col.key], row)
