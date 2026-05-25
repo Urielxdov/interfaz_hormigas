@@ -30,7 +30,7 @@ export function useUsuarios () {
       await sqlite.upsertMany(data)
       dispatch({ type: 'SET', payload: data })
     } catch (e) {
-      setError('Error al cargar usuarios')
+      setError(e instanceof Error ? e.message : 'Error al cargar usuarios')
       console.error('[useUsuarios] syncFromServer:', e)
     } finally {
       setLoading(false)

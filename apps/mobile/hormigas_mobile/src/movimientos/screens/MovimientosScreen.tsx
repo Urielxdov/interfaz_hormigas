@@ -219,8 +219,8 @@ export default function MovimientosScreen () {
       setReferenciaError(null)
       setForm(EMPTY_FORM)
       setModalOpen(false)
-    } catch {
-      Alert.alert('Error', 'No se pudo registrar el movimiento')
+    } catch (e) {
+      Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo registrar el movimiento')
     }
   }
 

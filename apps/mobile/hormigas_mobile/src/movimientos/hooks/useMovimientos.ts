@@ -18,8 +18,8 @@ export function useMovimientos(sucursalId?: number, onMovimientoRegistrado?: () 
       const svc = await getMovimientoService()
       const data = await svc.listar(sucursalId)
       setMovimientos(data)
-    } catch {
-      setError('Error al cargar movimientos')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar movimientos')
     } finally {
       setLoading(false)
     }

@@ -57,8 +57,8 @@ export default function EmpresasScreen() {
             setEmpForm(EMPTY_EMP)
             setAdmForm(EMPTY_ADM)
             setModal(false)
-        } catch {
-            Alert.alert('Error', 'No se pudo crear la empresa')
+        } catch (e) {
+            Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo crear la empresa')
         }
     }
 

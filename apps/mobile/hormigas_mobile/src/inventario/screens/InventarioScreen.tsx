@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native'
 import { router } from 'expo-router'
 import { Package, Plus } from 'lucide-react-native'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
@@ -137,8 +137,12 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
         <CreateInventarioScreen
           sucursalId={sucursalId}
           onSuccess={async (dto) => {
-            await crearInventario(dto)
-            setShowCreate(false)
+            try {
+              await crearInventario(dto)
+              setShowCreate(false)
+            } catch (e) {
+              Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo agregar el producto')
+            }
           }}
         />
       </Modal>

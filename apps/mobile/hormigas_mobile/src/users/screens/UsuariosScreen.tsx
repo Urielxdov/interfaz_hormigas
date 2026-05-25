@@ -49,8 +49,8 @@ export default function UsuariosScreen() {
             })
             setForm(EMPTY)
             setModal(false)
-        } catch {
-            Alert.alert('Error', 'No se pudo crear el usuario')
+        } catch (e) {
+            Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo crear el usuario')
         }
     }
 

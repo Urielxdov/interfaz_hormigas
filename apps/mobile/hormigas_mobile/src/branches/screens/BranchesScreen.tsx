@@ -13,7 +13,7 @@ import { BranchMapper } from '@/mappers/BranchMapper'
 import { router } from 'expo-router'
 import { Building2, Eye, Pencil, Power } from 'lucide-react-native'
 import { useState } from 'react'
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 export default function BranchesScreen() {
   const [modal, setModal] = useState(false)
@@ -172,24 +172,28 @@ export default function BranchesScreen() {
                 }
               : undefined
           }
-          onSubmit={data => {
-            if (selectBranch) {
-              updateBranch({
-                id: selectBranch.id,
-                nombre: data.nombre,
-                direccion: data.direccion,
-                encargadoId: data.encargadoId ?? undefined,
-                activa: selectBranch.activa,
-              })
-            } else {
-              createBranch({
-                nombre: data.nombre,
-                direccion: data.direccion,
-                activa: true,
-                encargadoId: data.encargadoId ?? undefined,
-              })
+          onSubmit={async data => {
+            try {
+              if (selectBranch) {
+                await updateBranch({
+                  id: selectBranch.id,
+                  nombre: data.nombre,
+                  direccion: data.direccion,
+                  encargadoId: data.encargadoId ?? undefined,
+                  activa: selectBranch.activa,
+                })
+              } else {
+                await createBranch({
+                  nombre: data.nombre,
+                  direccion: data.direccion,
+                  activa: true,
+                  encargadoId: data.encargadoId ?? undefined,
+                })
+              }
+              closeModal()
+            } catch (e) {
+              Alert.alert('Error', e instanceof Error ? e.message : 'No se pudo guardar la sucursal')
             }
-            closeModal()
           }}
         />
       </Modal>

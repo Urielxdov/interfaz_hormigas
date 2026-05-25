@@ -48,7 +48,7 @@ export class ApiHttpClient {
 
         if (!res.ok) {
             console.log('[API][GET] ERROR:', data)
-            throw new HttpError(res.status, `GET ${path} → ${res.status}`)
+            throw new HttpError(res.status, data?.error ?? `GET ${path} → ${res.status}`)
         }
 
         return data as T
@@ -72,7 +72,7 @@ export class ApiHttpClient {
 
         if (!res.ok) {
             console.log('[API][POST] ERROR:', data)
-            throw new HttpError(res.status, `POST ${path} → ${res.status}`)
+            throw new HttpError(res.status, data?.error ?? `POST ${path} → ${res.status}`)
         }
 
         return data as T
@@ -96,7 +96,7 @@ export class ApiHttpClient {
 
         if (!res.ok) {
             console.log('[API][PUT] ERROR:', data)
-            throw new HttpError(res.status, `PUT ${path} → ${res.status}`)
+            throw new HttpError(res.status, data?.error ?? `PUT ${path} → ${res.status}`)
         }
 
         return data as T
@@ -109,7 +109,7 @@ export class ApiHttpClient {
             body: body !== undefined ? JSON.stringify(body) : undefined,
         })
         const data = await res.json().catch(() => null)
-        if (!res.ok) throw new HttpError(res.status, `PATCH ${path} → ${res.status}`)
+        if (!res.ok) throw new HttpError(res.status, data?.error ?? `PATCH ${path} → ${res.status}`)
         return data as T
     }
 
@@ -126,7 +126,7 @@ export class ApiHttpClient {
         if (!res.ok) {
             const data = await res.json().catch(() => null)
             console.log('[API][DELETE] ERROR:', data)
-            throw new HttpError(res.status, `DELETE ${path} → ${res.status}`)
+            throw new HttpError(res.status, data?.error ?? `DELETE ${path} → ${res.status}`)
         }
 
         console.log('[API][DELETE] success')
