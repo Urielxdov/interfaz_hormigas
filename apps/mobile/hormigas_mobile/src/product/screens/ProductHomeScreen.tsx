@@ -4,9 +4,9 @@ import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
-import { Package, Pencil, Power, BarChart2 } from 'lucide-react-native'
-import { useState } from 'react'
-import { ScrollView, Text, View } from 'react-native'
+import { ChevronLeft, ChevronRight, Package, Pencil, Power, BarChart2 } from 'lucide-react-native'
+import { useEffect, useMemo, useState } from 'react'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { router } from 'expo-router'
 import CreateProductoScreen from './CreateProduct'
 import InformationCard from '@/src/utils/components/InformationCard'
@@ -29,12 +29,13 @@ const FILTERS_FORM_FIELDS: FormFieldConfig<FilterFormValues>[] = [
   }
 ] 
 
-export default function ProductHomeScreen () {
-  const { control, formState: {errors}, watch } = useForm<FilterFormValues>({
+const PAGE_SIZE = 20
 
-  })
+export default function ProductHomeScreen () {
+  const { control, formState: {errors}, watch } = useForm<FilterFormValues>({})
   const [modal, setModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<ProductViewModel | null>(null)
+  const [page, setPage] = useState(0)
   const { products, toggleStatus, updateProduct, createProduct } = useProducts()
 
   const isTablet = useIsTablet()
@@ -43,15 +44,30 @@ export default function ProductHomeScreen () {
   const stockTotal = products.reduce((acc, s) => acc + s.stock, 0)
 
   const filterSku = watch('titleSku')
-  
-  const leakedProducts = products.filter(p => {
-    if (!filterSku) return true
+
+  const filteredProducts = useMemo(() => {
+    if (!filterSku) return products
     const search = filterSku.toLowerCase()
-    return (
+    return products.filter(p =>
       p.nombre.toLocaleLowerCase().includes(search) ||
       p.sku.toLocaleLowerCase().includes(search)
     )
-  })
+  }, [products, filterSku])
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE)),
+    [filteredProducts.length]
+  )
+
+  const leakedProducts = useMemo(
+    () => filteredProducts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [filteredProducts, page]
+  )
+
+  const goNext = () => setPage(p => Math.min(p + 1, totalPages - 1))
+  const goPrev = () => setPage(p => Math.max(p - 1, 0))
+
+  useEffect(() => { setPage(0) }, [filterSku])
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
@@ -162,6 +178,27 @@ export default function ProductHomeScreen () {
           data={leakedProducts}
         />
 
+        {totalPages > 1 && (
+          <View className='flex-row items-center justify-center gap-4 py-3'>
+            <TouchableOpacity
+              onPress={goPrev}
+              disabled={page === 0}
+              className={`p-2 rounded-xl border ${page === 0 ? 'border-stone-100 dark:border-zinc-800' : 'border-stone-200 dark:border-zinc-700'}`}
+            >
+              <ChevronLeft size={18} color={page === 0 ? '#d4d4d8' : '#6366f1'} />
+            </TouchableOpacity>
+            <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>
+              Página {page + 1} de {totalPages}
+            </Text>
+            <TouchableOpacity
+              onPress={goNext}
+              disabled={page >= totalPages - 1}
+              className={`p-2 rounded-xl border ${page >= totalPages - 1 ? 'border-stone-100 dark:border-zinc-800' : 'border-stone-200 dark:border-zinc-700'}`}
+            >
+              <ChevronRight size={18} color={page >= totalPages - 1 ? '#d4d4d8' : '#6366f1'} />
+            </TouchableOpacity>
+          </View>
+        )}
 
       </View>
       </ScrollView>

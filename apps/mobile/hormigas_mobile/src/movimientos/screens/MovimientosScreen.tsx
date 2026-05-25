@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native'
-import { ChevronDown, Plus, X } from 'lucide-react-native'
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react-native'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
@@ -138,7 +138,7 @@ export default function MovimientosScreen () {
   const { showError, errorModal } = useErrorModal()
 
   const { branches } = useBranches()
-  const { movimientos, loading, error, creating, registrar } =
+  const { movimientos, loading, error, creating, registrar, page, totalPages, goNext, goPrev } =
     useMovimientos(filterSucursalId)
 
   const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
@@ -331,6 +331,28 @@ export default function MovimientosScreen () {
               </View>
             )
           })}
+
+          {totalPages > 1 && (
+            <View className='flex-row items-center justify-center gap-4 py-4'>
+              <TouchableOpacity
+                onPress={goPrev}
+                disabled={page === 0 || loading}
+                className={`p-2 rounded-xl border ${page === 0 ? 'border-stone-100 dark:border-zinc-800' : 'border-stone-200 dark:border-zinc-700'}`}
+              >
+                <ChevronLeft size={18} color={page === 0 ? '#d4d4d8' : '#6366f1'} />
+              </TouchableOpacity>
+              <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-sm'>
+                Página {page + 1} de {totalPages}
+              </Text>
+              <TouchableOpacity
+                onPress={goNext}
+                disabled={page >= totalPages - 1 || loading}
+                className={`p-2 rounded-xl border ${page >= totalPages - 1 ? 'border-stone-100 dark:border-zinc-800' : 'border-stone-200 dark:border-zinc-700'}`}
+              >
+                <ChevronRight size={18} color={page >= totalPages - 1 ? '#d4d4d8' : '#6366f1'} />
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       </View>
 

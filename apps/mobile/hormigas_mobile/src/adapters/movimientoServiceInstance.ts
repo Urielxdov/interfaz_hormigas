@@ -1,5 +1,5 @@
 import { ApiHttpClient, SqliteSyncQueueRepositoryImpl, SqliteInventaryForSaleImpl, TokenServiceImpl } from '@hormigas/infrastructure'
-import { createMovimientoService, MovimientoSyncService, IMovimientoApi, MovimientoDTO, CrearMovimientoDTO, InventarioResponseDTO } from '@hormigas/application'
+import { createMovimientoService, MovimientoSyncService, IMovimientoApi, MovimientoDTO, MovimientoPage, CrearMovimientoDTO, InventarioResponseDTO } from '@hormigas/application'
 import { getDB, initDatabase } from '@/db/DataBase'
 import { ExpoSQLiteClient } from './ExpoSQLiteClient'
 import { storage } from './AsyncStorageAdapter'
@@ -26,9 +26,10 @@ export const getMovimientoService = (): Promise<MovimientoSyncService> => {
     const api: IMovimientoApi = {
       crear: (dto: Omit<CrearMovimientoDTO, 'inventarioId'>) =>
         http.post<MovimientoDTO>('/api/movimiento/crear', dto),
-      listar: (sucursalId?: number) => {
-        const params = sucursalId != null ? `?sucursalId=${sucursalId}` : ''
-        return http.get<MovimientoDTO[]>(`/api/movimiento/buscar${params}`)
+      listar: (sucursalId?: number, page = 0, size = 20) => {
+        const params = new URLSearchParams({ page: String(page), size: String(size) })
+        if (sucursalId != null) params.set('sucursalId', String(sucursalId))
+        return http.get<MovimientoPage>(`/api/movimiento/buscar?${params}`)
       },
       stockBajo: () =>
         http.get<InventarioResponseDTO[]>('/api/inventario/stockBajo'),

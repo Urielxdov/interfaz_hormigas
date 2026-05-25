@@ -36,9 +36,16 @@ export interface InventarioResponseDTO {
   stockMaximo: number
 }
 
+export interface MovimientoPage {
+  content: MovimientoDTO[]
+  totalPages: number
+  totalElements: number
+  number: number
+}
+
 export interface IMovimientoApi {
   crear(dto: Omit<CrearMovimientoDTO, 'inventarioId'>): Promise<MovimientoDTO>
-  listar(sucursalId?: number): Promise<MovimientoDTO[]>
+  listar(sucursalId?: number, page?: number, size?: number): Promise<MovimientoPage>
   stockBajo(): Promise<InventarioResponseDTO[]>
   inventarioPorSucursal(sucursalId: number): Promise<InventarioResponseDTO[]>
   buscarPorProducto(productoId: number, sucursalId?: number): Promise<MovimientoDTO[]>
@@ -115,8 +122,8 @@ export class MovimientoSyncService {
     return null
   }
 
-  async listar(sucursalId?: number): Promise<MovimientoDTO[]> {
-    return this.api.listar(sucursalId)
+  async listar(sucursalId?: number, page = 0, size = 20): Promise<MovimientoPage> {
+    return this.api.listar(sucursalId, page, size)
   }
 
   async syncPending(): Promise<void> {
