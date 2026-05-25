@@ -11,6 +11,7 @@ import {
   View
 } from 'react-native'
 import { ChevronDown, Plus, X } from 'lucide-react-native'
+import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
 import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
@@ -139,6 +140,9 @@ export default function MovimientosScreen () {
   const { movimientos, loading, error, creating, registrar } =
     useMovimientos(filterSucursalId)
 
+  const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
+  const paddingH = useResponsiveValue(16, 24, 32)
+
   const [inventarios, setInventarios] = useState<InventarioItemDTO[]>([])
   const [loadingInventarios, setLoadingInventarios] = useState(false)
 
@@ -234,7 +238,7 @@ export default function MovimientosScreen () {
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-      <View className='w-11/12 self-center mt-4 gap-3'>
+      <View style={{ maxWidth, alignSelf: 'center', width: '100%', paddingHorizontal: paddingH }} className='flex-1 mt-4 gap-3'>
         <View className='flex-row items-center justify-between'>
           <View>
             <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>
