@@ -1,52 +1,24 @@
 import { GenericForm } from '@/src/utils/components/Form/GenericForm'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
-import { CreateProductDTO } from '@hormigas/application'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { ChevronDown } from 'lucide-react-native'
 import { useState } from 'react'
 import { useCategorias } from '@/src/utils/hooks/useCategorias'
 import Modal from '@/src/utils/components/Modal'
 import { ScrollView } from 'react-native'
+import { productoSchema, ProductoInput } from '@hormigas/mobile-shared'
 
-const PRODUCTS_FORM_FIELDS: FormFieldConfig<CreateProductDTO>[] = [
-  {
-    name: 'nombre',
-    label: 'Nombre',
-    placeholder: 'Ej. Laptop Dell XPS 15',
-    rules: { required: 'El nombre es obligatorio' }
-  },
-  {
-    name: 'sku',
-    label: 'SKU',
-    placeholder: 'Ej. LAPTOP-DELL-001',
-    rules: { required: 'El SKU es obligatorio' }
-  },
-  {
-    name: 'precio',
-    label: 'Precio',
-    placeholder: '0.00'
-  },
-  {
-    name: 'estado',
-    label: 'Activo'
-  },
-  {
-    name: 'control',
-    label: '¿Control de inventario?'
-  }
+const PRODUCTS_FORM_FIELDS: FormFieldConfig<ProductoInput>[] = [
+  { name: 'nombre', label: 'Nombre', placeholder: 'Ej. Laptop Dell XPS 15' },
+  { name: 'sku', label: 'SKU', placeholder: 'Ej. LAPTOP-DELL-001', autoCapitalize: 'characters' },
+  { name: 'precio', label: 'Precio', placeholder: '0.00', keyboardType: 'decimal-pad' },
+  { name: 'estado', label: 'Activo' },
+  { name: 'control', label: '¿Control de inventario?' },
 ]
 
-const INVENTARIO_FIELDS: FormFieldConfig<CreateProductDTO>[] = [
-  {
-    name: 'stockMinimo',
-    label: 'Stock Mínimo',
-    placeholder: '0'
-  },
-  {
-    name: 'stockMaximo',
-    label: 'Stock Máximo',
-    placeholder: '0'
-  }
+const INVENTARIO_FIELDS: FormFieldConfig<ProductoInput>[] = [
+  { name: 'stockMinimo', label: 'Stock Mínimo', placeholder: '0', keyboardType: 'numeric' },
+  { name: 'stockMaximo', label: 'Stock Máximo', placeholder: '0', keyboardType: 'numeric' },
 ]
 
 interface CategoryPickerProps {
@@ -113,17 +85,18 @@ function CategoryPicker({ value, label, onSelect, error }: CategoryPickerProps) 
 }
 
 interface CreateProductScreenProps {
-  defaultValues?: Partial<CreateProductDTO>
-  onSubmit?: (data: CreateProductDTO) => void
+  defaultValues?: Partial<ProductoInput>
+  onSubmit?: (data: ProductoInput) => void
 }
 
 export default function CreateProductoScreen ({ defaultValues, onSubmit }: CreateProductScreenProps) {
   return (
-    <GenericForm<CreateProductDTO>
+    <GenericForm<ProductoInput>
       title='Crear Producto'
       subtitle='Completa los datos del nuevo producto'
       fields={PRODUCTS_FORM_FIELDS}
-      defaultValues={{ nombre: '', sku: '', categoria: '', precio: 0, estado: true, control: false, ...defaultValues }}
+      schema={productoSchema as any}
+      defaultValues={{ nombre: '', sku: '', precio: '', estado: true, control: false, categoriaId: undefined, ...defaultValues }}
       onSubmit={data => onSubmit?.(data)}
     >
       {(control, errors, watch, setValue) => (
@@ -133,7 +106,7 @@ export default function CreateProductoScreen ({ defaultValues, onSubmit }: Creat
             label='Categoría'
             onSelect={(id, nombre) => {
               setValue('categoriaId', id as any)
-              setValue('categoria', nombre as any)
+              setValue('categoria' as any, nombre as any)
             }}
             error={errors.categoriaId?.message}
           />
