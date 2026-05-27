@@ -4,18 +4,24 @@
   "main": "index.ts",
   "dependencies": {
     "@hormigas/application": "workspace:*",
-    "@hormigas/domain": "workspace:*"
+    "@hormigas/domain": "workspace:*",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
+    "@react-native-community/netinfo": "*",
     "react": "*",
-    "react-native": "*",
-    "@react-native-community/netinfo": "*"
+    "react-native": "*"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11"
+  }
 }

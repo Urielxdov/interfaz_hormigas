@@ -17,6 +17,7 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
+    "@hookform/resolvers": "^5.4.0",
     "@hormigas/application": "workspace:*",
     "@hormigas/domain": "workspace:*",
     "@hormigas/infrastructure": "workspace:*",
