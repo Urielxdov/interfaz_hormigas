@@ -5,7 +5,7 @@ import {
 } from 'react-native'
 import { CreateInventarioDTO } from '@hormigas/application'
 import { getProductService } from '@/src/adapters/productServiceInstance'
-import { validateStock } from '@/src/utils/validation'
+import { inventarioSchema } from '@hormigas/mobile-shared'
 
 interface Props {
   sucursalId: number
@@ -51,17 +51,15 @@ export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props)
   }, [])
 
   const handleSubmit = async () => {
+    const stockResult = inventarioSchema.safeParse({ stockActual, stockMinimo, stockMaximo })
     const errs: StockErrors = {
       productoId: !productoId ? 'Selecciona un producto' : undefined,
-      stockActual: validateStock(stockActual, 'Stock inicial') ?? undefined,
-      stockMinimo: validateStock(stockMinimo, 'Stock mínimo') ?? undefined,
-      stockMaximo: validateStock(stockMaximo, 'Stock máximo') ?? undefined,
     }
-    // Cross-field: stockMinimo <= stockMaximo
-    const min = Number(stockMinimo)
-    const max = Number(stockMaximo)
-    if (!errs.stockMinimo && !errs.stockMaximo && min > max) {
-      errs.stockMinimo = 'El mínimo no puede superar al máximo'
+    if (!stockResult.success) {
+      const flat = stockResult.error.flatten().fieldErrors
+      errs.stockActual = flat.stockActual?.[0]
+      errs.stockMinimo = flat.stockMinimo?.[0]
+      errs.stockMaximo = flat.stockMaximo?.[0]
     }
     setErrors(errs)
     if (Object.values(errs).some(Boolean)) return
