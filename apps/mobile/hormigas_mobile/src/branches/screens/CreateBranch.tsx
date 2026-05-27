@@ -1,55 +1,21 @@
-import { fieldRules } from '@/src/utils/validation'
 import { GenericForm } from '@/src/utils/components/Form/GenericForm'
 import { FormFieldConfig } from '@/src/utils/components/Form'
 import SelectField from '@/src/utils/components/SelectField'
 import { Controller } from 'react-hook-form'
 import { useUsuarios } from '@/src/users/hooks/useUsuarios'
+import { sucursalSchema, SucursalInput } from '@hormigas/mobile-shared'
 
-type BranchFormValues = {
-  nombre: string
-  direccion: string
-  encargadoId: number | null
-  codigo: string
-  telefono: string
-  ciudad: string
-}
-
-const BRANCH_FORM_FIELDS: FormFieldConfig<BranchFormValues>[] = [
-  {
-    name: 'nombre',
-    label: 'Nombre',
-    placeholder: 'Ej. Sucursal Centro',
-    rules: fieldRules.nombreLugar
-  },
-  {
-    name: 'direccion',
-    label: 'Dirección',
-    placeholder: 'Ej. Av. Principal 123',
-    rules: fieldRules.direccion
-  },
-  {
-    name: 'codigo',
-    label: 'Código',
-    placeholder: 'Ej. CENTRO-01',
-    rules: fieldRules.codigo
-  },
-  {
-    name: 'telefono',
-    label: 'Teléfono',
-    placeholder: 'Ej. 555 123 4567',
-    rules: fieldRules.telefono
-  },
-  {
-    name: 'ciudad',
-    label: 'Ciudad',
-    placeholder: 'Ej. Monterrey',
-    rules: fieldRules.ciudad
-  }
+const BRANCH_FORM_FIELDS: FormFieldConfig<SucursalInput>[] = [
+  { name: 'nombre', label: 'Nombre', placeholder: 'Ej. Sucursal Centro' },
+  { name: 'direccion', label: 'Dirección', placeholder: 'Ej. Av. Principal 123' },
+  { name: 'codigo', label: 'Código', placeholder: 'Ej. CENTRO-01', autoCapitalize: 'characters' },
+  { name: 'telefono', label: 'Teléfono', placeholder: 'Ej. 5551234567', keyboardType: 'numeric' },
+  { name: 'ciudad', label: 'Ciudad', placeholder: 'Ej. Monterrey' },
 ]
 
 interface CreateBranchScreenProps {
-  defaultValues?: Partial<BranchFormValues>
-  onSubmit?: (data: BranchFormValues) => void
+  defaultValues?: Partial<SucursalInput>
+  onSubmit?: (data: SucursalInput) => void
 }
 
 export function CreateBranchScreen ({ defaultValues, onSubmit }: CreateBranchScreenProps) {
@@ -57,10 +23,11 @@ export function CreateBranchScreen ({ defaultValues, onSubmit }: CreateBranchScr
   const userOptions = usuarios.map(u => ({ label: u.name, value: u.id }))
 
   return (
-    <GenericForm<BranchFormValues>
+    <GenericForm<SucursalInput>
       title='Nueva Sucursal'
       subtitle='Completa el formulario para crear una nueva sucursal'
       fields={BRANCH_FORM_FIELDS}
+      schema={sucursalSchema as any}
       defaultValues={{ nombre: '', direccion: '', encargadoId: null, codigo: '', telefono: '', ciudad: '', ...defaultValues }}
       onSubmit={data => onSubmit?.(data)}
     >
