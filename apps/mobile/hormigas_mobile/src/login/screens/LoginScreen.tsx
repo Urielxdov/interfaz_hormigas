@@ -1,4 +1,3 @@
-import { fieldRules } from '@/src/utils/validation'
 import { useAuth, isSuperAdminToken } from '@/src/login/hooks/useAuth'
 import { TokenServiceImpl } from '@hormigas/infrastructure'
 import { storage } from '@/src/adapters/AsyncStorageAdapter'
@@ -8,30 +7,25 @@ import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { router } from 'expo-router'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { loginSchema, LoginInput } from '@hormigas/mobile-shared'
 import { Text, View } from 'react-native'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { Package } from 'lucide-react-native'
 
-type LoginFormValues = {
-  email: string
-  password: string
-}
-
-const LOGIN_FIELDS: FormFieldConfig<LoginFormValues>[] = [
+const LOGIN_FIELDS: FormFieldConfig<LoginInput>[] = [
   {
     name: 'email',
     label: 'Email',
     placeholder: 'tu@email.com',
     autoCapitalize: 'none',
-    rules: fieldRules.email
   },
   {
     name: 'password',
-    label: 'Contrasena',
+    label: 'Contraseña',
     placeholder: '********',
     secureTextEntry: true,
-    rules: fieldRules.password
   }
 ]
 
@@ -43,11 +37,12 @@ export default function LoginScreen () {
     control,
     handleSubmit,
     formState: { errors }
-  } = useForm<LoginFormValues>({
-    defaultValues: { email: '', password: '' }
+  } = useForm<LoginInput>({
+    defaultValues: { email: '', password: '' },
+    resolver: zodResolver(loginSchema),
   })
 
-  const handleLogin = async (data: LoginFormValues) => {
+  const handleLogin = async (data: LoginInput) => {
     try {
       await login(data)
       const token = await tokenService.getToken()
