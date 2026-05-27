@@ -2,12 +2,14 @@ import { BranchItemListDTO, CreateBranchDTO } from '../use-cases/branch/Branch'
 import { IApiBranchRepository } from '../port/branch-api.port'
 import { ISyncQueueRepository, SyncQueueItem } from '../sync/sync.interfaces'
 import { generateUUID } from '../utils/uuid'
+import { DuplicateBranchError } from '../errors/DuplicateBranchError'
 
 const MAX_RETRIES = 5
 
 export interface ILocalBranchRepository {
   save(dto: CreateBranchDTO): Promise<BranchItemListDTO>
   upsertMany(items: BranchItemListDTO[]): Promise<void>
+  findByNombre(nombre: string): Promise<BranchItemListDTO | null>
 }
 
 export class BranchService {
@@ -18,6 +20,9 @@ export class BranchService {
   ) {}
 
   async create(dto: CreateBranchDTO): Promise<BranchItemListDTO> {
+    const existing = await this.localRepo.findByNombre(dto.nombre)
+    if (existing) throw new DuplicateBranchError(existing)
+
     const created = await this.localRepo.save(dto)
 
     const item: SyncQueueItem = {

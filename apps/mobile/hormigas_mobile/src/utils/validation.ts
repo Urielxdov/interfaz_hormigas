@@ -127,12 +127,14 @@ export function validateStock(v: string, label = 'Este campo'): string | null {
   return null
 }
 
-export function validateCantidad(v: string): string | null {
+export function validateCantidad(v: string, maxStock?: number): string | null {
   if (!v.trim()) return 'La cantidad es obligatoria'
   const n = parseInt(v, 10)
   if (isNaN(n) || v.includes('.')) return 'Debe ser un número entero'
   if (n <= 0) return 'Debe ser mayor a 0'
   if (n > 99_999) return 'Máximo 99,999'
+  if (maxStock !== undefined && n > maxStock)
+    return `Stock insuficiente (disponible: ${maxStock})`
   return null
 }
 

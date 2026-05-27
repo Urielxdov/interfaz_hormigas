@@ -35,6 +35,7 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
       inventarioId: String(item.id),
       productoId: String(item.productoId),
       productoNombre: item.productoNombre,
+      stockActual: String(item.stockActual),
     }
     if (tipo) params.tipoPreseleccionado = tipo
     router.push({

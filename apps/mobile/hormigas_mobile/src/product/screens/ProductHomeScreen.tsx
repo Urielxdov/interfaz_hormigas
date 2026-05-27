@@ -17,6 +17,8 @@ import { useProducts } from '@/src/utils/hooks/useProducts'
 import { useAuth } from '@/src/login/hooks/useAuth'
 import { useCategorias } from '@/src/utils/hooks/useCategorias'
 import { Tag } from 'lucide-react-native'
+import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
+import { DuplicateProductError } from '@hormigas/application'
 
 type FilterFormValues = {
   titleSku: string
@@ -41,6 +43,9 @@ export default function ProductHomeScreen () {
   const { isAdminEmpresa } = useAuth()
   const { categorias } = useCategorias()
   const [filterCat, setFilterCat] = useState<string | null>(null)
+
+  const { showError, errorModal } = useErrorModal()
+  const [reactivateInfo, setReactivateInfo] = useState<{ localId: string; nombre: string } | null>(null)
 
   const isTablet = useIsTablet()
   const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
@@ -255,26 +260,65 @@ export default function ProductHomeScreen () {
         <CreateProductoScreen
           defaultValues={selectedProduct ?? undefined}
           onSubmit={async (data) => {
-            if (selectedProduct) {
-              await updateProduct({
-                ...selectedProduct,
-                nombre: data.nombre,
-                sku: data.sku,
-                categoria: data.categoria,
-                precio: data.precio,
-                estado: data.estado,
-              })
-            } else {
-              await createProduct({
-                ...data,
-                control: data.control ?? false,
-              })
+            try {
+              if (selectedProduct) {
+                await updateProduct({
+                  ...selectedProduct,
+                  nombre: data.nombre,
+                  sku: data.sku,
+                  categoria: data.categoria,
+                  precio: data.precio,
+                  estado: data.estado,
+                })
+              } else {
+                await createProduct({
+                  ...data,
+                  control: data.control ?? false,
+                })
+              }
+              setModal(false)
+              setSelectedProduct(null)
+            } catch (e) {
+              if (e instanceof DuplicateProductError) {
+                setModal(false)
+                setSelectedProduct(null)
+                if (!e.existing.activo) {
+                  setReactivateInfo({ localId: e.existing.localId, nombre: e.existing.nombre })
+                } else {
+                  showError(
+                    e.field === 'sku'
+                      ? `Ya existe un producto activo con el SKU "${e.existing.sku}".`
+                      : `Ya existe un producto activo con el nombre "${e.existing.nombre}".`
+                  )
+                }
+              } else {
+                showError(e instanceof Error ? e.message : 'No se pudo guardar el producto')
+              }
             }
-            setModal(false)
-            setSelectedProduct(null)
           }}
         />
       </Modal>
+
+      <Modal
+        isOpen={reactivateInfo !== null}
+        onClose={() => setReactivateInfo(null)}
+        variant='confirm'
+        onSubmit={async () => {
+            if (reactivateInfo) {
+                await toggleStatus(reactivateInfo.localId)
+                setReactivateInfo(null)
+            }
+        }}
+        submitTitle='Reactivar'
+      >
+        <View className='gap-2'>
+            <Text className='font-sans-bold text-lg text-zinc-900 dark:text-zinc-50'>Producto inactivo</Text>
+            <Text className='font-sans text-zinc-600 dark:text-zinc-400 text-sm leading-5'>
+                El producto "{reactivateInfo?.nombre}" existe pero está inactivo. ¿Deseas reactivarlo?
+            </Text>
+        </View>
+      </Modal>
+      {errorModal}
     </View>
   )
 }

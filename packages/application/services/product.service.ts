@@ -1,5 +1,6 @@
 import { Product } from '@hormigas/domain'
 import { IProductRepository } from '../repositories/product.repository'
+import { DuplicateProductError } from '../errors/DuplicateProductError'
 import { ISyncQueueRepository, SyncQueueItem } from '../sync/sync.interfaces'
 import { IApiProductRepository, NuevoProductoDTO } from '../port/product-api.port'
 import { CreateProductDTO } from '../use-cases/product/Product.dto'
@@ -31,6 +32,12 @@ export class ProductService {
             categoria: dto.categoria,
         }
 
+        const existingBySku = await this.localRepo.findBySku(dto.sku)
+        if (existingBySku) throw new DuplicateProductError('sku', existingBySku)
+
+        const existingByNombre = await this.localRepo.findByNombre(dto.nombre)
+        if (existingByNombre) throw new DuplicateProductError('nombre', existingByNombre)
+
         await this.localRepo.save(product, false)
 
         const queueItem: SyncQueueItem = {
@@ -58,7 +65,8 @@ export class ProductService {
     }
 
     async update(product: Product): Promise<void> {
-        await this.localRepo.save(product, false)
+        const existing = await this.localRepo.findById(product.localId)
+        await this.localRepo.save({ ...product, categoriaId: existing?.categoriaId }, false)
     }
 
     async toggleActive(localId: string): Promise<void> {
@@ -99,7 +107,8 @@ export class ProductService {
         const serverProducts = await this.apiRepo.findAll()
 
         for (const sp of serverProducts) {
-            const existing = await this.localRepo.findBySku(sp.sku)
+            const existing = await this.localRepo.findByServerId(sp.id)
+                          ?? await this.localRepo.findBySku(sp.sku)
             const product: Product = {
                 localId: existing?.localId ?? generateUUID(),
                 nombre: sp.nombre,

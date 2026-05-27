@@ -15,6 +15,7 @@ interface Props {
   inventarioId: number
   productoId: number
   productoNombre: string
+  stockActual?: number
   tipoPreseleccionado?: TipoSimple
   onSuccess: (result: MovimientoDTO | null) => void
 }
@@ -24,6 +25,7 @@ export default function MovimientoScreen({
   inventarioId,
   productoId,
   productoNombre,
+  stockActual,
   tipoPreseleccionado,
   onSuccess,
 }: Props) {
@@ -36,7 +38,7 @@ export default function MovimientoScreen({
   const [referenciaError, setReferenciaError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
-    const cantErr = validateCantidad(cantidad)
+    const cantErr = validateCantidad(cantidad, tipo === 'SALIDA' ? stockActual : undefined)
     const refErr = validateReferencia(referencia)
     setCantidadError(cantErr)
     setReferenciaError(refErr)
@@ -87,7 +89,12 @@ export default function MovimientoScreen({
 
       {/* Cantidad */}
       <View className="gap-1 px-4">
-        <Text className="text-sm font-sans-medium text-zinc-700 dark:text-zinc-300">Cantidad</Text>
+        <View className="flex-row items-center justify-between">
+          <Text className="text-sm font-sans-medium text-zinc-700 dark:text-zinc-300">Cantidad</Text>
+          {tipo === 'SALIDA' && stockActual !== undefined && (
+            <Text className="text-xs text-zinc-400">Disponible: {stockActual}</Text>
+          )}
+        </View>
         <TextInput
           value={cantidad}
           onChangeText={setCantidad}

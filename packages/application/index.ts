@@ -1,3 +1,7 @@
+// Errors
+export * from './errors/DuplicateProductError'
+export * from './errors/DuplicateBranchError'
+
 // Ports
 export * from './port/storage.port'
 export * from './port/user.port'

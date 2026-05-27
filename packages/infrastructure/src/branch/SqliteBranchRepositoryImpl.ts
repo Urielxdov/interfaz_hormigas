@@ -31,6 +31,11 @@ export class SqliteBranchRepositoryImpl {
 
     async upsertMany(items: BranchItemListDTO[]): Promise<void> {
         for (const item of items) {
+            // Remove any locally-created row with same nombre and different id
+            await this.db.run(
+                'DELETE FROM sucursal WHERE LOWER(nombre) = LOWER(?) AND id != ?',
+                [item.nombre, Number(item.id)]
+            )
             await this.db.run(
                 `INSERT OR REPLACE INTO sucursal (id, nombre, direccion, activa)
                  VALUES (?, ?, ?, ?)`,
@@ -42,6 +47,14 @@ export class SqliteBranchRepositoryImpl {
                 ]
             )
         }
+    }
+
+    async findByNombre(nombre: string): Promise<BranchItemListDTO | null> {
+        const row = await this.db.getOne<SucursalRow>(
+            'SELECT * FROM sucursal WHERE LOWER(nombre) = LOWER(?)',
+            [nombre]
+        )
+        return row ? toDTO(row) : null
     }
 
     async save(dto: CreateBranchDTO): Promise<BranchItemListDTO> {

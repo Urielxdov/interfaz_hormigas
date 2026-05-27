@@ -36,6 +36,22 @@ export class SqliteProductRepositoryImpl implements IProductRepository {
         return row ? ProductSqliteMapper.toDomain(row) : null
     }
 
+    async findByNombre(nombre: string): Promise<Product | null> {
+        const row = await this.db.getOne<ProductRow>(
+            'SELECT * FROM producto WHERE LOWER(nombre) = LOWER(?)',
+            [nombre]
+        )
+        return row ? ProductSqliteMapper.toDomain(row) : null
+    }
+
+    async findByServerId(serverId: number): Promise<Product | null> {
+        const row = await this.db.getOne<ProductRow>(
+            'SELECT * FROM producto WHERE server_id = ?',
+            [serverId]
+        )
+        return row ? ProductSqliteMapper.toDomain(row) : null
+    }
+
     async save(product: Product, synced = false): Promise<boolean> {
         const row = ProductSqliteMapper.toRow(product, synced ? 1 : 0)
         await this.db.run(

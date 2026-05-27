@@ -11,6 +11,7 @@ import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
+import { DuplicateBranchError } from '@hormigas/application'
 import { router } from 'expo-router'
 import { Building2, Eye, Pencil, Power } from 'lucide-react-native'
 import { useState } from 'react'
@@ -194,7 +195,16 @@ export default function BranchesScreen() {
               }
               closeModal()
             } catch (e) {
-              showError(e instanceof Error ? e.message : 'No se pudo guardar la sucursal')
+              if (e instanceof DuplicateBranchError) {
+                closeModal()
+                showError(
+                  e.existing.activa
+                    ? `Ya existe una sucursal activa con el nombre "${e.existing.nombre}".`
+                    : `Ya existe una sucursal inactiva con el nombre "${e.existing.nombre}". Puedes reactivarla desde la lista.`
+                )
+              } else {
+                showError(e instanceof Error ? e.message : 'No se pudo guardar la sucursal')
+              }
             }
           }}
         />

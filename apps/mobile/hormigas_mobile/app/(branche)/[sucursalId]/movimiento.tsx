@@ -8,6 +8,7 @@ export default function MovimientoRoute() {
     inventarioId: string
     productoId: string
     productoNombre: string
+    stockActual?: string
     tipoPreseleccionado?: string
   }>()
 
@@ -17,6 +18,7 @@ export default function MovimientoRoute() {
       inventarioId={Number(params.inventarioId)}
       productoId={Number(params.productoId)}
       productoNombre={params.productoNombre ?? ''}
+      stockActual={params.stockActual !== undefined ? Number(params.stockActual) : undefined}
       tipoPreseleccionado={params.tipoPreseleccionado as Extract<TipoMovimiento, 'ENTRADA' | 'SALIDA'> | undefined}
       onSuccess={() => router.back()}
     />

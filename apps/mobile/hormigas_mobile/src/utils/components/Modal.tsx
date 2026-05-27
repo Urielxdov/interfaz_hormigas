@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useState } from 'react'
 import {
   KeyboardAvoidingView,
   Modal as NativeModal,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -84,7 +83,7 @@ export default function Modal({
       onRequestClose={handleClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior='padding'
         style={{ flex: 1 }}
       >
         <Animated.View
