@@ -13,6 +13,7 @@ import { Tag, Plus, Power, X } from 'lucide-react-native'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
 import { useCategorias } from '@/src/utils/hooks/useCategorias'
 import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
+import { categoriaSchema } from '@hormigas/mobile-shared'
 
 export default function CategoriasScreen() {
     const { categorias, loading, error, saving, crear, toggleActivo } = useCategorias()
@@ -25,22 +26,23 @@ export default function CategoriasScreen() {
 
     const NOMBRE_MAX = 50
     const DESC_MAX = 200
-    const NOMBRE_PATTERN = /^[\p{L}\p{N}\s\-_&/.]+$/u
 
-    const nombreTrimmed = nombre.trim()
-    const nombreError =
-        !nombreTrimmed ? 'El nombre es obligatorio' :
-        nombreTrimmed.length < 2 ? 'Mínimo 2 caracteres' :
-        !NOMBRE_PATTERN.test(nombreTrimmed) ? 'Solo letras, números y los caracteres -_&/.' :
-        null
+    const nombreParseResult = nombre.length > 0
+      ? categoriaSchema.safeParse({ nombre, descripcion })
+      : null
+    const nombreError = nombreParseResult && !nombreParseResult.success
+      ? nombreParseResult.error.flatten().fieldErrors.nombre?.[0] ?? null
+      : null
 
     const handleCrear = async () => {
-        if (nombreError) {
-            showError(nombreError)
+        const result = categoriaSchema.safeParse({ nombre, descripcion })
+        if (!result.success) {
+            const err = result.error.flatten().fieldErrors.nombre?.[0]
+            showError(err ?? 'Datos inválidos')
             return
         }
         try {
-            await crear({ nombre: nombreTrimmed, descripcion: descripcion.trim() || undefined })
+            await crear({ nombre: result.data.nombre, descripcion: result.data.descripcion || undefined })
             setNombre('')
             setDescripcion('')
             setModal(false)
@@ -170,9 +172,9 @@ export default function CategoriasScreen() {
                             </View>
 
                             <TouchableOpacity
-                                className={`rounded-xl py-3.5 items-center mt-1 ${saving || !!nombreError || descripcion.length > DESC_MAX ? 'bg-indigo-300 dark:bg-indigo-800' : 'bg-indigo-500'}`}
+                                className={`rounded-xl py-3.5 items-center mt-1 ${saving ? 'bg-indigo-300 dark:bg-indigo-800' : 'bg-indigo-500'}`}
                                 onPress={handleCrear}
-                                disabled={saving || !!nombreError || descripcion.length > DESC_MAX}
+                                disabled={saving}
                             >
                                 {saving ? (
                                     <ActivityIndicator color='#fff' />

@@ -13,7 +13,7 @@ import {
     View,
 } from 'react-native'
 import { Building2, LogOut, Plus, Power, X } from 'lucide-react-native'
-import { validateNombre, validateNombreLugar, validateEmail, validatePassword, validateRFC, validateTelefono } from '@/src/utils/validation'
+import { empresaSchema } from '@hormigas/mobile-shared'
 import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 
 type EmpresaForm = { nombre: string; rfc: string; direccion: string; telefono: string }
@@ -39,22 +39,23 @@ export default function EmpresasScreen() {
     }
 
     const handleCrear = async () => {
-        const eErrs: EmpresaErrors = {
-            nombre: validateNombreLugar(empForm.nombre) ?? undefined,
-            rfc: validateRFC(empForm.rfc) ?? undefined,
-            direccion: empForm.direccion && empForm.direccion.length > 150 ? 'Máximo 150 caracteres' : undefined,
-            telefono: validateTelefono(empForm.telefono) ?? undefined,
+        const result = empresaSchema.safeParse({ empresa: empForm, admin: admForm })
+        if (!result.success) {
+            const eErrs: EmpresaErrors = {}
+            const aErrs: AdminErrors = {}
+            for (const issue of result.error.issues) {
+                const [section, field] = issue.path
+                if (section === 'empresa') eErrs[field as keyof EmpresaForm] = issue.message
+                if (section === 'admin') aErrs[field as keyof AdminForm] = issue.message
+            }
+            setEmpErrors(eErrs)
+            setAdmErrors(aErrs)
+            return
         }
-        const aErrs: AdminErrors = {
-            nombre: validateNombre(admForm.nombre) ?? undefined,
-            correo: validateEmail(admForm.correo) ?? undefined,
-            password: validatePassword(admForm.password) ?? undefined,
-        }
-        setEmpErrors(eErrs)
-        setAdmErrors(aErrs)
-        if (Object.values(eErrs).some(Boolean) || Object.values(aErrs).some(Boolean)) return
+        setEmpErrors({})
+        setAdmErrors({})
         try {
-            await crear({ empresa: empForm, admin: admForm })
+            await crear({ empresa: result.data.empresa, admin: result.data.admin })
             setEmpForm(EMPTY_EMP)
             setAdmForm(EMPTY_ADM)
             setModal(false)

@@ -13,6 +13,7 @@ import {
 import { useState, useEffect } from 'react'
 import { getSaleService } from '@/src/adapters/saleServiceInstance'
 import { getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
+import { posCantidadSchema, posMontoSchema } from '@hormigas/mobile-shared'
 
 interface Props {
     token: string | null
@@ -40,11 +41,30 @@ export default function POSScreen({ token }: Props) {
     } = usePOS(token)
 
     const [quantities, setQuantities] = useState<Record<string, string>>({})
+    const [quantityErrors, setQuantityErrors] = useState<Record<string, string>>({})
+    const [montoError, setMontoError] = useState<string | null>(null)
 
     const handleAdd = (product: ProductWithStock) => {
-        const q = parseInt(quantities[product.productoLocalId] ?? '1', 10)
-        addToCart(product, isNaN(q) ? 1 : q)
+        const rawQty = quantities[product.productoLocalId] ?? '1'
+        const qtyResult = posCantidadSchema.safeParse({ cantidad: rawQty })
+        if (!qtyResult.success) {
+            const err = qtyResult.error.flatten().fieldErrors.cantidad?.[0] ?? 'Cantidad inválida'
+            setQuantityErrors(prev => ({ ...prev, [product.productoLocalId]: err }))
+            return
+        }
+        setQuantityErrors(prev => ({ ...prev, [product.productoLocalId]: '' }))
+        addToCart(product, parseInt(rawQty, 10))
         setQuantities(prev => ({ ...prev, [product.productoLocalId]: '1' }))
+    }
+
+    const handleRegisterSale = () => {
+        const montoResult = posMontoSchema.safeParse({ montoRecibido })
+        if (!montoResult.success) {
+            setMontoError(montoResult.error.flatten().fieldErrors.montoRecibido?.[0] ?? 'Monto inválido')
+            return
+        }
+        setMontoError(null)
+        registerSale()
     }
 
     return (
@@ -61,27 +81,33 @@ export default function POSScreen({ token }: Props) {
                         placeholder="Nombre o SKU..."
                         value={query}
                         onChangeText={setQuery}
+                        maxLength={100}
                     />
                     {searching && <ActivityIndicator style={{ marginTop: 8 }} />}
                     {results.map(p => (
-                        <View key={p.productoLocalId} style={styles.resultRow}>
-                            <View style={styles.resultInfo}>
-                                <Text style={styles.resultName}>{p.nombre}</Text>
-                                <Text style={styles.resultMeta}>
-                                    {p.sku} · ${p.precio.toFixed(2)} · Stock: {p.stockActual}
-                                </Text>
+                        <View key={p.productoLocalId}>
+                            <View style={styles.resultRow}>
+                                <View style={styles.resultInfo}>
+                                    <Text style={styles.resultName}>{p.nombre}</Text>
+                                    <Text style={styles.resultMeta}>
+                                        {p.sku} · ${p.precio.toFixed(2)} · Stock: {p.stockActual}
+                                    </Text>
+                                </View>
+                                <TextInput
+                                    style={styles.qtyInput}
+                                    keyboardType="numeric"
+                                    value={quantities[p.productoLocalId] ?? '1'}
+                                    onChangeText={v =>
+                                        setQuantities(prev => ({ ...prev, [p.productoLocalId]: v }))
+                                    }
+                                />
+                                <TouchableOpacity style={styles.addBtn} onPress={() => handleAdd(p)}>
+                                    <Text style={styles.addBtnText}>+</Text>
+                                </TouchableOpacity>
                             </View>
-                            <TextInput
-                                style={styles.qtyInput}
-                                keyboardType="numeric"
-                                value={quantities[p.productoLocalId] ?? '1'}
-                                onChangeText={v =>
-                                    setQuantities(prev => ({ ...prev, [p.productoLocalId]: v }))
-                                }
-                            />
-                            <TouchableOpacity style={styles.addBtn} onPress={() => handleAdd(p)}>
-                                <Text style={styles.addBtnText}>+</Text>
-                            </TouchableOpacity>
+                            {quantityErrors[p.productoLocalId] ? (
+                                <Text style={styles.fieldError}>{quantityErrors[p.productoLocalId]}</Text>
+                            ) : null}
                         </View>
                     ))}
                 </View>
@@ -144,12 +170,13 @@ export default function POSScreen({ token }: Props) {
                             </View>
                         )}
 
+                        {montoError ? <Text style={styles.error}>{montoError}</Text> : null}
                         {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                         {successMsg && <Text style={styles.success}>{successMsg}</Text>}
 
                         <TouchableOpacity
                             style={[styles.saleBtn, registering && styles.saleBtnDisabled]}
-                            onPress={registerSale}
+                            onPress={handleRegisterSale}
                             disabled={registering}
                         >
                             {registering ? (
@@ -262,6 +289,7 @@ const styles = StyleSheet.create({
     },
     cambioLabel: { fontSize: 15, fontWeight: '600', color: '#059669' },
     cambioAmount: { fontSize: 20, fontWeight: '700', color: '#059669' },
+    fieldError: { color: '#ef4444', fontSize: 12, marginTop: 2 },
     error: { color: '#ef4444', fontSize: 13, textAlign: 'center' },
     success: { color: '#059669', fontSize: 13, textAlign: 'center', fontWeight: '600' },
     saleBtn: {

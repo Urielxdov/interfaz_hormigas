@@ -6,7 +6,7 @@ import {
 import type { CrearMovimientoDTO, MovimientoDTO, TipoMovimiento } from '@hormigas/application'
 import { useMovimiento } from '@/src/utils/hooks/useMovimiento'
 import { useMotivo } from '@/src/utils/hooks/useMotivo'
-import { validateCantidad, validateReferencia } from '@/src/utils/validation'
+import { movimientoSchema } from '@hormigas/mobile-shared'
 
 type TipoSimple = Extract<TipoMovimiento, 'ENTRADA' | 'SALIDA'>
 
@@ -38,8 +38,14 @@ export default function MovimientoScreen({
   const [referenciaError, setReferenciaError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
-    const cantErr = validateCantidad(cantidad, tipo === 'SALIDA' ? stockActual : undefined)
-    const refErr = validateReferencia(referencia)
+    const result = movimientoSchema.safeParse({ cantidad, referencia })
+    const flat = result.success ? {} : result.error.flatten().fieldErrors
+    let cantErr = flat.cantidad?.[0] ?? null
+    const refErr = (flat as { referencia?: string[] }).referencia?.[0] ?? null
+    if (!cantErr && tipo === 'SALIDA' && stockActual !== undefined) {
+      const n = parseInt(cantidad, 10)
+      if (n > stockActual) cantErr = `Stock insuficiente (disponible: ${stockActual})`
+    }
     setCantidadError(cantErr)
     setReferenciaError(refErr)
     if (cantErr || refErr) return

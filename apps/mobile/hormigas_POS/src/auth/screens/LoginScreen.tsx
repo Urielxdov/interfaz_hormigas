@@ -3,7 +3,6 @@ import { router } from 'expo-router'
 import { useState } from 'react'
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -12,24 +11,34 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native'
+import { loginSchema } from '@hormigas/mobile-shared'
 
 export default function LoginScreen() {
     const { login } = useAuth()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
+    const [emailError, setEmailError] = useState<string | null>(null)
+    const [passwordError, setPasswordError] = useState<string | null>(null)
+    const [loginError, setLoginError] = useState<string | null>(null)
 
     const handleLogin = async () => {
-        if (!email || !password) {
-            Alert.alert('Error', 'Ingresa email y contraseña')
+        const result = loginSchema.safeParse({ email, password })
+        if (!result.success) {
+            const flat = result.error.flatten().fieldErrors
+            setEmailError(flat.email?.[0] ?? null)
+            setPasswordError(flat.password?.[0] ?? null)
             return
         }
+        setEmailError(null)
+        setPasswordError(null)
+        setLoginError(null)
         setLoading(true)
         try {
-            await login({ email, password })
+            await login(result.data)
             router.replace('/(tabs)/pos')
         } catch {
-            Alert.alert('Error', 'Credenciales incorrectas')
+            setLoginError('Credenciales incorrectas')
         } finally {
             setLoading(false)
         }
@@ -44,21 +53,28 @@ export default function LoginScreen() {
                 <Text style={styles.title}>Hormigas POS</Text>
                 <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contraseña"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
+                <View>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                    />
+                    {emailError ? <Text style={styles.fieldError}>{emailError}</Text> : null}
+                </View>
+                <View>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Contraseña"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                    />
+                    {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
+                </View>
+                {loginError ? <Text style={styles.fieldError}>{loginError}</Text> : null}
 
                 <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
                     {loading ? (
@@ -117,5 +133,10 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
         fontSize: 16,
+    },
+    fieldError: {
+        color: '#ef4444',
+        fontSize: 12,
+        marginTop: 4,
     },
 })

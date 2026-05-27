@@ -16,7 +16,7 @@ import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
 import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
 import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
-import { validateCantidad, validateReferencia } from '@/src/utils/validation'
+import { movimientoSchema } from '@hormigas/mobile-shared'
 import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 
 const TIPOS_SALIDA = new Set<TipoMovimiento>([
@@ -202,8 +202,10 @@ export default function MovimientosScreen () {
       showError('Selecciona sucursal e inventario')
       return
     }
-    const cantErr = validateCantidad(form.cantidad)
-    const refErr = validateReferencia(form.referencia)
+    const result = movimientoSchema.safeParse({ cantidad: form.cantidad, referencia: form.referencia })
+    const flat = result.success ? {} : result.error.flatten().fieldErrors
+    const cantErr = (flat as { cantidad?: string[] }).cantidad?.[0] ?? null
+    const refErr = (flat as { referencia?: string[] }).referencia?.[0] ?? null
     setCantidadError(cantErr)
     setReferenciaError(refErr)
     if (cantErr || refErr) return
