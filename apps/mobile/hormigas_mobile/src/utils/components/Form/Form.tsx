@@ -4,7 +4,6 @@ import {
   FieldErrors,
   FieldValues,
   Path,
-  RegisterOptions
 } from 'react-hook-form'
 import InputField from '@/src/utils/components/InputFiled'
 import { Fragment, ReactNode, useRef } from 'react'
@@ -21,7 +20,6 @@ export type FormFieldConfig<T extends FieldValues> = {
   name: Path<T>
   label: string
   placeholder?: string
-  rules?: RegisterOptions<T, Path<T>>
   keyboardType?: KeyboardTypeOptions
   autoCapitalize?: TextInputProps['autoCapitalize']
   secureTextEntry?: boolean,
@@ -66,7 +64,6 @@ export default function Form<T extends FieldValues> ({
             <Controller
               control={control}
               name={field.name}
-              rules={field.rules}
               render={({ field: { onChange, value } }) => (
                 <InputField
                   inputRef={ref => { inputRefs.current[field.name] = ref }}
