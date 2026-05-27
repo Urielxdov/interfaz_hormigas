@@ -1,196 +1,109 @@
-# Hormigas — Interfaz cliente
+# 🐜 Hormigas
 
-Monorepo de aplicaciones móviles para el sistema de inventarios y punto de venta Hormigas. Arquitectura offline-first: SQLite local primero, sincronización con la API en segundo plano.
-
----
-
-## Aplicaciones
-
-### hormigas_mobile
-App de gestión para administradores (ADMIN). Permite crear y gestionar productos, sucursales, inventarios y usuarios de la empresa. Flujo offline-first completo con cola de sincronización.
-
-**Pantallas:**
-- Login → detecta rol y redirige
-- Home — métricas, stock bajo, resumen por sucursal
-- Productos — CRUD, búsqueda por nombre/SKU, toggle activo
-- Sucursales — CRUD, activar/desactivar
-- Usuarios — listar y crear usuarios para la empresa (ADMIN only)
-- **Panel SUPER_ADMIN** — listar todas las empresas, crear empresa + admin, activar/desactivar
-
-### hormigas_POS
-App de punto de venta para cajeros (USER). Opera completamente offline; sincroniza ventas cuando hay conexión.
-
-**Pantallas:**
-- Login → redirige al POS
-- Venta — búsqueda de producto en tiempo real, carrito multi-producto, cálculo de cambio, registro de venta
-- Historial — ventas locales con detalle expandible y estado de sync
-- Badge de sincronización en header (pendiente / sincronizando / listo)
+**Sistema de inventario y punto de venta para pequeñas y medianas empresas.**  
+Gestiona productos, sucursales y ventas desde el celular — con o sin conexión a internet.
 
 ---
 
-## Arquitectura
+## ¿Qué es Hormigas?
 
-### Flujo offline-first
+Hormigas es una suite de aplicaciones móviles para negocios con múltiples sucursales. Permite a los administradores controlar su inventario en tiempo real y a los cajeros registrar ventas aunque no haya señal. Cuando regresa la conexión, todo se sincroniza automáticamente.
 
+---
+
+## Aplicaciones incluidas
+
+| App | Para quién | Qué hace |
+|-----|-----------|----------|
+| **hormigas_mobile** | Administradores | Gestiona productos, sucursales, inventario, usuarios y categorías |
+| **hormigas_POS** | Cajeros | Registra ventas, calcula cambio, historial con estado de sync |
+
+---
+
+## Características principales
+
+- **Offline-first** — funciona sin internet; sincroniza en segundo plano al reconectar
+- **Multi-sucursal** — cada sucursal tiene su propio inventario y stock
+- **Control de stock** — alertas de stock bajo, movimientos de entrada y salida, validación de cantidades
+- **Punto de venta** — carrito multi-producto, búsqueda en tiempo real, cálculo automático de cambio
+- **Roles de acceso** — Cajero (POS), Administrador (gestión), Super Admin (gestión de empresas)
+- **Categorías de productos** — organiza tu catálogo con etiquetas personalizadas
+- **Prevención de duplicados** — detecta productos y sucursales duplicados antes de crear; ofrece reactivar registros inactivos
+- **Sincronización visible** — badge en el header muestra el estado de sync en tiempo real
+
+---
+
+## Capturas de pantalla
+
+> *(próximamente)*
+
+---
+
+## Requisitos
+
+- Dispositivo Android 8.0+ o iOS 14+
+- Servidor Hormigas API corriendo en la red local o en la nube
+
+Para desarrollo local:
+
+- Node.js 20+
+- pnpm 8+
+- Android Studio (Android) o Xcode (iOS)
+
+---
+
+## Instalación rápida
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/Urielxdov/interfaz_hormigas.git
+cd interfaz_hormigas
+
+# 2. Instalar dependencias
+pnpm install
+
+# 3. Configurar la URL de la API (crear archivo .env en cada app)
+echo "EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080" > apps/mobile/hormigas_mobile/.env
+echo "EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080" > apps/mobile/hormigas_POS/.env
+
+# 4. Iniciar la app de gestión
+cd apps/mobile/hormigas_mobile
+pnpm start
+
+# 5. Iniciar el POS (en otra terminal)
+cd apps/mobile/hormigas_POS
+pnpm start
 ```
-Usuario registra venta / crea producto
-          │
-          ▼
-    SQLite local (inmediato)
-    sync_queue → PENDING
-          │
-          ├── ¿Hay conexión? → POST API → HTTP 200 → queue DONE
-          │                              → error → retries++
-          │
-    Al recuperar conexión:
-    syncPending() → procesa toda la cola
-    pullProductsWithStock() → refresca inventario local
-```
 
-### Estructura del monorepo
+Luego escanea el QR con la app **Expo Go** o conecta un dispositivo/emulador.
+
+---
+
+## Estructura del repositorio
 
 ```
 interfaz_hormigas/
 ├── apps/
 │   └── mobile/
-│       ├── hormigas_mobile/     # App de gestión (ADMIN / SUPER_ADMIN)
-│       ├── hormigas_POS/        # App punto de venta (USER)
-│       └── shared/              # NetworkContext, factories compartidos
+│       ├── hormigas_mobile/   # App de gestión (Admin / Super Admin)
+│       ├── hormigas_POS/      # App de punto de venta (Cajero)
+│       └── shared/            # Contextos y factories compartidos
 └── packages/
-    ├── domain/                  # Entidades TS, Schema SQL SQLite
-    ├── application/             # Casos de uso, interfaces, servicios
-    └── infrastructure/          # Implementaciones: SQLite, HTTP, mappers
-```
-
-### Dependencias entre capas
-
-```
-domain  ←  application  ←  infrastructure  ←  app (mobile / POS)
-```
-
-Ninguna capa inferior importa de capas superiores.
-
----
-
-## Stack tecnológico
-
-| Área | Tecnología |
-|---|---|
-| Framework | React Native 0.81 + Expo 54 |
-| Navegación | Expo Router 6 |
-| UI — hormigas_mobile | NativeWind (Tailwind CSS) + Lucide icons |
-| UI — hormigas_POS | StyleSheet (sin Tailwind) + Ionicons |
-| Base de datos local | expo-sqlite v16 |
-| Almacenamiento seguro | expo-secure-store (JWT) |
-| Gestión de paquetes | pnpm workspaces |
-| Lenguaje | TypeScript strict |
-
----
-
-## Paquetes compartidos
-
-### `@hormigas/domain`
-Entidades TypeScript y schema SQL:
-
-- **Entidades:** `Product`, `Branch`, `User`, `Inventary`, `Transaction`, `Sale`, `SaleItem`
-- **`CREATE_TABLES_SQL`** — DDL completo SQLite: producto, inventario, movimiento, sucursal, sync_queue, venta, venta_item
-
-### `@hormigas/application`
-Lógica de negocio e interfaces:
-
-- **Servicios:** `ProductService`, `SaleService`
-- **`SaleService`** — `registerSale()`, `syncPending()`, `searchProducts()`, `pullProductsWithStock()`, `getHistory()`
-- **Puertos API:** `IApiProductRepository`, `IApiSaleRepository`, `IApiUserRepository`, `IApiEmpresaRepository`
-- **Interfaces SQLite:** `IProductRepository`, `ISaleRepository`, `ISyncQueueRepository`, `ILocalInventaryRepository`
-- **DTOs:** sale, product, branch, user, empresa
-
-### `@hormigas/infrastructure`
-Implementaciones concretas:
-
-- **`ApiHttpClient`** — fetch con Bearer token, métodos `get`, `post`, `put`, `patch`, `delete`
-- **SQLite:** `SqliteProductRepositoryImpl`, `SqliteSaleRepositoryImpl`, `SqliteInventaryForSaleImpl`, `SqliteSyncQueueRepositoryImpl`
-- **API:** `ApiProductRepositoryImpl`, `ApiSaleRepositoryImpl`, `ApiUserRepositoryImpl`, `ApiEmpresaRepositoryImpl`
-- **Auth:** `TokenServiceImpl` (expo-secure-store), `UserServiceHTTP`
-
----
-
-## Flujo de autenticación y roles
-
-```
-Login
-  │
-  ├── token.roles contiene ROLE_SUPER_ADMIN
-  │     └── → /(superadmin)  panel de gestión de empresas
-  │
-  └── ROLE_ADMIN / ROLE_USER
-        └── → /(tabs)/home   app de gestión normal
-```
-
-El JWT se decodifica en el cliente (base64) para extraer `roles` y `sucursalId`. No se hace ninguna llamada extra al servidor para determinar el rol.
-
----
-
-## Configuración de entorno
-
-Crear `.env` en cada app:
-
-**`apps/mobile/hormigas_mobile/.env`**
-```env
-EXPO_PUBLIC_API_URL=http://<ip-servidor>:8080
-```
-
-**`apps/mobile/hormigas_POS/.env`**
-```env
-EXPO_PUBLIC_API_URL=http://<ip-servidor>:8080
+    ├── domain/                # Entidades y esquema SQLite
+    ├── application/           # Servicios y casos de uso
+    └── infrastructure/        # SQLite, HTTP, mappers
 ```
 
 ---
 
-## Instalación
+## Documentación técnica
 
-**Requisitos:** Node.js 20+, pnpm, entorno Expo / Android Studio o Xcode
+Para arquitectura, esquema de base de datos, flujo offline-first, build con EAS y guías de contribución:
 
-```bash
-git clone https://github.com/Urielxdov/interfaz_hormigas.git
-cd interfaz_hormigas
-
-pnpm install
-```
-
-**Iniciar hormigas_mobile:**
-```bash
-cd apps/mobile/hormigas_mobile
-pnpm android   # o pnpm ios
-```
-
-**Iniciar hormigas_POS:**
-```bash
-cd apps/mobile/hormigas_POS
-pnpm android   # o pnpm ios
-```
+👉 [`docs/TECHNICAL.md`](docs/TECHNICAL.md)
 
 ---
 
-## Sincronización
+## Licencia
 
-Cada app mantiene su propia base de datos SQLite independiente. La cola de sincronización (`sync_queue`) registra operaciones pendientes de enviar al servidor.
-
-| Campo | Descripción |
-|---|---|
-| `entity` | Tipo de recurso: `producto`, `venta` |
-| `operation` | `CREATE`, `UPDATE`, `DELETE` |
-| `payload` | JSON con los datos a enviar |
-| `status` | `PENDING` → `DONE` |
-| `retries` | Incrementa en cada fallo |
-
-El badge de sincronización en el header de cada app muestra el estado en tiempo real (poll cada 3 segundos).
-
----
-
-## Notas de desarrollo
-
-- `local_id` (UUID generado en cliente) es la clave primaria local. `server_id` se asigna tras la primera sincronización exitosa.
-- La bandera `synced` solo cambia a `1` si el servidor confirma con HTTP 200.
-- El POS llama a `pullProductsWithStock()` al montar la pantalla principal para tener el inventario actualizado.
-- hormigas_POS usa `hormigas_pos.db` como nombre de base de datos, separado del de hormigas_mobile (`hormigas.db`).
-- Los singletons de servicio (`getSaleService`, `getProductService`) son lazy — se inicializan en el primer uso y se reutilizan durante toda la sesión.
+Propietario — Edgar Uriel Hernandez Galvan
