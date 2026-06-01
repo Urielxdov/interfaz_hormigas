@@ -13,10 +13,12 @@ Referencia técnica completa del monorepo: arquitectura, paquetes, base de datos
 5. [Cola de sincronización (`sync_queue`)](#cola-de-sincronización)
 6. [Esquema SQLite](#esquema-sqlite)
 7. [Autenticación y roles](#autenticación-y-roles)
-8. [Setup de desarrollo](#setup-de-desarrollo)
-9. [Build con EAS](#build-con-eas)
-10. [Agregar una nueva entidad](#agregar-una-nueva-entidad)
-11. [Decisiones de diseño recientes](#decisiones-de-diseño-recientes)
+8. [Validación de formularios con Zod](#validación-de-formularios-con-zod)
+9. [Componentes reutilizables](#componentes-reutilizables)
+10. [Setup de desarrollo](#setup-de-desarrollo)
+11. [Build con EAS](#build-con-eas)
+12. [Agregar una nueva entidad](#agregar-una-nueva-entidad)
+13. [Decisiones de diseño recientes](#decisiones-de-diseño-recientes)
 
 ---
 
@@ -30,6 +32,7 @@ Referencia técnica completa del monorepo: arquitectura, paquetes, base de datos
 | UI — hormigas_POS | StyleSheet nativo + Ionicons |
 | Base de datos local | expo-sqlite v16 |
 | Almacenamiento seguro | expo-secure-store (JWT) |
+| Validación de formularios | Zod 4 + react-hook-form + @hookform/resolvers |
 | Gestión de paquetes | pnpm workspaces |
 | Lenguaje | TypeScript strict |
 | Build en la nube | EAS Build (Expo Application Services) |
@@ -141,6 +144,22 @@ Implementaciones concretas de los puertos. Aquí vive todo el I/O.
 | `ApiBranchRepositoryImpl` | `/api/sucursal/*` |
 | `ApiUserRepositoryImpl` | `/api/usuario/*` |
 | `ApiEmpresaRepositoryImpl` | `/api/empresa/*` |
+
+---
+
+### `@hormigas/mobile-shared`
+
+Paquete compartido entre `hormigas_mobile` y `hormigas_POS`. Ubicación: `apps/mobile/shared/`.
+
+**Contiene:**
+
+| Módulo | Descripción |
+|--------|-------------|
+| `schemas/` | Esquemas Zod de todos los formularios |
+| `context/NetworkContext.tsx` | Proveedor de `isOnline` via `@react-native-community/netinfo` |
+| `hooks/useUserServiceFactory.tsx` | Factory que devuelve el `UserService` correcto según conexión |
+
+**Dependencias:** `@hormigas/application`, `@hormigas/domain`, `zod`. No importa de `infrastructure` — las implementaciones concretas las provee cada app.
 
 ---
 
@@ -402,6 +421,121 @@ Login → decodifica JWT
 | `ROLE_USER` | hormigas_POS | Registrar ventas, ver historial |
 | `ROLE_ADMIN` | hormigas_mobile | Todo excepto panel super admin |
 | `ROLE_SUPER_ADMIN` | hormigas_mobile | Panel de empresas, crear admins |
+
+---
+
+## Validación de formularios con Zod
+
+Todos los formularios usan **Zod 4** como fuente única de verdad para las reglas de validación. Los esquemas viven en `apps/mobile/shared/schemas/` y se comparten entre `hormigas_mobile` y `hormigas_POS`.
+
+### Ubicación
+
+```
+apps/mobile/shared/
+├── schemas/
+│   ├── index.ts              ← re-exporta todos los esquemas
+│   ├── loginSchema.ts
+│   ├── usuarioSchema.ts
+│   ├── sucursalSchema.ts
+│   ├── productoSchema.ts     ← con validación cruzada de stock
+│   ├── categoriaSchema.ts    ← bloquea etiquetas HTML
+│   ├── inventarioSchema.ts
+│   ├── movimientoSchema.ts
+│   ├── empresaSchema.ts      ← valida formato RFC
+│   ├── posSchema.ts
+│   └── __tests__/            ← jest, un archivo por schema
+```
+
+El paquete se llama `@hormigas/mobile-shared`. Importar desde él:
+
+```ts
+import { productoSchema, type ProductoInput } from '@hormigas/mobile-shared'
+```
+
+### Convenciones de esquemas
+
+Cada esquema sigue estas reglas:
+
+1. **Campos de texto obligatorios:** `z.string().min(1, '…').trim()` — siempre trim en `.transform`.
+2. **Números que vienen como string** (inputs de teclado numérico): se reciben como `z.string()` y se validan con `.refine(v => !isNaN(parseFloat(v)))`. El output sigue siendo `string`; la conversión ocurre en el adapter antes de llamar al servicio.
+3. **Campos opcionales con string vacío:** `z.union([z.string().max(…), z.literal('')]).optional()`.
+4. **Validaciones cruzadas:** usar `superRefine` al final (ver `productoSchema` — valida `stockMinimo < stockMaximo` solo cuando `control = true`).
+5. **Exportar siempre** `Input` (antes del transform) y `Output` (después) con `z.input<typeof schema>` / `z.output<typeof schema>`.
+
+### Integración con `GenericForm`
+
+`GenericForm` acepta un prop `schema?: ZodType<T>`. Cuando se pasa, activa `zodResolver` en `react-hook-form`:
+
+```ts
+// src/utils/components/Form/GenericForm.tsx
+const { control, handleSubmit, formState: { errors } } = useForm<T>({
+  defaultValues,
+  resolver: schema ? zodResolver(schema) : undefined,
+})
+```
+
+Uso en una pantalla:
+
+```tsx
+import { productoSchema, type ProductoInput } from '@hormigas/mobile-shared'
+
+<GenericForm<ProductoInput>
+  title="Nuevo producto"
+  fields={fields}
+  schema={productoSchema}
+  onSubmit={handleCreate}
+/>
+```
+
+Los errores de Zod se propagan automáticamente a cada `<InputField>` via `errors` de react-hook-form. No hace falta validar manualmente.
+
+### Tests de esquemas
+
+Cada esquema tiene un archivo de test en `__tests__/`. Correr con:
+
+```bash
+cd apps/mobile/shared
+pnpm test
+```
+
+Los tests cubren: campos vacíos, límites de longitud, transformaciones (trim, toUpperCase), y casos cruzados (stockMin ≥ stockMax).
+
+---
+
+## Componentes reutilizables
+
+Ubicados en `apps/mobile/hormigas_mobile/src/utils/components/`.
+
+| Componente | Uso |
+|-----------|-----|
+| `GenericForm` | Formulario completo con react-hook-form + zodResolver opcional |
+| `Form` / `InputFiled` | Primitivos de campo controlado para `react-hook-form` |
+| `Modal` | Modal con variantes `info` / `confirm` |
+| `ButtonCustom` | Botón con estados loading/disabled |
+| `Header` | Header de pantalla con título y botón de retroceso |
+| `DataTable` | Tabla scrollable con columnas configurables |
+| `SearchableSelect` | Selector con búsqueda por texto (usado en movimientos) |
+| `SelectField` | Picker nativo simple |
+| `AlertCard` | Tarjeta de alerta inline (error / info) |
+| `SyncQueueBadge` | Badge de estado de sincronización — consulta `sync_queue` cada 3s |
+| `ThemeToggle` | Switch light/dark mode |
+| `InformationCard` | Tarjeta de estadística / métrica |
+
+### `useErrorModal`
+
+Hook para mostrar errores de mutaciones sin usar `Alert.alert`:
+
+```ts
+const { showError, errorModal } = useErrorModal()
+
+// en el catch:
+showError(e.message)
+
+// en el JSX:
+{errorModal}
+```
+
+Internamente renderiza el componente `Modal` con `variant='info'`. El mensaje puede ser cualquier string, incluido el mensaje de error del backend.
 
 ---
 
