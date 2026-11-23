@@ -2,3 +2,5 @@ packages:
   - 'apps/mobile/shared'
   - 'apps/mobile/*'
   - 'packages/*'
+allowBuilds:
+  unrs-resolver: false
