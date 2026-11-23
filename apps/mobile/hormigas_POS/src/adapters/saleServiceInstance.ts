@@ -30,7 +30,8 @@ export const getSaleService = (): Promise<SaleService> => {
             new SqliteSaleRepositoryImpl(client),
             new SqliteInventaryForSaleImpl(client),
             new SqliteSyncQueueRepositoryImpl(client),
-            new ApiSaleRepositoryImpl(http)
+            new ApiSaleRepositoryImpl(http),
+            { run: fn => client.transaction(fn) }
         )
         return _service
     })()

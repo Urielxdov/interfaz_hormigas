@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CartItem, ProductWithStock } from '@hormigas/application'
+import { CartItem, ProductWithStock, InsufficientStockError } from '@hormigas/application'
 import { getSaleService } from '@/src/adapters/saleServiceInstance'
 import { getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
 
@@ -48,7 +48,7 @@ export function usePOS(token: string | null) {
             if (existing) {
                 return prev.map(i =>
                     i.productoLocalId === product.productoLocalId
-                        ? { ...i, cantidad: i.cantidad + cantidad }
+                        ? { ...i, cantidad: i.cantidad + cantidad, subtotal: i.precio * (i.cantidad + cantidad) }
                         : i
                 )
             }
@@ -61,6 +61,7 @@ export function usePOS(token: string | null) {
                     sku: product.sku,
                     precio: product.precio,
                     cantidad,
+                    subtotal: product.precio * cantidad,
                 },
             ]
         })
@@ -78,7 +79,7 @@ export function usePOS(token: string | null) {
             return
         }
         setCart(prev =>
-            prev.map(i => i.productoLocalId === productoLocalId ? { ...i, cantidad } : i)
+            prev.map(i => i.productoLocalId === productoLocalId ? { ...i, cantidad, subtotal: i.precio * cantidad } : i)
         )
     }
 
@@ -109,9 +110,15 @@ export function usePOS(token: string | null) {
             setQuery('')
             setSuccessMsg(`Venta registrada. Cambio: $${cambio.toFixed(2)}`)
             setTimeout(() => setSuccessMsg(null), 3000)
+            // Intento inmediato de sync; si no hay red queda en cola. El servicio evita ejecuciones solapadas.
+            svc.syncPending().catch(e => console.warn('[POS] sync tras venta falló:', e))
         } catch (e) {
-            setErrorMsg('Error al registrar la venta')
-            console.error('[POS] registerSale error:', e)
+            if (e instanceof InsufficientStockError) {
+                setErrorMsg(e.message)
+            } else {
+                setErrorMsg('Error al registrar la venta')
+                console.error('[POS] registerSale error:', e)
+            }
         } finally {
             setRegistering(false)
         }

@@ -1,11 +1,16 @@
-import { IApiSaleRepository, VentaBatchRequest, ProductoConStockResponse } from '@hormigas/application'
+import { IApiSaleRepository, VentaBatchRequest, VentaBatchResponse, ProductoConStockResponse } from '@hormigas/application'
 import { ApiHttpClient } from '../http/ApiHttpClient'
 
 export class ApiSaleRepositoryImpl implements IApiSaleRepository {
     constructor(private http: ApiHttpClient) {}
 
-    async registrarVentaBatch(request: VentaBatchRequest): Promise<void> {
-        await this.http.post<void>('/api/movimiento/venta/batch', request)
+    async registrarVentaBatch(request: VentaBatchRequest): Promise<VentaBatchResponse> {
+        const res = await this.http.post<Partial<VentaBatchResponse> | null>('/api/movimiento/venta/batch', request)
+        return {
+            clientId: res?.clientId ?? null,
+            duplicada: res?.duplicada ?? false,
+            rechazados: res?.rechazados ?? [],
+        }
     }
 
     async buscarProductosConStock(q: string, sucursalId: number): Promise<ProductoConStockResponse[]> {

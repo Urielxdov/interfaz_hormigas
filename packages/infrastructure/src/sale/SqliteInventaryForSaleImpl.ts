@@ -1,4 +1,4 @@
-import { ILocalInventaryRepository, IInventarioLocalRepo, InventarioLocalRow } from '@hormigas/application'
+import { ILocalInventaryRepository, IInventarioLocalRepo, InventarioLocalRow, ServerProductData, generateUUID } from '@hormigas/application'
 import { DatabaseClient } from '../../db/contracts/DatabaseClient'
 
 type StockRow = {
@@ -13,13 +13,30 @@ type StockRow = {
 export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, IInventarioLocalRepo {
     constructor(private db: DatabaseClient) {}
 
-    async decrementStock(productoLocalId: string, sucursalServerId: number, cantidad: number): Promise<void> {
-        await this.db.run(
+    async decrementStock(productoLocalId: string, sucursalServerId: number, cantidad: number): Promise<boolean> {
+        const { changes } = await this.db.run(
             `UPDATE inventario
              SET stock_actual = stock_actual - ?
              WHERE producto_id = (SELECT server_id FROM producto WHERE local_id = ?)
-               AND sucursal_id = ?`,
-            [cantidad, productoLocalId, sucursalServerId]
+               AND sucursal_id = ?
+               AND stock_actual >= ?`,
+            [cantidad, productoLocalId, sucursalServerId, cantidad]
+        )
+        return changes > 0
+    }
+
+    async upsertProductFromServer(product: ServerProductData): Promise<void> {
+        const { changes } = await this.db.run(
+            `UPDATE producto
+             SET nombre = ?, sku = ?, precio = ?, activo = 1, synced = 1
+             WHERE server_id = ?`,
+            [product.nombre, product.sku, product.precio, product.serverId]
+        )
+        if (changes > 0) return
+        await this.db.run(
+            `INSERT INTO producto (local_id, server_id, nombre, sku, precio, activo, synced)
+             VALUES (?, ?, ?, ?, ?, 1, 1)`,
+            [generateUUID(), product.serverId, product.nombre, product.sku, product.precio]
         )
     }
 
@@ -67,10 +84,27 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
         stockMinimo: number = 0,
         stockMaximo: number = 9999
     ): Promise<void> {
+        // Lo vendido en este dispositivo y aun no confirmado por el servidor ya salio del stock real:
+        // se resta para que el pull no lo devuelva.
+        const pending = await this.db.getOne<{ qty: number | null }>(
+            `SELECT SUM(vi.cantidad) AS qty
+             FROM venta_item vi
+             JOIN venta v ON v.id = vi.venta_id
+             WHERE v.sincronizado = 0
+               AND v.sucursal_id = ?
+               AND vi.producto_server_id = ?`,
+            [String(sucursalServerId), productoServerId]
+        )
+        const stock = Math.max(0, stockActual - (pending?.qty ?? 0))
+        // inventario.sucursal_id tiene FK a sucursal: el POS no sincroniza sucursales, asi que la creamos si falta.
+        await this.db.run(
+            `INSERT OR IGNORE INTO sucursal (id, nombre, activa) VALUES (?, ?, 1)`,
+            [sucursalServerId, `Sucursal #${sucursalServerId}`]
+        )
         await this.db.run(
             `INSERT OR REPLACE INTO inventario (id, producto_id, sucursal_id, stock_actual, stock_minimo, stock_maximo)
              VALUES (?, ?, ?, ?, ?, ?)`,
-            [inventarioId, productoServerId, sucursalServerId, stockActual, stockMinimo, stockMaximo]
+            [inventarioId, productoServerId, sucursalServerId, stock, stockMinimo, stockMaximo]
         )
     }
 

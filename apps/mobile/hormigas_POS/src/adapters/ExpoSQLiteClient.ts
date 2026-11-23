@@ -1,13 +1,22 @@
 import * as SQLite from 'expo-sqlite'
 import { DatabaseClient } from '@hormigas/infrastructure'
 
-type BindParams = (string | number | null | ArrayBuffer)[]
+type BindParams = SQLite.SQLiteBindValue[]
 
 export class ExpoSQLiteClient implements DatabaseClient {
     constructor(private db: SQLite.SQLiteDatabase) {}
 
-    async run(query: string, params?: unknown[]): Promise<void> {
-        await this.db.runAsync(query, (params ?? []) as BindParams)
+    async run(query: string, params?: unknown[]): Promise<{ changes: number }> {
+        const res = await this.db.runAsync(query, (params ?? []) as BindParams)
+        return { changes: res.changes }
+    }
+
+    async transaction<T>(fn: () => Promise<T>): Promise<T> {
+        let result!: T
+        await this.db.withTransactionAsync(async () => {
+            result = await fn()
+        })
+        return result
     }
 
     async getOne<T>(query: string, params?: unknown[]): Promise<T | null> {

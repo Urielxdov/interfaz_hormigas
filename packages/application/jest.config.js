@@ -1,0 +1,12 @@
+/** @type {import('jest').Config} */
+module.exports = {
+  testEnvironment: 'node',
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  passWithNoTests: true,
+  moduleNameMapper: {
+    '^@hormigas/domain$': '<rootDir>/../domain',
+  },
+  transform: {
+    '^.+\.ts$': ['ts-jest', { tsconfig: './tsconfig.jest.json' }],
+  },
+}
