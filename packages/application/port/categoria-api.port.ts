@@ -11,7 +11,9 @@ export interface NuevaCategoriaDTO {
 }
 
 export interface IApiCategoriaRepository {
-  listar(): Promise<CategoriaDTO[]>
+  /** Activas; con `todas` tambien las inactivas (pantalla de gestion). */
+  listar(todas?: boolean): Promise<CategoriaDTO[]>
   crear(dto: NuevaCategoriaDTO): Promise<CategoriaDTO>
+  actualizar(id: number, dto: NuevaCategoriaDTO): Promise<CategoriaDTO>
   toggleActivo(id: number): Promise<CategoriaDTO>
 }

@@ -35,4 +35,22 @@ describe('categoriaSchema', () => {
   test('accepts descripcion with special chars but no HTML', () => {
     expect(categoriaSchema.safeParse({ ...valid, descripcion: 'Producto & más...' }).success).toBe(true)
   })
+
+  test('rejects nombre of only spaces', () => {
+    expect(categoriaSchema.safeParse({ ...valid, nombre: '     ' }).success).toBe(false)
+  })
+
+  test('rejects padded short nombre after trim', () => {
+    expect(categoriaSchema.safeParse({ ...valid, nombre: '  ab  ' }).success).toBe(false)
+  })
+
+  test('collapses repeated spaces', () => {
+    const result = categoriaSchema.safeParse({ ...valid, nombre: 'Frutas   y   verduras' })
+    expect(result.success && result.data.nombre).toBe('Frutas y verduras')
+  })
+
+  test('rejects characters the server does not accept', () => {
+    expect(categoriaSchema.safeParse({ ...valid, nombre: 'Bebidas!' }).success).toBe(false)
+    expect(categoriaSchema.safeParse({ ...valid, nombre: 'Limpieza & Hogar' }).success).toBe(true)
+  })
 })
