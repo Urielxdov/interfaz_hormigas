@@ -1,9 +1,10 @@
-import { View, Text } from 'react-native'
+import { useState } from 'react'
+import { View, Text, LayoutChangeEvent } from 'react-native'
 import { MovimientoDTO } from '@hormigas/application'
 import StockLineChart from './StockLineChart'
 import MovimientosBarChart from './MovimientosBarChart'
 import TrendBadge from './TrendBadge'
-import { computeLineData, computeBarData, computeTrend } from '../utils/chartHelpers'
+import { computeLineData, computeDailyTotals, computeTrend } from '../utils/chartHelpers'
 
 interface BranchProductCardProps {
   sucursalNombre: string
@@ -11,10 +12,17 @@ interface BranchProductCardProps {
 }
 
 export default function BranchProductCard({ sucursalNombre, movimientos }: BranchProductCardProps) {
+  const [chartWidth, setChartWidth] = useState(0)
   const lineData = computeLineData(movimientos)
-  const barData = computeBarData(movimientos)
+  const barData = computeDailyTotals(movimientos)
   const trendPercent = computeTrend(movimientos)
   const stockActual = lineData.length > 0 ? lineData[lineData.length - 1].value : null
+
+  // Ancho real del área de contenido (dentro del padding), medido con onLayout.
+  const onChartLayout = (e: LayoutChangeEvent) => {
+    const w = Math.floor(e.nativeEvent.layout.width)
+    if (w > 0 && w !== chartWidth) setChartWidth(w)
+  }
 
   return (
     <View className='bg-white dark:bg-zinc-900 rounded-2xl border border-stone-100 dark:border-zinc-800 overflow-hidden mb-4'>
@@ -40,7 +48,9 @@ export default function BranchProductCard({ sucursalNombre, movimientos }: Branc
         <Text className='font-sans text-zinc-500 dark:text-zinc-400 text-xs mb-3 uppercase tracking-wide'>
           Stock a lo largo del tiempo
         </Text>
-        <StockLineChart data={lineData} />
+        <View onLayout={onChartLayout}>
+          <StockLineChart data={lineData} containerWidth={chartWidth} />
+        </View>
       </View>
 
       {/* Bar chart */}
@@ -60,7 +70,7 @@ export default function BranchProductCard({ sucursalNombre, movimientos }: Branc
             </View>
           </View>
         </View>
-        <MovimientosBarChart data={barData} />
+        <MovimientosBarChart data={barData} containerWidth={chartWidth} />
       </View>
     </View>
   )

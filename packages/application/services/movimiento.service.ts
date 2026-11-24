@@ -48,7 +48,8 @@ export interface IMovimientoApi {
   listar(sucursalId?: number, page?: number, size?: number): Promise<MovimientoPage>
   stockBajo(): Promise<InventarioResponseDTO[]>
   inventarioPorSucursal(sucursalId: number): Promise<InventarioResponseDTO[]>
-  buscarPorProducto(productoId: number, sucursalId?: number): Promise<MovimientoDTO[]>
+  /** GET /api/movimiento/buscar devuelve una página de Spring ({ content, totalPages, ... }). */
+  buscarPorProducto(productoId: number, sucursalId?: number, size?: number): Promise<MovimientoPage>
 }
 
 export interface IInventarioLocalRepo {
@@ -168,7 +169,12 @@ export class MovimientoSyncService {
     return this.inventarioRepo.getLowStockItems()
   }
 
-  async buscarPorProducto(productoId: number, sucursalId?: number): Promise<MovimientoDTO[]> {
-    return this.api.buscarPorProducto(productoId, sucursalId)
+  /** Últimos movimientos del producto (hasta `size`, más recientes primero en el backend). */
+  async buscarPorProducto(productoId: number, sucursalId?: number, size = 500): Promise<MovimientoDTO[]> {
+    const res = await this.api.buscarPorProducto(productoId, sucursalId, size)
+    const content = (res as Partial<MovimientoPage> | null | undefined)?.content
+    if (Array.isArray(content)) return content
+    // Tolerar un backend que devuelva directamente un arreglo.
+    return Array.isArray(res) ? (res as MovimientoDTO[]) : []
   }
 }

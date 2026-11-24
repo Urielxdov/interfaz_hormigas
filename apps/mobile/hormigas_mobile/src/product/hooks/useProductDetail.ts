@@ -32,8 +32,9 @@ export function useProductDetail(localId: string) {
       if (!isOnline) return
 
       const movSvc = await getMovimientoService()
+      // categoriaId guarda el server_id del producto (ver ProductSqliteMapper).
       const data = await movSvc.buscarPorProducto(found.categoriaId)
-      setAllMovimientos(data)
+      setAllMovimientos(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error('[useProductDetail]', e)
     } finally {

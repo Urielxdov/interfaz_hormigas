@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@hormigas/application": ["../../../packages/application/index.ts"],
+      "@hormigas/domain": ["../../../packages/domain/index.ts"]
+    },
+    "types": ["jest"]
+  }
+}

@@ -1,15 +1,23 @@
-import { View, Text, useWindowDimensions, useColorScheme } from 'react-native'
+import { View, Text, useColorScheme } from 'react-native'
 import { BarChart } from 'react-native-gifted-charts'
-import { BarDataPoint } from '../utils/chartHelpers'
+import {
+  DailyTotals,
+  CHART_SIDE_SPACING,
+  Y_AXIS_LABEL_WIDTH,
+  chartAreaWidth,
+  computeBarLayout,
+  computeYAxis,
+  formatYLabel,
+} from '../utils/chartHelpers'
 
 interface MovimientosBarChartProps {
-  data: BarDataPoint[]
+  data: DailyTotals[]
+  /** Ancho medido del contenedor (onLayout). */
+  containerWidth: number
 }
 
-export default function MovimientosBarChart({ data }: MovimientosBarChartProps) {
-  const { width } = useWindowDimensions()
+export default function MovimientosBarChart({ data, containerWidth }: MovimientosBarChartProps) {
   const isDark = useColorScheme() === 'dark'
-  const chartWidth = width - 96
 
   const axisColor = isDark ? '#3f3f46' : '#e4e4e7'
   const labelColor = isDark ? '#71717a' : '#a1a1aa'
@@ -22,24 +30,31 @@ export default function MovimientosBarChart({ data }: MovimientosBarChartProps) 
     )
   }
 
-  const barWidth = Math.max(10, Math.min(26, (chartWidth / Math.max(data.length, 1)) - 8))
-  const spacing = Math.max(4, barWidth * 0.25)
+  // Sin medida todavía: no renderizar para evitar desbordes.
+  if (containerWidth <= 0) return <View style={{ height: 200 }} />
+
+  const chartWidth = chartAreaWidth(containerWidth)
+  const { data: bars, barWidth } = computeBarLayout(data, chartWidth)
+  const yAxis = computeYAxis(data.flatMap(d => [d.entradas, d.salidas]))
 
   return (
     <BarChart
-      data={data}
+      data={bars}
       barWidth={barWidth}
-      spacing={spacing}
       roundedTop
       width={chartWidth}
+      yAxisLabelWidth={Y_AXIS_LABEL_WIDTH}
+      maxValue={yAxis.maxValue}
+      stepValue={yAxis.stepValue}
+      noOfSections={yAxis.noOfSections}
+      formatYLabel={formatYLabel}
       yAxisTextStyle={{ color: labelColor, fontSize: 10, fontFamily: 'Inter_400Regular' }}
       xAxisLabelTextStyle={{ color: labelColor, fontSize: 9, fontFamily: 'Inter_400Regular' }}
       rulesColor={axisColor}
       yAxisColor={axisColor}
       xAxisColor={axisColor}
-      noOfSections={4}
-      initialSpacing={8}
-      endSpacing={8}
+      initialSpacing={CHART_SIDE_SPACING}
+      endSpacing={CHART_SIDE_SPACING}
     />
   )
 }
