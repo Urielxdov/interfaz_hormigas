@@ -35,7 +35,7 @@ export default function EmpresasScreen() {
 
     const handleLogout = async () => {
         await logout()
-        router.replace('/(login)')
+        router.replace('/(login)/login')
     }
 
     const handleCrear = async () => {

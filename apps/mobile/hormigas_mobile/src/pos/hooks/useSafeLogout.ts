@@ -20,7 +20,7 @@ export function useSafeLogout () {
 
   const doLogout = useCallback(async () => {
     await logout()
-    router.replace('/(login)')
+    router.replace('/(login)/login')
   }, [logout])
 
   const countPending = useCallback(async (): Promise<number> => {

@@ -13,8 +13,13 @@ import { useEffect } from 'react'
 import { NetworkProvider } from '../../shared/context/NetworkContext'
 import { AuthProvider } from '@/src/login/hooks/useAuth'
 import { PosSessionProvider } from '@/src/pos/context/PosSessionProvider'
+import { ToastProvider } from '@/src/utils/components/ToastProvider'
 
 export const THEME_STORAGE_KEY = '@hormigas_theme'
+
+// La entrada (app/index.tsx) decide la pantalla segun la sesion; sin esto el Stack arranca
+// en la primera pantalla declarada ((login)) aunque haya sesion guardada.
+export const unstable_settings = { initialRouteName: 'index' }
 
 export default function RootLayout () {
   const { isReady, error } = useInitDatabase()
@@ -39,6 +44,7 @@ export default function RootLayout () {
 
   return (
     <SafeAreaProvider>
+      <ToastProvider>
       <NetworkProvider>
         <AuthProvider>
           {/* Sync de ventas en segundo plano: solo corre con sesion USER o ADMIN. */}
@@ -50,6 +56,7 @@ export default function RootLayout () {
                 header: () => <Header />,
               }}
             >
+              <Stack.Screen name='index' options={{ headerShown: false, animation: 'none' }} />
               <Stack.Screen name='(login)' options={{ headerShown: false, animation: 'fade' }} />
               <Stack.Screen name='(tabs)' options={{ headerShown: true }} />
               <Stack.Screen name='(superadmin)' options={{ headerShown: false, animation: 'fade' }} />
@@ -58,6 +65,7 @@ export default function RootLayout () {
           </PosSessionProvider>
         </AuthProvider>
       </NetworkProvider>
+      </ToastProvider>
     </SafeAreaProvider>
   )
 }

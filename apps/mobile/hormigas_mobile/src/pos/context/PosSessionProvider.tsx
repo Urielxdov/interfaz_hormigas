@@ -62,7 +62,7 @@ export function PosSessionProvider ({ children }: { children: React.ReactNode })
 
   const onSessionExpired = useCallback(() => {
     logout().finally(() => {
-      router.replace('/(login)')
+      router.replace('/(login)/login')
       Alert.alert(
         'Sesión expirada',
         'Inicia sesión de nuevo. Las ventas pendientes se enviarán al volver a entrar.'

@@ -6,6 +6,6 @@ import { homeRouteForRole } from '@/src/login/utils/session'
 export default function RootRedirect() {
     const { token, role, isLoading } = useAuth()
     if (isLoading) return null
-    if (!token || !role) return <Redirect href="/(login)" />
+    if (!token || !role) return <Redirect href="/(login)/login" />
     return <Redirect href={homeRouteForRole(role)} />
 }

@@ -16,7 +16,7 @@ export default function RoleGate ({ allow, children }: Props) {
   const { token, role, isLoading } = useAuth()
 
   if (isLoading) return null
-  if (!token || !role) return <Redirect href='/(login)' />
+  if (!token || !role) return <Redirect href='/(login)/login' />
   if (!canAccess(role, allow)) return <Redirect href={homeRouteForRole(role)} />
 
   return <>{children}</>
