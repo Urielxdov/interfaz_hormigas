@@ -22,8 +22,8 @@ export function useEmpresas() {
         setError(null)
         try {
             setEmpresas(await getRepo().listarTodas())
-        } catch {
-            setError('Error al cargar empresas')
+        } catch (e) {
+            setError(e instanceof Error ? `No se pudieron cargar las empresas: ${e.message}` : 'Error al cargar empresas')
         } finally {
             setLoading(false)
         }
@@ -35,7 +35,7 @@ export function useEmpresas() {
         setSaving(true)
         try {
             const nueva = await getRepo().crear(dto)
-            setEmpresas(prev => [...prev, nueva])
+            setEmpresas(prev => [...prev, nueva].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')))
             return nueva
         } finally {
             setSaving(false)
