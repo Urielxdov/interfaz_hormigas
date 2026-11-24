@@ -24,12 +24,15 @@
         "gradleCommand": "assembleRelease"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://verbose-system-66pgxjvrxvv3rg57-37167.app.github.dev/"
+        "EXPO_PUBLIC_API_URL": "https://hormigas.onrender.com"
       }
     },
     "production": {
       "extends": "base",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://hormigas.onrender.com"
+      }
     }
   },
   "submit": {
