@@ -9,6 +9,8 @@ import { inventarioSchema } from '@hormigas/mobile-shared'
 
 interface Props {
   sucursalId: number
+  /** Productos que ya tienen inventario en la sucursal (se ocultan: crearlos daria duplicado). */
+  excluirProductoIds?: number[]
   onSuccess: (dto: CreateInventarioDTO) => Promise<void>
 }
 
@@ -17,7 +19,7 @@ interface ProductoOption {
   nombre: string
 }
 
-export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props) {
+export default function CreateInventarioScreen({ sucursalId, excluirProductoIds = [], onSuccess }: Props) {
   const [productos, setProductos] = useState<ProductoOption[]>([])
   const [productoId, setProductoId] = useState<number | null>(null)
   const [stockActual, setStockActual] = useState('')
@@ -41,8 +43,8 @@ export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props)
         if (cancelled) return
         setProductos(
           ps
-            .filter(p => p.categoriaId != null)
-            .map(p => ({ id: p.categoriaId!, nombre: p.nombre }))
+            .filter(p => p.serverId != null && !excluirProductoIds.includes(p.serverId))
+            .map(p => ({ id: p.serverId!, nombre: p.nombre }))
         )
       })
       .catch(() => setErrors(prev => ({ ...prev, productoId: 'No se pudieron cargar productos' })))
@@ -104,7 +106,7 @@ export default function CreateInventarioScreen({ sucursalId, onSuccess }: Props)
             </TouchableOpacity>
           ))}
           {productos.length === 0 && (
-            <Text className="px-4 py-3 text-zinc-400">Sin productos sincronizados</Text>
+            <Text className="px-4 py-3 text-zinc-400">Todos los productos activos ya están en esta sucursal</Text>
           )}
         </View>
         {errors.productoId && <Text className='text-red-500 text-xs mt-0.5'>{errors.productoId}</Text>}

@@ -15,18 +15,13 @@ import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
 import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
 import { SearchableSelect } from '@/src/utils/components/SearchableSelect'
-import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
+import { esMovimientoSalida, type InventarioItemDTO, type TipoMovimiento } from '@hormigas/application'
 import { movimientoSchema } from '@hormigas/mobile-shared'
 import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
 
-const TIPOS_SALIDA = new Set<TipoMovimiento>([
-  'SALIDA',
-  'VENTA',
-  'MERMA',
-  'TRASLADO_SALIDA'
-])
-const esTipoSalida = (tipo: TipoMovimiento) => TIPOS_SALIDA.has(tipo)
-type TipoRegistroMovimiento = Extract<TipoMovimiento, 'ENTRADA' | 'SALIDA'>
+const esTipoSalida = (tipo: string) => esMovimientoSalida(tipo)
+// Solo tipos que existen en el backend (ENTRADA/SALIDA no existen y daban 400)
+type TipoRegistroMovimiento = TipoMovimiento
 
 type FormState = {
   sucursalId: string
@@ -39,7 +34,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   sucursalId: '',
   inventarioId: '',
-  tipo: 'ENTRADA',
+  tipo: 'COMPRA',
   cantidad: '',
   referencia: ''
 }

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import { useCallback, useRef, useState } from 'react'
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router'
-import { Package, Plus } from 'lucide-react-native'
+import { ArrowLeft, Package, Plus } from 'lucide-react-native'
 import type { InventarioItemDTO, TipoMovimiento } from '@hormigas/application'
 import { useInventarioSucursal } from '@/src/utils/hooks/useInventarioSucursal'
 import { useErrorModal } from '@/src/utils/hooks/useErrorModal'
@@ -24,6 +25,12 @@ function StockBadge({ item }: { item: InventarioItemDTO }) {
 
 export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) {
   const { items, loading, crearInventario, refresh } = useInventarioSucursal(sucursalId)
+  // Al volver de registrar un movimiento, mostrar el stock actualizado
+  const first = useRef(true)
+  useFocusEffect(useCallback(() => {
+    if (first.current) { first.current = false; return }
+    refresh().catch(() => {})
+  }, [refresh]))
   const [showCreate, setShowCreate] = useState(false)
   const { showError, errorModal } = useErrorModal()
   const numColumns = useResponsiveValue(1, 2, 2)
@@ -54,8 +61,15 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
 
   return (
     <View className="flex-1 bg-stone-50 dark:bg-zinc-950">
-      <View className="bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 pt-14 pb-4 flex-row items-center justify-between">
-        <View>
+      <View className="bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 py-4 flex-row items-center justify-between">
+        <TouchableOpacity
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/branche'))}
+          accessibilityLabel="Volver"
+          className="p-2 -ml-2 mr-1"
+        >
+          <ArrowLeft size={22} color="#71717a" />
+        </TouchableOpacity>
+        <View className="flex-1">
           <Text className="font-sans-bold text-xl text-zinc-900 dark:text-zinc-50">Inventario</Text>
           <Text className="text-sm text-zinc-500 dark:text-zinc-400">{sucursalNombre}</Text>
         </View>
@@ -139,6 +153,7 @@ export default function InventarioScreen({ sucursalId, sucursalNombre }: Props) 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)}>
         <CreateInventarioScreen
           sucursalId={sucursalId}
+          excluirProductoIds={items.map(i => i.productoId)}
           onSuccess={async (dto) => {
             try {
               await crearInventario(dto)

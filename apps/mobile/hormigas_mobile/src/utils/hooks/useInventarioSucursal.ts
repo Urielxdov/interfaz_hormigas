@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { InventarioItemDTO, CreateInventarioDTO } from '@hormigas/application'
+const porNombre = (a: InventarioItemDTO, b: InventarioItemDTO) =>
+  (a.productoNombre ?? '').localeCompare(b.productoNombre ?? '', 'es')
+
 import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
 import { getInventarioRepos } from '@/src/adapters/inventarioServiceInstance'
 
@@ -12,7 +15,7 @@ export function useInventarioSucursal(sucursalId: number) {
   const loadLocal = useCallback(async () => {
     const { sqlite } = await getInventarioRepos()
     const data = await sqlite.findBySucursal(sucursalId)
-    setItems(data)
+    setItems([...data].sort(porNombre))
   }, [sucursalId])
 
   const syncFromServer = useCallback(async () => {
@@ -20,7 +23,7 @@ export function useInventarioSucursal(sucursalId: number) {
       const { api, sqlite } = await getInventarioRepos()
       const data = await api.listarPorSucursal(sucursalId)
       await sqlite.upsertMany(data)
-      setItems(data)
+      setItems([...data].sort(porNombre))
     } catch (e) {
       console.warn('[useInventarioSucursal] syncFromServer:', e)
     }
@@ -40,15 +43,16 @@ export function useInventarioSucursal(sucursalId: number) {
     await sqlite.upsertMany([created])
     setItems(prev => {
       const exists = prev.some(i => i.id === created.id)
-      return exists ? prev.map(i => i.id === created.id ? created : i) : [...prev, created]
+      return (exists ? prev.map(i => i.id === created.id ? created : i) : [...prev, created]).sort(porNombre)
     })
     return created
   }
 
-  const refresh = async () => {
-    if (!isOnline) return
-    await syncFromServer()
-  }
+  // Estable (useCallback) para poder usarse en useFocusEffect sin recargar en bucle
+  const refresh = useCallback(async () => {
+    await loadLocal()
+    if (isOnline) await syncFromServer()
+  }, [loadLocal, syncFromServer, isOnline])
 
   return { items, loading, error, crearInventario, refresh }
 }

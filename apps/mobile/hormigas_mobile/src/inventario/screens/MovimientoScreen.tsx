@@ -3,11 +3,11 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   ActivityIndicator
 } from 'react-native'
-import type { CrearMovimientoDTO, MovimientoDTO, TipoMovimiento } from '@hormigas/application'
+import { TIPOS_MANUALES, type CrearMovimientoDTO, type MovimientoDTO, type TipoMovimiento } from '@hormigas/application'
 import { useMovimiento } from '@/src/utils/hooks/useMovimiento'
-import { useMotivo } from '@/src/utils/hooks/useMotivo'
 import { movimientoSchema } from '@hormigas/mobile-shared'
 
+/** Direccion elegida en pantalla; lo que se envia es un tipo real del backend (COMPRA, MERMA...). */
 type TipoSimple = Extract<TipoMovimiento, 'ENTRADA' | 'SALIDA'>
 
 interface Props {
@@ -29,11 +29,16 @@ export default function MovimientoScreen({
   tipoPreseleccionado,
   onSuccess,
 }: Props) {
-  const [tipo, setTipo] = useState<TipoSimple>(tipoPreseleccionado ?? 'SALIDA')
+  const [tipo, setTipoDir] = useState<TipoSimple>(tipoPreseleccionado ?? 'SALIDA')
+  const opciones = TIPOS_MANUALES.filter(t => t.entrada === (tipo === 'ENTRADA'))
+  const [tipoReal, setTipoReal] = useState<TipoMovimiento>(opciones[0]!.tipo)
+  const setTipo = (t: TipoSimple) => {
+    setTipoDir(t)
+    setTipoReal(TIPOS_MANUALES.find(o => o.entrada === (t === 'ENTRADA'))!.tipo)
+  }
   const [cantidad, setCantidad] = useState('')
   const [referencia, setReferencia] = useState('')
   const { registrar, loading, error } = useMovimiento()
-  const { motivos } = useMotivo()
   const [cantidadError, setCantidadError] = useState<string | null>(null)
   const [referenciaError, setReferenciaError] = useState<string | null>(null)
 
@@ -54,7 +59,7 @@ export default function MovimientoScreen({
         sucursalId,
         productoId,
         inventarioId,
-        tipoMovimiento: tipo,
+        tipoMovimiento: tipoReal,
         cantidad: parseInt(cantidad, 10),
         referencia: referencia.trim() || undefined,
       } satisfies CrearMovimientoDTO)
@@ -69,7 +74,7 @@ export default function MovimientoScreen({
       className="flex-1 bg-stone-50 dark:bg-zinc-950"
       contentContainerStyle={{ padding: 16, gap: 16 }}
     >
-      <View className="bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 pt-14 pb-4">
+      <View className="bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 py-4">
         <Text className="font-sans-bold text-xl text-zinc-900 dark:text-zinc-50">Registrar movimiento</Text>
         <Text className="text-zinc-500 dark:text-zinc-400">{productoNombre}</Text>
       </View>
@@ -93,6 +98,23 @@ export default function MovimientoScreen({
         ))}
       </View>
 
+      {/* Motivo real del movimiento (tipo que entiende el backend) */}
+      <View className="flex-row flex-wrap gap-2 px-4">
+        {opciones.map(o => (
+          <TouchableOpacity
+            key={o.tipo}
+            onPress={() => setTipoReal(o.tipo)}
+            className={`px-3 py-2 rounded-lg border ${
+              tipoReal === o.tipo
+                ? 'bg-indigo-500 border-indigo-500'
+                : 'bg-white dark:bg-zinc-900 border-stone-200 dark:border-zinc-700'
+            }`}
+          >
+            <Text className={`text-sm font-sans-medium ${tipoReal === o.tipo ? 'text-white' : 'text-zinc-700 dark:text-zinc-300'}`}>{o.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Cantidad */}
       <View className="gap-1 px-4">
         <View className="flex-row items-center justify-between">
@@ -111,23 +133,6 @@ export default function MovimientoScreen({
         />
         {cantidadError && <Text className="text-red-500 text-xs mt-0.5">{cantidadError}</Text>}
       </View>
-
-      {/* Motivos (si existen) */}
-      {motivos.length > 0 && (
-        <View className="gap-2 px-4">
-          <Text className="text-sm font-sans-medium text-zinc-700 dark:text-zinc-300">Motivo (opcional)</Text>
-          <View className="flex-row flex-wrap gap-2">
-            {motivos.map(m => (
-              <TouchableOpacity
-                key={m.id}
-                className="px-3 py-2 rounded-lg border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-900"
-              >
-                <Text className="text-sm text-zinc-700 dark:text-zinc-300">{m.nombre}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      )}
 
       {/* Referencia */}
       <View className="gap-1 px-4">

@@ -1,3 +1,4 @@
+import { esMovimientoEntrada, esMovimientoSalida } from '@hormigas/application'
 import { useInventarioSucursal } from '@/src/utils/hooks/useInventarioSucursal'
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
 import { router } from 'expo-router'
@@ -34,14 +35,15 @@ export default function BranchDetailScreen({ sucursalId, sucursalNombre }: Props
   const maxWidth = useResponsiveValue<number | undefined>(undefined, 700, 960)
   const padding = useResponsiveValue(16, 24, 32)
 
-  const entradas = movimientos.filter(m => m.tipoMovimiento === 'ENTRADA').length
-  const salidas = movimientos.filter(m => m.tipoMovimiento === 'SALIDA').length
+  // Por signo del tipo: COMPRA/DEVOLUCION suman, VENTA/MERMA restan (el backend no tiene ENTRADA/SALIDA)
+  const entradas = movimientos.filter(m => esMovimientoEntrada(m.tipoMovimiento)).length
+  const salidas = movimientos.filter(m => esMovimientoSalida(m.tipoMovimiento)).length
   const lowStock = inventario.filter(i => i.stockActual <= i.stockMinimo)
   const recentMovs = movimientos.slice(0, 10)
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-      <View className='bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 pt-14 pb-4 flex-row items-center gap-3'>
+      <View className='bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 py-4 flex-row items-center gap-3'>
         <TouchableOpacity onPress={() => router.back()} className='p-2 -ml-2 rounded-xl'>
           <ArrowLeft size={20} color='#71717a' />
         </TouchableOpacity>
@@ -135,17 +137,17 @@ export default function BranchDetailScreen({ sucursalId, sucursalNombre }: Props
               </View>
               <View
                 className={`ml-2 px-2.5 py-0.5 rounded-full ${
-                  m.tipoMovimiento === 'ENTRADA' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
+                  esMovimientoEntrada(m.tipoMovimiento) ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
                 }`}
               >
                 <Text
                   className={`text-xs font-semibold ${
-                    m.tipoMovimiento === 'ENTRADA'
+                    esMovimientoEntrada(m.tipoMovimiento)
                       ? 'text-green-700 dark:text-green-400'
                       : 'text-red-700 dark:text-red-400'
                   }`}
                 >
-                  {m.tipoMovimiento === 'ENTRADA' ? `+${m.cantidad}` : `-${m.cantidad}`}
+                  {esMovimientoEntrada(m.tipoMovimiento) ? `+${m.cantidad}` : `-${m.cantidad}`}
                 </Text>
               </View>
             </View>

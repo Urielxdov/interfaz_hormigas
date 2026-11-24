@@ -1,6 +1,6 @@
 import { useMovimientos } from '@/src/movimientos/hooks/useMovimientos'
 import { useBreakpoint } from '@/src/utils/hooks/useBreakpoint'
-import { BranchItemListDTO } from '@hormigas/application'
+import { BranchItemListDTO, esMovimientoEntrada, esMovimientoSalida } from '@hormigas/application'
 import { router } from 'expo-router'
 import { Activity, Eye, TrendingDown, TrendingUp } from 'lucide-react-native'
 import { useMemo } from 'react'
@@ -19,8 +19,8 @@ export default function BranchMovimientosSection({ branches }: Props) {
     for (const m of movimientos) {
       if (!map[m.sucursalId]) map[m.sucursalId] = { entradas: 0, salidas: 0, total: 0 }
       map[m.sucursalId].total++
-      if (m.tipoMovimiento === 'ENTRADA') map[m.sucursalId].entradas++
-      else map[m.sucursalId].salidas++
+      if (esMovimientoEntrada(m.tipoMovimiento)) map[m.sucursalId].entradas++
+      else if (esMovimientoSalida(m.tipoMovimiento)) map[m.sucursalId].salidas++
     }
     return map
   }, [movimientos])
