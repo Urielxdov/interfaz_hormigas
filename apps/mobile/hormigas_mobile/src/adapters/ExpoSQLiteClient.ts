@@ -45,6 +45,9 @@ export class ExpoSQLiteClient implements DatabaseClient {
         try {
             let result!: T
             await this.db.withExclusiveTransactionAsync(async txn => {
+                // La conexion de la transaccion es nueva: sin busy_timeout falla con
+                // "database is locked" en cuanto la principal esta leyendo/escribiendo.
+                await txn.execAsync('PRAGMA busy_timeout = 5000;')
                 result = await fn(new ExpoSQLiteClient(txn, true))
             })
             return result

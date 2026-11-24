@@ -12,13 +12,18 @@ export function useInventario() {
     try {
       const localRepo = await getInventarioLocalRepo()
 
+      // Si falla la descarga (sin red, servidor caido, base ocupada) se muestra lo que hay en local.
       if (isOnline) {
-        const serverItems = await getInventarioApi().stockBajo()
-        for (const item of serverItems) {
-          await localRepo.upsertFromServer(
-            item.id, item.productoId, item.sucursalId,
-            item.stockActual, item.stockMinimo, item.stockMaximo
-          )
+        try {
+          const serverItems = await getInventarioApi().stockBajo()
+          for (const item of serverItems) {
+            await localRepo.upsertFromServer(
+              item.id, item.productoId, item.sucursalId,
+              item.stockActual, item.stockMinimo, item.stockMaximo
+            )
+          }
+        } catch (e) {
+          console.warn('[useInventario] descarga de stock bajo falló:', e)
         }
       }
 
