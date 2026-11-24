@@ -1,14 +1,11 @@
-import { Redirect, Stack } from 'expo-router'
-import { useAuth } from '@/src/login/hooks/useAuth'
+import { Stack } from 'expo-router'
+import RoleGate from '@/src/login/components/RoleGate'
+import { ROUTE_ACCESS } from '@/src/login/utils/session'
 
 export default function SuperAdminLayout() {
-    const { token, isLoading, isSuperAdmin } = useAuth()
-
-    if (isLoading) return null
-    if (!token) return <Redirect href="/(login)" />
-    if (!isSuperAdmin) return <Redirect href="/(tabs)/home" />
-
     return (
-        <Stack screenOptions={{ headerShown: false }} />
+        <RoleGate allow={ROUTE_ACCESS.superadmin}>
+            <Stack screenOptions={{ headerShown: false }} />
+        </RoleGate>
     )
 }

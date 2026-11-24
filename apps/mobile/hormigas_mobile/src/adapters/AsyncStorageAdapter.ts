@@ -1,12 +1,10 @@
 import * as SecureStorage from 'expo-secure-store'
 import { IStorage } from '@hormigas/application'
 
+/** Almacenamiento seguro de la sesion (token). No escribe valores en logs. */
 class StorageAdapter implements IStorage {
   async setItem(key: string, value: string): Promise<void> {
     await SecureStorage.setItemAsync(key, value)
-    if (__DEV__) {
-      console.log('[Storage] Guardado:', key, value)
-    }
   }
 
   async getItem(key: string): Promise<string | null> {

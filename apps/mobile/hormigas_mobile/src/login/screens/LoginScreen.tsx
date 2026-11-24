@@ -1,8 +1,8 @@
-import { useAuth, isSuperAdminToken } from '@/src/login/hooks/useAuth'
-import { TokenServiceImpl } from '@hormigas/infrastructure'
-import { storage } from '@/src/adapters/AsyncStorageAdapter'
-
-const tokenService = new TokenServiceImpl(storage)
+import { useAuth } from '@/src/login/hooks/useAuth'
+import { getRoleFromToken, homeRouteForRole } from '@/src/login/utils/session'
+import { useSaleQueueStatus } from '@/src/pos/hooks/useSaleQueueStatus'
+import { isNetworkError } from '@hormigas/application'
+import { useState } from 'react'
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import Form, { FormFieldConfig } from '@/src/utils/components/Form'
 import { router } from 'expo-router'
@@ -31,6 +31,10 @@ const LOGIN_FIELDS: FormFieldConfig<LoginInput>[] = [
 
 export default function LoginScreen () {
   const { login } = useAuth()
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  // Ventas del dispositivo sin enviar (de cualquier usuario): se envian al entrar quien las registro.
+  const { pendingCount } = useSaleQueueStatus()
   const cardMaxWidth = useResponsiveValue<number | undefined>(undefined, 440, 440)
 
   const {
@@ -43,13 +47,20 @@ export default function LoginScreen () {
   })
 
   const handleLogin = async (data: LoginInput) => {
+    setLoginError(null)
+    setSubmitting(true)
     try {
-      await login(data)
-      const token = await tokenService.getToken()
-      const superAdmin = token ? isSuperAdminToken(token) : false
-      router.replace(superAdmin ? '/(superadmin)' : '/(tabs)/home')
-    } catch (error) {
-      console.error('[LoginScreen] Error:', error)
+      const token = await login(data)
+      if (!token) throw new Error('El servidor no devolvió token')
+      // Cada rol aterriza en su pantalla: USER -> POS, ADMIN -> panel, SUPER_ADMIN -> empresas.
+      router.replace(homeRouteForRole(getRoleFromToken(token)))
+    } catch (e) {
+      const status = (e as { status?: number } | null)?.status
+      if (isNetworkError(e)) setLoginError('Sin conexión con el servidor')
+      else if (status === 401 || status === 403 || status === 400) setLoginError('Credenciales incorrectas')
+      else setLoginError('No se pudo iniciar sesión. Intenta de nuevo.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -76,6 +87,15 @@ export default function LoginScreen () {
             </Text>
           </View>
 
+          {pendingCount > 0 ? (
+            <View className='rounded-xl bg-amber-50 dark:bg-amber-500/15 p-3'>
+              <Text className='font-sans text-sm text-center text-amber-800 dark:text-amber-300'>
+                Hay {pendingCount} venta{pendingCount !== 1 ? 's' : ''} sin sincronizar en este dispositivo.
+                Se enviarán al iniciar sesión con el usuario que las registró.
+              </Text>
+            </View>
+          ) : null}
+
           <Form
             control={control}
             errors={errors}
@@ -83,9 +103,14 @@ export default function LoginScreen () {
             scrollable={false}
           />
 
+          {loginError ? (
+            <Text className='font-sans text-sm text-center text-red-500'>{loginError}</Text>
+          ) : null}
+
           <ButtonCustom
-            title='Iniciar sesión'
+            title={submitting ? 'Iniciando sesión...' : 'Iniciar sesión'}
             onPress={handleSubmit(handleLogin)}
+            disabled={submitting}
           />
         </View>
       </View>

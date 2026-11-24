@@ -1,18 +1,11 @@
-import { NetworkProvider } from '../../shared/context/NetworkContext'
 import { Redirect } from 'expo-router'
-import { useAuth, isSuperAdminToken } from '@/src/login/hooks/useAuth'
+import { useAuth } from '@/src/login/hooks/useAuth'
+import { homeRouteForRole } from '@/src/login/utils/session'
 
-function RootRedirect() {
-    const { token, isLoading } = useAuth()
+/** Entrada de la app: cada rol aterriza en su pantalla (ver HOME_ROUTE en session.ts). */
+export default function RootRedirect() {
+    const { token, role, isLoading } = useAuth()
     if (isLoading) return null
-    if (!token) return <Redirect href="/(login)" />
-    return <Redirect href={isSuperAdminToken(token) ? '/(superadmin)' : '/(tabs)/home'} />
-}
-
-export default function App() {
-    return (
-        <NetworkProvider>
-            <RootRedirect />
-        </NetworkProvider>
-    )
+    if (!token || !role) return <Redirect href="/(login)" />
+    return <Redirect href={homeRouteForRole(role)} />
 }

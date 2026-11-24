@@ -1,21 +1,21 @@
 import MetricsSection from '@/src/home/components/MetricsSection'
 import LowStockSection from '@/src/home/components/LowStockSection'
 import BranchSummaryScreen from '../components/BranchSummaryScreen'
-import { useAuth } from '@/src/login/hooks/useAuth'
+import { useSafeLogout } from '@/src/pos/hooks/useSafeLogout'
 import { useProducts } from '@/src/utils/hooks/useProducts'
 import { useBranches } from '@/src/utils/hooks/useBranch'
 import { useSyncQueueStatus } from '@/src/utils/hooks/useSyncQueueStatus'
 import { useInventario } from '@/src/utils/hooks/useInventario'
 import { useSyncManager } from '@/src/utils/hooks/useSyncManager'
 import { useResponsiveValue } from '@/src/utils/hooks/useBreakpoint'
-import { router } from 'expo-router'
 import { LogOut, RefreshCw, CheckCircle } from 'lucide-react-native'
 import { useCallback, useState } from 'react'
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 import { useFocusEffect } from '@react-navigation/native'
 
 export default function HomeScreen() {
-  const { logout } = useAuth()
+  // Un ADMIN puede tener ventas del POS sin enviar: se avisa antes de cerrar sesion.
+  const { handleLogout, busy: loggingOut } = useSafeLogout()
   const { products } = useProducts()
   const { branches } = useBranches()
   const { pendingCount } = useSyncQueueStatus()
@@ -27,11 +27,6 @@ export default function HomeScreen() {
   const padding = useResponsiveValue(16, 24, 32)
 
   useFocusEffect(useCallback(() => { refreshStock() }, [refreshStock]))
-
-  const handleLogout = async () => {
-    await logout()
-    router.replace('/(login)')
-  }
 
   const handleSyncPress = async () => {
     if (pendingCount === 0 && !isSyncing) {
@@ -70,8 +65,8 @@ export default function HomeScreen() {
                'Sincronizar'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} className='p-2'>
-            <LogOut size={20} color='#71717a' />
+          <TouchableOpacity onPress={handleLogout} disabled={loggingOut} className='p-2'>
+            {loggingOut ? <ActivityIndicator size='small' color='#71717a' /> : <LogOut size={20} color='#71717a' />}
           </TouchableOpacity>
         </View>
       </View>

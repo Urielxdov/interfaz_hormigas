@@ -1,7 +1,10 @@
-import { Tabs } from 'expo-router'
+import { Tabs, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useEffect } from 'react'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
+import RoleGate from '@/src/login/components/RoleGate'
+import { useAuth } from '@/src/login/hooks/useAuth'
+import { ROUTE_ACCESS } from '@/src/login/utils/session'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
@@ -44,7 +47,18 @@ function AnimatedTabIcon({ name, color, size, focused }: AnimatedTabIconProps) {
   )
 }
 
+/** Panel de administracion: solo ADMIN y SUPER_ADMIN (un USER que llegue aqui va al POS). */
 export default function TabLayout() {
+  return (
+    <RoleGate allow={ROUTE_ACCESS.admin}>
+      <AdminTabs />
+    </RoleGate>
+  )
+}
+
+function AdminTabs() {
+  const { role } = useAuth()
+
   return (
     <Tabs
       screenOptions={{
@@ -77,6 +91,28 @@ export default function TabLayout() {
           }}
         />
       ))}
+      {/* Acceso al punto de venta (solo ADMIN): abre el POS encima del panel. */}
+      <Tabs.Screen
+        name='pos'
+        options={{
+          href: role === 'ADMIN' ? undefined : null,
+          tabBarAccessibilityLabel: 'Punto de venta',
+          tabBarIcon: ({ focused, color, size }) => (
+            <AnimatedTabIcon
+              name={focused ? 'cart' : 'cart-outline'}
+              size={size}
+              color={color}
+              focused={focused}
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: e => {
+            e.preventDefault()
+            router.push('/(pos)/venta')
+          },
+        }}
+      />
     </Tabs>
   )
 }

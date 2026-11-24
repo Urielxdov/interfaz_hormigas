@@ -4,9 +4,15 @@ import { getMovimientoService } from '@/src/adapters/movimientoServiceInstance'
 import { getProductService } from '@/src/adapters/productServiceInstance'
 import { getBranchService } from '@/src/adapters/branchServiceInstance'
 import { getSyncQueueRepo } from '@/src/adapters/syncQueueInstance'
+import { getSaleService } from '@/src/adapters/saleServiceInstance'
+import { useAuth } from '@/src/login/hooks/useAuth'
+import { getOwnerIdFromToken } from '@/src/login/utils/session'
 
 export function useSyncManager() {
   const { isOnline } = useNetwork()
+  const { token, role } = useAuth()
+  const ownerId = token ? getOwnerIdFromToken(token) : null
+  const sellsOnPos = role === 'ADMIN' || role === 'USER'
   const prevOnlineRef = useRef(isOnline)
   const isSyncingRef = useRef(false)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -30,6 +36,12 @@ export function useSyncManager() {
       await branchSvc.syncPending()
       await movimientoSvc.syncPending()
       await movimientoSvc.pullFromServer()
+      // Ventas del POS de este usuario (misma cola, entity 'venta'); el servicio evita
+      // pasadas solapadas con la sincronizacion de fondo del POS.
+      if (sellsOnPos) {
+        const saleSvc = await getSaleService()
+        await saleSvc.syncPending({ ownerId })
+      }
       await syncQueueRepo.clearProcessed()
 
       setLastSync(new Date())
@@ -39,7 +51,7 @@ export function useSyncManager() {
       isSyncingRef.current = false
       setIsSyncing(false)
     }
-  }, [isOnline])
+  }, [isOnline, sellsOnPos, ownerId])
 
   // Auto-sync solo al reconectar (online false → true)
   useEffect(() => {

@@ -1,80 +1,95 @@
 import { storage } from '@/src/adapters/AsyncStorageAdapter'
-import UserServiceOfflineAdapter from '@/src/adapters/UserServiceOfflineAdapter'
-import { useEffect, useRef, useState } from 'react'
-
-import { useNetwork } from '../../../../shared/context/NetworkContext'
-import { useUserServiceFactorie } from '@hormigas/mobile-shared/hooks/useUserServiceFactory'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { TokenService, UserRequestDTO } from '@hormigas/application'
+import { TokenServiceImpl, UserServiceHTTP, ApiHttpClient } from '@hormigas/infrastructure'
 import {
-  TokenServiceImpl,
-  UserServiceHTTP,
-  ApiHttpClient
-} from '@hormigas/infrastructure'
+  AppRole,
+  getRoleFromToken,
+  isAdminEmpresaToken,
+  isSuperAdminToken,
+  isTokenExpired,
+} from '@/src/login/utils/session'
+
+export {
+  getRolesFromToken,
+  getRoleFromToken,
+  getSucursalIdFromToken,
+  getOwnerIdFromToken,
+  homeRouteForRole,
+  isAdminEmpresaToken,
+  isSuperAdminToken,
+  isTokenExpired,
+} from '@/src/login/utils/session'
+export type { AppRole } from '@/src/login/utils/session'
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? ''
 
-const tokenService: TokenService = new TokenServiceImpl(storage)
+/** Sesion unica de la app (un solo token en SecureStore para todos los roles). */
+export const tokenService: TokenService = new TokenServiceImpl(storage)
 const httpClient = new ApiHttpClient(API_URL, tokenService)
-const onlineAdapter = new UserServiceHTTP(tokenService, httpClient)
-const offlineAdapter = new UserServiceOfflineAdapter()
+const userService = new UserServiceHTTP(tokenService, httpClient)
 
-function decodeJWTPayload(token: string): Record<string, unknown> {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    return JSON.parse(atob(base64))
-  } catch {
-    return {}
-  }
+interface AuthContextValue {
+  token: string | null
+  isLoading: boolean
+  role: AppRole | null
+  isSuperAdmin: boolean
+  isAdminEmpresa: boolean
+  /** Inicia sesion; devuelve el token guardado. Lanza NetworkError / HttpError del ApiHttpClient. */
+  login: (dto: UserRequestDTO) => Promise<string | null>
+  logout: () => Promise<void>
 }
 
-export function getRolesFromToken(token: string): string[] {
-  const payload = decodeJWTPayload(token)
-  const roles = payload['roles']
-  if (typeof roles !== 'string') return []
-  return roles.split(' ')
-}
+const AuthContext = createContext<AuthContextValue | null>(null)
 
-export function isSuperAdminToken(token: string): boolean {
-  return getRolesFromToken(token).includes('ROLE_SUPER_ADMIN')
-}
-
-export function isAdminEmpresaToken(token: string): boolean {
-  return getRolesFromToken(token).includes('ROLE_ADMIN')
-}
-
-export const useAuth = () => {
+export function AuthProvider ({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  const { isOnline } = useNetwork()
-  const userService = useUserServiceFactorie(
-    onlineAdapter,
-    offlineAdapter,
-    isOnline
-  )
 
   useEffect(() => {
     tokenService
       .getToken()
-      .then(setToken)
+      .then(async saved => {
+        // Token caducado al arrancar: se fuerza re-login. Las ventas pendientes siguen
+        // en la cola (con su usuario) y se envian al volver a iniciar sesion.
+        if (saved && isTokenExpired(saved)) {
+          await tokenService.clearTokens()
+          setToken(null)
+          return
+        }
+        setToken(saved)
+      })
       .catch(() => setToken(null))
       .finally(() => setIsLoading(false))
   }, [])
 
-  const login = async (dto: UserRequestDTO) => {
-    const data = await userService.login(dto)
-    const savedToken = await tokenService.getToken()
-    setToken(savedToken)
-    return data
-  }
+  const login = useCallback(async (dto: UserRequestDTO) => {
+    await userService.login(dto)
+    const saved = await tokenService.getToken()
+    setToken(saved)
+    return saved
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await tokenService.clearTokens()
     setToken(null)
-  }
+  }, [])
 
-  const isSuperAdmin = token ? isSuperAdminToken(token) : false
-  const isAdminEmpresa = token ? isAdminEmpresaToken(token) : false
+  const value = useMemo<AuthContextValue>(() => ({
+    token,
+    isLoading,
+    role: token ? getRoleFromToken(token) : null,
+    isSuperAdmin: token ? isSuperAdminToken(token) : false,
+    isAdminEmpresa: token ? isAdminEmpresaToken(token) : false,
+    login,
+    logout,
+  }), [token, isLoading, login, logout])
 
-  return { token, isLoading, login, logout, isSuperAdmin, isAdminEmpresa }
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export const useAuth = (): AuthContextValue => {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth debe usarse dentro de <AuthProvider>')
+  return ctx
 }
