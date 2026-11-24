@@ -49,7 +49,14 @@ export default function Modal({
         duration: 280,
         easing: Easing.out(Easing.cubic),
       })
+    } else if (visible) {
+      // Cierre desde el padre (isOpen=false): antes el modal quedaba abierto
+      opacity.value = withTiming(0, { duration: 160 })
+      translateY.value = withTiming(40, { duration: 200, easing: Easing.in(Easing.cubic) }, finished => {
+        if (finished) runOnJS(setVisible)(false)
+      })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   const handleClose = () => {

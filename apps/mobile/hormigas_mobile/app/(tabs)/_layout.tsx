@@ -1,6 +1,7 @@
 import { Tabs, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import React, { useEffect } from 'react'
+import { useColorScheme } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import RoleGate from '@/src/login/components/RoleGate'
 import { useAuth } from '@/src/login/hooks/useAuth'
@@ -10,16 +11,17 @@ type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 type TabConfig = {
   name: string
+  title: string
   focusedIcon: IconName
   unfocusedIcon: IconName
 }
 
 const TABS: TabConfig[] = [
-  { name: 'home',        focusedIcon: 'home',          unfocusedIcon: 'home-outline' },
-  { name: 'branche',     focusedIcon: 'business',      unfocusedIcon: 'business-outline' },
-  { name: 'movimientos', focusedIcon: 'swap-vertical', unfocusedIcon: 'swap-vertical-outline' },
-  { name: 'products',    focusedIcon: 'cube',          unfocusedIcon: 'cube-outline' },
-  { name: 'users',       focusedIcon: 'people',        unfocusedIcon: 'people-outline' },
+  { name: 'home',        title: 'Inicio',      focusedIcon: 'home',          unfocusedIcon: 'home-outline' },
+  { name: 'branche',     title: 'Sucursales',  focusedIcon: 'business',      unfocusedIcon: 'business-outline' },
+  { name: 'movimientos', title: 'Movim.',      focusedIcon: 'swap-vertical', unfocusedIcon: 'swap-vertical-outline' },
+  { name: 'products',    title: 'Productos',   focusedIcon: 'cube',          unfocusedIcon: 'cube-outline' },
+  { name: 'users',       title: 'Usuarios',    focusedIcon: 'people',        unfocusedIcon: 'people-outline' },
 ]
 
 interface AnimatedTabIconProps {
@@ -58,28 +60,32 @@ export default function TabLayout() {
 
 function AdminTabs() {
   const { role } = useAuth()
+  const dark = useColorScheme() === 'dark'
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#000',
-        tabBarInactiveTintColor: '#666',
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: dark ? '#a5b4fc' : '#4f46e5',
+        tabBarInactiveTintColor: dark ? '#71717a' : '#71717a',
+        tabBarShowLabel: true,
+        tabBarLabelStyle: { fontFamily: 'Inter_500Medium', fontSize: 10 },
         tabBarStyle: {
-          backgroundColor: '#fff',
+          backgroundColor: dark ? '#18181b' : '#fff',
           borderTopWidth: 0.5,
-          borderTopColor: '#dbdbdb',
-          height: 60,
+          borderTopColor: dark ? '#27272a' : '#e7e5e4',
+          height: 64,
           paddingBottom: 8,
+          paddingTop: 4,
         },
         headerShown: false,
       }}
     >
-      {TABS.map(({ name, focusedIcon, unfocusedIcon }) => (
+      {TABS.map(({ name, title, focusedIcon, unfocusedIcon }) => (
         <Tabs.Screen
           key={name}
           name={name}
           options={{
+            title,
             tabBarIcon: ({ focused, color, size }) => (
               <AnimatedTabIcon
                 name={focused ? focusedIcon : unfocusedIcon}
@@ -95,6 +101,7 @@ function AdminTabs() {
       <Tabs.Screen
         name='pos'
         options={{
+          title: 'Vender',
           href: role === 'ADMIN' ? undefined : null,
           tabBarAccessibilityLabel: 'Punto de venta',
           tabBarIcon: ({ focused, color, size }) => (

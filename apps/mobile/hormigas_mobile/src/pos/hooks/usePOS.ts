@@ -137,6 +137,7 @@ export function usePOS(sucursalId: number, ownerId: string | null) {
                     } else if (res.interrupted && res.reason !== 'auth') {
                         toast.show({
                             type: 'warning',
+                            icon: 'cloud-offline',
                             title: res.reason === 'network' ? 'Venta guardada sin conexión' : 'Venta guardada, servidor no disponible',
                             message: 'Se enviará automáticamente en cuanto sea posible.',
                         })

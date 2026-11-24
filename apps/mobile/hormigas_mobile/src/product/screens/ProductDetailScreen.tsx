@@ -44,7 +44,7 @@ export default function ProductDetailScreen({ localId }: Props) {
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
       {/* Header */}
-      <View className='bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 pt-14 pb-4 flex-row items-center gap-3'>
+      <View className='bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 py-4 flex-row items-center gap-3'>
         <TouchableOpacity onPress={() => router.back()} className='p-2 -ml-2 rounded-xl'>
           <ArrowLeft size={20} color='#71717a' />
         </TouchableOpacity>

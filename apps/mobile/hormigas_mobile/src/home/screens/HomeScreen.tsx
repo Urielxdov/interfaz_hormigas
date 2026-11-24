@@ -39,7 +39,7 @@ export default function HomeScreen() {
 
   return (
     <View className='flex-1 bg-stone-50 dark:bg-zinc-950'>
-      <View className='bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 pt-14 pb-4 flex-row items-center justify-between'>
+      <View className='bg-white dark:bg-zinc-900 border-b border-stone-200 dark:border-zinc-800 px-5 py-3 flex-row items-center justify-between'>
         <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>Inicio</Text>
         <View className='flex-row items-center gap-3'>
           <TouchableOpacity
@@ -74,7 +74,10 @@ export default function HomeScreen() {
         <View style={{ maxWidth, alignSelf: 'center', width: '100%', padding, gap: 16 }}>
           <MetricsSection
             totalProductos={products.filter(p => p.estado).length}
+            productosInactivos={products.filter(p => !p.estado).length}
             totalSucursales={branches.filter(b => b.activa).length}
+            sucursalesInactivas={branches.filter(b => !b.activa).length}
+            stockBajo={lowStockItems.length}
             pendienteSync={pendingCount}
           />
           <LowStockSection items={lowStockItems} loading={loadingStock} />

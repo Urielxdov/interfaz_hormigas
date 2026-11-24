@@ -9,6 +9,8 @@ export interface ToastOptions {
   type: ToastType
   title: string
   message?: string
+  /** Icono de Ionicons en lugar del del tipo (ej. 'cloud-offline'). */
+  icon?: keyof typeof Ionicons.glyphMap
   /** ms visible; por defecto 3.5 s (errores 5 s). */
   duration?: number
 }
@@ -23,7 +25,7 @@ const ToastContext = createContext<ToastApi | null>(null)
 const STYLES: Record<ToastType, { bg: string; border: string; fg: string; icon: keyof typeof Ionicons.glyphMap }> = {
   success: { bg: '#052e16', border: '#16a34a', fg: '#dcfce7', icon: 'checkmark-circle' },
   error: { bg: '#450a0a', border: '#dc2626', fg: '#fee2e2', icon: 'close-circle' },
-  warning: { bg: '#451a03', border: '#d97706', fg: '#fef3c7', icon: 'cloud-offline' },
+  warning: { bg: '#451a03', border: '#d97706', fg: '#fef3c7', icon: 'alert-circle' },
   info: { bg: '#172554', border: '#2563eb', fg: '#dbeafe', icon: 'information-circle' },
 }
 
@@ -78,7 +80,7 @@ export function ToastProvider ({ children }: { children: ReactNode }) {
             accessibilityRole='alert'
             style={[styles.toast, { backgroundColor: s.bg, borderColor: s.border }]}
           >
-            <Ionicons name={s.icon} size={24} color={s.border} />
+            <Ionicons name={toast.icon ?? s.icon} size={24} color={s.border} />
             <View style={styles.texts}>
               <Text style={[styles.title, { color: s.fg }]}>{toast.title}</Text>
               {toast.message ? <Text style={[styles.message, { color: s.fg }]}>{toast.message}</Text> : null}

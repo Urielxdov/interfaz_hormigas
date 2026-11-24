@@ -3,6 +3,7 @@ import CreateBranchScreen from '@/src/branches/screens/CreateBranch'
 import { useAuth } from '@/src/login/hooks/useAuth'
 import ButtonCustom from '@/src/utils/components/ButtonCustom'
 import DataTable from '@/src/utils/components/DataTable'
+import RowAction from '@/src/utils/components/RowAction'
 import Modal from '@/src/utils/components/Modal'
 import { statusClass } from '@/src/utils/helpers/ColorHerlper'
 import useIsTablet from '@/src/utils/hooks/useIsTablet'
@@ -13,7 +14,7 @@ import { BranchItemTableDTO } from '@/interfaces/Branch'
 import { BranchMapper } from '@/mappers/BranchMapper'
 import { DuplicateBranchError } from '@hormigas/application'
 import { router } from 'expo-router'
-import { Building2, Eye, Pencil, Power } from 'lucide-react-native'
+import { Boxes, Building2, Eye, Pencil, Power } from 'lucide-react-native'
 import { useState } from 'react'
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
@@ -68,39 +69,25 @@ export default function BranchesScreen() {
           title='Sucursales'
           description={`${branches.filter(b => b.activa).length} activas de ${branches.length}`}
           icon={Building2}
+          emptyMessage='Aún no hay sucursales registradas.'
+          keyExtractor={row => String(row.id)}
           columns={[
-            {
-              key: 'nombre',
-              label: 'Nombre',
-              render: (val, row) => (
-                <TouchableOpacity
-                  onPress={() =>
-                    router.push({
-                      pathname: '/(branche)/[sucursalId]/inventario',
-                      params: { sucursalId: String(row.id), sucursalNombre: row.nombre },
-                    })
-                  }
-                >
-                  <Text className='text-indigo-600 dark:text-indigo-400 font-sans-medium underline'>
-                    {String(val)}
-                  </Text>
-                </TouchableOpacity>
-              ),
-            },
-            {
-              key: 'direccion',
-              label: 'Dirección',
-            },
+            { key: 'nombre', label: 'Nombre', primary: true },
+            { key: 'direccion', label: 'Dirección', secondary: true },
             {
               key: 'responsable',
               label: 'Responsable',
+              render: val => (
+                <Text className='font-sans text-sm text-zinc-700 dark:text-zinc-300'>{val ? String(val) : 'Sin asignar'}</Text>
+              ),
             },
             {
               key: 'activa',
               label: 'Estado',
+              badge: true,
               render: val => (
                 <View
-                  className={`rounded-xl px-2 py-0.5 self-start ${
+                  className={`rounded-full px-2 py-0.5 self-start ${
                     val ? 'bg-green-100 dark:bg-green-900/30' : 'bg-zinc-100 dark:bg-zinc-800'
                   }`}
                 >
@@ -117,38 +104,45 @@ export default function BranchesScreen() {
             {
               key: 'acciones',
               label: 'Acciones',
+              actions: true,
               render: (_, row) => (
-                <View className='flex-row gap-1.5'>
-                  <ButtonCustom
+                <View className='flex-row flex-wrap justify-end gap-1.5'>
+                  <RowAction
+                    label='Inventario'
+                    icon={Boxes}
+                    tone='primary'
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(branche)/[sucursalId]/inventario',
+                        params: { sucursalId: String(row.id), sucursalNombre: row.nombre },
+                      })
+                    }
+                  />
+                  <RowAction
+                    label='Detalle'
+                    icon={Eye}
                     onPress={() =>
                       router.push({
                         pathname: '/(branche)/[sucursalId]/detalle',
                         params: { sucursalId: String(row.id), sucursalNombre: row.nombre },
                       })
                     }
-                    bgColor='bg-indigo-500'
-                    icon={Eye}
-                    iconSize={15}
-                    compact
                   />
                   {isAdminEmpresa && (
                     <>
-                      <ButtonCustom
+                      <RowAction
+                        label='Editar'
+                        icon={Pencil}
                         onPress={() => {
                           setSelectedBranch(row)
                           setModal(true)
                         }}
-                        bgColor='bg-blue-500'
-                        icon={Pencil}
-                        iconSize={15}
-                        compact
                       />
-                      <ButtonCustom
-                        onPress={() => toggleStatus(row.id)}
-                        bgColor={row.activa ? 'bg-green-500' : 'bg-red-500'}
+                      <RowAction
+                        label={row.activa ? 'Desactivar' : 'Activar'}
                         icon={Power}
-                        iconSize={15}
-                        compact
+                        tone={row.activa ? 'danger' : 'success'}
+                        onPress={() => toggleStatus(row.id)}
                       />
                     </>
                   )}

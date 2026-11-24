@@ -31,7 +31,7 @@ export function GenericForm<T extends FieldValues> ({
     handleSubmit,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors, isSubmitting }
   } = useForm<T>({
     defaultValues,
     resolver: schema ? zodResolver(schema) : undefined,
@@ -40,8 +40,8 @@ export function GenericForm<T extends FieldValues> ({
   return (
     <View className='w-full'>
       <View className='gap-1 p-2'>
-        <Text className='text-2xl font-bold'>{title}</Text>
-        {subtitle && <Text className='text-gray-500'>{subtitle}</Text>}
+        <Text className='font-sans-bold text-2xl text-zinc-900 dark:text-zinc-50'>{title}</Text>
+        {subtitle && <Text className='font-sans text-zinc-500 dark:text-zinc-400'>{subtitle}</Text>}
       </View>
       <Form
         control={control}
@@ -50,7 +50,12 @@ export function GenericForm<T extends FieldValues> ({
         scrollable={false}
       >
         {children?.(control, errors, watch, setValue)}
-        <ButtonCustom title={submitLabel} onPress={handleSubmit(onSubmit)} />
+        <ButtonCustom
+          title={isSubmitting ? 'Guardando...' : submitLabel}
+          onPress={handleSubmit(onSubmit)}
+          disabled={isSubmitting}
+          bgColor={isSubmitting ? 'bg-indigo-300' : 'bg-indigo-500'}
+        />
       </Form>
     </View>
   )

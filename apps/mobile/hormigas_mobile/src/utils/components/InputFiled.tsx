@@ -41,8 +41,8 @@ export default function InputField({
   // Boolean → Switch
   if (typeof value === 'boolean') {
     return (
-      <View className='flex-row items-center justify-between w-full mb-4'>
-        <Text className='text-left text-gray-700 font-semibold'>{label}</Text>
+      <View className='flex-row items-center justify-between w-full'>
+        <Text className='text-left font-sans-medium text-sm text-zinc-700 dark:text-zinc-300'>{label}</Text>
         <Switch
           value={value}
           onValueChange={(val) => onChangeText(val)}
@@ -55,10 +55,11 @@ export default function InputField({
   if (typeof value === 'number') {
     return (
       <View className='flex gap-1 w-full'>
-        <Text className='text-left text-gray-700 font-semibold'>{label}</Text>
+        <Text className='text-left font-sans-medium text-xs text-zinc-700 dark:text-zinc-300'>{label}</Text>
         <TextInput
           ref={inputRef}
-          className='w-full mb-4 p-4 border border-gray-300 rounded-lg bg-white'
+          className='w-full px-4 py-3 border border-stone-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 font-sans text-base'
+          placeholderTextColor='#a1a1aa'
           placeholder={placeholder}
           value={String(value)}
           onChangeText={(text) => {
@@ -78,10 +79,11 @@ export default function InputField({
   // String → TextInput normal
   return (
     <View className='flex gap-1 w-full'>
-      <Text className='text-left text-gray-700 font-semibold'>{label}</Text>
+      <Text className='text-left font-sans-medium text-xs text-zinc-700 dark:text-zinc-300'>{label}</Text>
       <TextInput
         ref={inputRef}
-        className='w-full mb-4 p-4 border border-gray-300 rounded-lg bg-white'
+        className='w-full px-4 py-3 border border-stone-200 dark:border-zinc-700 rounded-xl bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 font-sans text-base'
+          placeholderTextColor='#a1a1aa'
         placeholder={placeholder}
         secureTextEntry={secureText}
         value={value}
