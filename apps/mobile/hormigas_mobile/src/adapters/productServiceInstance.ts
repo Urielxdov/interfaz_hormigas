@@ -26,30 +26,6 @@ export const getProductService = (): Promise<ProductService> => {
         const tokenService = new TokenServiceImpl(storage)
         const httpClient = new ApiHttpClient(API_URL, tokenService)
 
-        console.log('📦 SQLITE READY')
-
-        // 👇 VER TODO LO QUE HAY EN PRODUCTOS
-        try {
-            const productos = await db.getAllAsync(`
-                SELECT *
-                FROM producto
-            `)
-
-            console.log(
-                '📦 PRODUCTOS SQLITE:',
-                JSON.stringify(productos, null, 2)
-            )
-
-            // 👇 SOLO IDS
-            console.log(
-                '📦 IDS:',
-                productos.map((p: any) => p.local_id)
-            )
-
-        } catch (e) {
-            console.error('❌ ERROR LEYENDO SQLITE', e)
-        }
-
         const productRepo = new SqliteProductRepositoryImpl(dbClient)
         const syncQueueRepo = new SqliteSyncQueueRepositoryImpl(dbClient)
         const apiProductRepo = new ApiProductRepositoryImpl(httpClient)

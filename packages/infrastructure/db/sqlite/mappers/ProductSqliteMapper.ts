@@ -2,13 +2,15 @@ import { Product } from '@hormigas/domain'
 
 export type ProductRow = {
     local_id: string
-    server_id?: number
+    server_id?: number | null
     nombre: string
     sku: string
-    descripcion?: string
-    precio?: number
+    descripcion?: string | null
+    precio?: number | null
     activo: number    // 0 | 1
-    categoria?: string
+    categoria?: string | null
+    categoria_id?: number | null
+    stock_total?: number | null
     synced: number    // 0 | 1
 }
 
@@ -22,7 +24,10 @@ export class ProductSqliteMapper {
             precio: row.precio ?? undefined,
             activo: row.activo === 1,
             categoria: row.categoria ?? undefined,
-            categoriaId: row.server_id ?? undefined,
+            categoriaId: row.categoria_id ?? undefined,
+            serverId: row.server_id ?? undefined,
+            stockTotal: row.stock_total ?? undefined,
+            synced: row.synced === 1,
         }
     }
 
@@ -35,7 +40,9 @@ export class ProductSqliteMapper {
             precio: product.precio,
             activo: product.activo ? 1 : 0,
             categoria: product.categoria,
-            server_id: product.categoriaId,
+            categoria_id: product.categoriaId,
+            server_id: product.serverId,
+            stock_total: product.stockTotal,
             synced,
         }
     }

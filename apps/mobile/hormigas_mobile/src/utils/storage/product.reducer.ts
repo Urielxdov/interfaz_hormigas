@@ -18,6 +18,7 @@ export function productReducer(state: ProductViewModel[], action: ProductAction)
                 ...action.payload,
                 id: `local-${Date.now()}`,
                 stock: 0,
+                synced: false,
                 acciones: ' ',
                 estado: true
             }

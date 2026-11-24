@@ -32,6 +32,12 @@ export const INVENTARIO_COLUMNS: ColumnMigration[] = [
     { name: 'synced_at', ddl: 'ALTER TABLE inventario ADD COLUMN synced_at INTEGER NOT NULL DEFAULT 0' },
 ]
 
+/** Columnas agregadas a `producto`: categoria real del servidor y stock total. */
+export const PRODUCTO_COLUMNS: ColumnMigration[] = [
+    { name: 'categoria_id', ddl: 'ALTER TABLE producto ADD COLUMN categoria_id INTEGER' },
+    { name: 'stock_total', ddl: 'ALTER TABLE producto ADD COLUMN stock_total INTEGER' },
+]
+
 /**
  * Migraciones de la base local unica (inventario + POS). Llamar despues de CREATE_TABLES_SQL:
  * las tablas nuevas (venta, venta_item, ...) las crea el CREATE TABLE IF NOT EXISTS; aqui solo
@@ -40,5 +46,6 @@ export const INVENTARIO_COLUMNS: ColumnMigration[] = [
 export async function migrateLocalSchema(db: DatabaseClient): Promise<void> {
     await migrateSyncQueue(db)
     await addMissingColumns(db, 'inventario', INVENTARIO_COLUMNS)
+    await addMissingColumns(db, 'producto', PRODUCTO_COLUMNS)
     await db.run('CREATE INDEX IF NOT EXISTS idx_venta_sincronizado ON venta (sincronizado, sucursal_id)')
 }

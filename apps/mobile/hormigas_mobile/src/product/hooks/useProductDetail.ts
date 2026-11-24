@@ -24,7 +24,7 @@ export function useProductDetail(localId: string) {
       const found = all.find(p => p.localId === localId) ?? null
       setProduct(found)
 
-      if (!found?.categoriaId) {
+      if (!found?.serverId) {
         setNotSynced(true)
         return
       }
@@ -32,8 +32,7 @@ export function useProductDetail(localId: string) {
       if (!isOnline) return
 
       const movSvc = await getMovimientoService()
-      // categoriaId guarda el server_id del producto (ver ProductSqliteMapper).
-      const data = await movSvc.buscarPorProducto(found.categoriaId)
+      const data = await movSvc.buscarPorProducto(found.serverId)
       setAllMovimientos(Array.isArray(data) ? data : [])
     } catch (e) {
       console.error('[useProductDetail]', e)

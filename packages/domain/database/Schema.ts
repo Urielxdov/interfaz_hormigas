@@ -27,6 +27,8 @@ export const CREATE_TABLES_SQL = `
     precio REAL,
     activo INTEGER NOT NULL DEFAULT 1,
     categoria TEXT,
+    categoria_id INTEGER,
+    stock_total INTEGER,
     synced INTEGER NOT NULL DEFAULT 0
   );
 

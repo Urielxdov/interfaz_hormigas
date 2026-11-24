@@ -56,8 +56,8 @@ export class SqliteProductRepositoryImpl implements IProductRepository {
         const row = ProductSqliteMapper.toRow(product, synced ? 1 : 0)
         await this.db.run(
             `INSERT OR REPLACE INTO producto
-             (local_id, server_id, nombre, sku, descripcion, precio, activo, categoria, synced)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             (local_id, server_id, nombre, sku, descripcion, precio, activo, categoria, categoria_id, stock_total, synced)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 row.local_id,
                 row.server_id ?? null,
@@ -67,6 +67,8 @@ export class SqliteProductRepositoryImpl implements IProductRepository {
                 row.precio ?? null,
                 row.activo,
                 row.categoria ?? null,
+                row.categoria_id ?? null,
+                row.stock_total ?? null,
                 row.synced,
             ]
         )

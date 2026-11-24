@@ -13,9 +13,13 @@ export interface CreateProductDTO {
 
 export interface ProductListItemDTO {
   id: string  // localId UUID
+  serverId?: number
   nombre: string
   sku: string
   categoria: string
+  categoriaId?: number
+  /** false mientras tenga cambios sin enviar al servidor */
+  synced: boolean
   precio: number
   stock: number
   estado: boolean
