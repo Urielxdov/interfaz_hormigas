@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useState } from 'react'
-import { CreateUsuarioDTO } from '@hormigas/application'
+import { CreateUsuarioDTO, UpdateUsuarioDTO } from '@hormigas/application'
 import { useNetwork } from '@hormigas/mobile-shared/context/NetworkContext'
 import { getUserRepos } from '@/src/adapters/userRepoInstance'
 import { userReducer } from '@/src/utils/storage/user.reducer'
@@ -58,5 +58,25 @@ export function useUsuarios () {
     }
   }
 
-  return { usuarios, loading, error, creating, crear, recargar: syncFromServer }
+  const actualizar = async (id: number, dto: UpdateUsuarioDTO) => {
+    setCreating(true)
+    try {
+      const { api } = await getUserRepos()
+      const updated = await api.actualizarUsuario(id, dto)
+      dispatch({ type: 'UPDATE', payload: updated })
+      return updated
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const toggleActivo = async (id: number) => {
+    const { api, sqlite } = await getUserRepos()
+    const updated = await api.toggleActivo(id)
+    await sqlite.upsertMany([updated])
+    dispatch({ type: 'UPDATE', payload: updated })
+    return updated
+  }
+
+  return { usuarios, loading, error, creating, crear, actualizar, toggleActivo, recargar: syncFromServer }
 }

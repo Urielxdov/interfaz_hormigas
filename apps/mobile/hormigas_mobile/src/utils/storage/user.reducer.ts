@@ -3,7 +3,7 @@ import { UsuarioResponseDTO } from '@hormigas/application'
 export type UserAction =
   | { type: 'SET'; payload: UsuarioResponseDTO[] }
   | { type: 'CREATE'; payload: UsuarioResponseDTO }
-  | { type: 'TOGGLE_STATUS'; payload: number }
+  | { type: 'UPDATE'; payload: UsuarioResponseDTO }
 
 export function userReducer(state: UsuarioResponseDTO[], action: UserAction): UsuarioResponseDTO[] {
   switch (action.type) {
@@ -11,10 +11,8 @@ export function userReducer(state: UsuarioResponseDTO[], action: UserAction): Us
       return action.payload
     case 'CREATE':
       return [...state, action.payload]
-    case 'TOGGLE_STATUS':
-      return state.map(u =>
-        u.id === action.payload ? { ...u, activo: !u.activo } : u
-      )
+    case 'UPDATE':
+      return state.map(u => (u.id === action.payload.id ? action.payload : u))
     default:
       return state
   }
