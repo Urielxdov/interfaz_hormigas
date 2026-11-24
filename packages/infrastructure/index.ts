@@ -10,6 +10,7 @@ export * from './src/http/ApiHttpClient'
 // DB contracts
 export * from './db/contracts/DatabaseClient'
 export * from './db/contracts/DatabaseConnectionFactory'
+export * from './db/sqlite/localSchemaMigrations'
 
 // Mappers
 export * from './db/sqlite/mappers/ProductSqliteMapper'

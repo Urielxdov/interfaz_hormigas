@@ -111,8 +111,8 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
         productoServerId: number,
         sucursalServerId: number,
         stockActual: number,
-        stockMinimo: number = 0,
-        stockMaximo: number = 9999
+        stockMinimo?: number,
+        stockMaximo?: number
     ): Promise<void> {
         // Lectura de pendientes + escritura en la misma transaccion: una venta registrada en medio
         // no puede quedar fuera del calculo.
@@ -134,10 +134,22 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
                 `INSERT OR IGNORE INTO sucursal (id, nombre, activa) VALUES (?, ?, 1)`,
                 [sucursalServerId, `Sucursal #${sucursalServerId}`]
             )
+            // Fila existente: solo se actualiza el stock (y min/max si vienen). Asi no se pierden
+            // las columnas de cache del inventario (producto_nombre, sucursal_nombre, precio,
+            // synced_at) que llena la vista de inventario de la misma base.
+            const { changes } = await tx.run(
+                `UPDATE OR REPLACE inventario
+                 SET producto_id = ?, sucursal_id = ?, stock_actual = ?,
+                     stock_minimo = COALESCE(?, stock_minimo),
+                     stock_maximo = COALESCE(?, stock_maximo)
+                 WHERE id = ?`,
+                [productoServerId, sucursalServerId, stock, stockMinimo ?? null, stockMaximo ?? null, inventarioId]
+            )
+            if (changes > 0) return
             await tx.run(
                 `INSERT OR REPLACE INTO inventario (id, producto_id, sucursal_id, stock_actual, stock_minimo, stock_maximo)
                  VALUES (?, ?, ?, ?, ?, ?)`,
-                [inventarioId, productoServerId, sucursalServerId, stock, stockMinimo, stockMaximo]
+                [inventarioId, productoServerId, sucursalServerId, stock, stockMinimo ?? 0, stockMaximo ?? 9999]
             )
         })
     }

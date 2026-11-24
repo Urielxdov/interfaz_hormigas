@@ -129,7 +129,7 @@ export class MovimientoSyncService {
 
   async syncPending(): Promise<void> {
     const MAX_RETRIES = 5
-    const pending = await this.syncQueueRepo.findPending(50)
+    const pending = await this.syncQueueRepo.findPending(50, { entity: 'movimiento' })
     for (const item of pending) {
       if (item.entity !== 'movimiento') continue
 

@@ -77,7 +77,7 @@ export class ProductService {
 
     async syncPending(): Promise<void> {
         const MAX_RETRIES = 5
-        const pending = await this.syncQueueRepo.findPending(20)
+        const pending = await this.syncQueueRepo.findPending(20, { entity: 'producto' })
 
         for (const item of pending) {
             if (item.entity !== 'producto') continue

@@ -41,7 +41,7 @@ export class BranchService {
   }
 
   async syncPending(): Promise<void> {
-    const pending = await this.syncQueueRepo.findPending(20)
+    const pending = await this.syncQueueRepo.findPending(20, { entity: 'sucursal' })
     for (const item of pending) {
       if (item.entity !== 'sucursal') continue
 
