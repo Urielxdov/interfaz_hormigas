@@ -7,7 +7,7 @@ interface Props {
 }
 
 export function SyncQueueBadge({ ownerId = null }: Props) {
-    const { pendingCount, failedCount, isSyncing, retrying, retryFailed } = useSyncQueueStatus()
+    const { pendingCount, failedCount, isSyncing, retrying, retryFailed } = useSyncQueueStatus(ownerId)
 
     const confirmRetry = () => {
         Alert.alert(
@@ -17,7 +17,7 @@ export function SyncQueueBadge({ ownerId = null }: Props) {
                 : `${failedCount} ventas no se pudieron enviar al servidor. ¿Reintentar ahora?`,
             [
                 { text: 'Cancelar', style: 'cancel' },
-                { text: 'Reintentar', onPress: () => { retryFailed(ownerId) } },
+                { text: 'Reintentar', onPress: () => { retryFailed() } },
             ]
         )
     }

@@ -7,7 +7,7 @@ const POLL_MS = 3000
  * Estado de la cola de ventas: pendientes (incluye las que esperan reintento) y
  * fallidas (FAILED, requieren accion: reintentar).
  */
-export function useSyncQueueStatus() {
+export function useSyncQueueStatus(ownerId: string | null = null) {
     const [pendingCount, setPendingCount] = useState(0)
     const [failedCount, setFailedCount] = useState(0)
     const [isSyncing, setIsSyncing] = useState(false)
@@ -17,7 +17,7 @@ export function useSyncQueueStatus() {
     const check = useCallback(async () => {
         try {
             const svc = await getSaleService()
-            const { pending, failed } = await svc.getQueueCounts()
+            const { pending, failed } = await svc.getQueueCounts(ownerId)
             setIsSyncing(prevCount.current > 0 && pending === 0)
             prevCount.current = pending
             setPendingCount(pending)
@@ -25,7 +25,7 @@ export function useSyncQueueStatus() {
         } catch {
             // silencioso
         }
-    }, [])
+    }, [ownerId])
 
     useEffect(() => {
         check()
@@ -34,7 +34,7 @@ export function useSyncQueueStatus() {
     }, [check])
 
     /** Pasa las ventas FAILED a PENDING y lanza una sincronizacion. */
-    const retryFailed = useCallback(async (ownerId: string | null = null) => {
+    const retryFailed = useCallback(async () => {
         setRetrying(true)
         try {
             const svc = await getSaleService()
@@ -47,7 +47,7 @@ export function useSyncQueueStatus() {
             setRetrying(false)
             check()
         }
-    }, [check])
+    }, [check, ownerId])
 
     return { pendingCount, failedCount, isSyncing, retrying, retryFailed, refresh: check }
 }

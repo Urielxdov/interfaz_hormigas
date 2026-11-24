@@ -12,7 +12,8 @@ const userService = new UserServiceHTTP(tokenService, httpClient)
 function decodeJWTPayload(token: string): Record<string, unknown> {
     try {
         const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-        return JSON.parse(atob(base64))
+        const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4)
+        return JSON.parse(atob(padded))
     } catch {
         return {}
     }
@@ -22,6 +23,16 @@ export function getSucursalIdFromToken(token: string): number | null {
     const payload = decodeJWTPayload(token)
     const id = payload['sucursalId']
     return typeof id === 'number' ? id : null
+}
+
+/**
+ * true si el JWT ya expiro (claim `exp`, en segundos). `skewSeconds` adelanta la expiracion
+ * para no enviar un token que caduca a medio request. Sin `exp` se considera vigente.
+ */
+export function isTokenExpired(token: string, nowMs: number = Date.now(), skewSeconds = 30): boolean {
+    const exp = decodeJWTPayload(token)['exp']
+    if (typeof exp !== 'number') return false
+    return exp * 1000 - skewSeconds * 1000 <= nowMs
 }
 
 /** Identificador del usuario de la sesion (claim `sub`, el correo). */
@@ -37,7 +48,16 @@ export const useAuth = () => {
     useEffect(() => {
         tokenService
             .getToken()
-            .then(setToken)
+            .then(async saved => {
+                // Token caducado al arrancar: se fuerza re-login. Las ventas pendientes siguen
+                // en la cola (con su usuario) y se envian al volver a iniciar sesion.
+                if (saved && isTokenExpired(saved)) {
+                    await tokenService.clearTokens()
+                    setToken(null)
+                    return
+                }
+                setToken(saved)
+            })
             .catch(() => setToken(null))
             .finally(() => setIsLoading(false))
     }, [])

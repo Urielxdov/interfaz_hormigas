@@ -474,8 +474,9 @@ export class SaleService {
         return this.syncQueueRepo.retryFailed(VENTA_ENTITY)
     }
 
-    async getQueueCounts(): Promise<SyncQueueCounts> {
-        return this.syncQueueRepo.countByStatus(VENTA_ENTITY)
+    /** Pendientes y fallidas; con ownerId, solo las de ese usuario (y heredadas sin usuario). */
+    async getQueueCounts(ownerId?: string | null): Promise<SyncQueueCounts> {
+        return this.syncQueueRepo.countByStatus(VENTA_ENTITY, ownerId)
     }
 
     async searchProducts(q: string, sucursalServerId: number): Promise<ProductWithStock[]> {

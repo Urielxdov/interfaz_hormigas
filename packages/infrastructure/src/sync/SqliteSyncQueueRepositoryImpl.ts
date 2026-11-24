@@ -137,12 +137,20 @@ export class SqliteSyncQueueRepositoryImpl implements ISyncQueueRepository {
         return true
     }
 
-    async countByStatus(entity?: string): Promise<SyncQueueCounts> {
+    async countByStatus(entity?: string, ownerId?: string | null): Promise<SyncQueueCounts> {
+        const where = [`status IN ('PENDING', 'FAILED')`]
+        const params: unknown[] = []
+        if (entity) {
+            where.push('entity = ?')
+            params.push(entity)
+        }
+        if (ownerId) {
+            where.push('(owner_id IS NULL OR owner_id = ?)')
+            params.push(ownerId)
+        }
         const rows = await this.db.getMany<{ status: string; n: number }>(
-            `SELECT status, COUNT(*) AS n FROM sync_queue
-             WHERE status IN ('PENDING', 'FAILED')${entity ? ' AND entity = ?' : ''}
-             GROUP BY status`,
-            entity ? [entity] : []
+            `SELECT status, COUNT(*) AS n FROM sync_queue WHERE ${where.join(' AND ')} GROUP BY status`,
+            params
         )
         const counts: SyncQueueCounts = { pending: 0, failed: 0 }
         for (const r of rows) {

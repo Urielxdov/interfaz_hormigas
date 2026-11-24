@@ -1,4 +1,6 @@
-import { Tabs, Redirect } from 'expo-router'
+import { Tabs, Redirect, router } from 'expo-router'
+import { useCallback } from 'react'
+import { Alert } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/src/auth/hooks/useAuth'
 import { POSHeader } from '@/src/utils/components/POSHeader'
@@ -8,10 +10,22 @@ import { getOwnerIdFromToken, getSucursalIdFromToken } from '@/src/auth/hooks/us
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 export default function TabLayout() {
-    const { token, isLoading } = useAuth()
+    const { token, isLoading, logout } = useAuth()
+
+    const onSessionExpired = useCallback(() => {
+        logout().finally(() => {
+            router.replace('/(login)')
+            Alert.alert(
+                'Sesión expirada',
+                'Inicia sesión de nuevo. Las ventas pendientes se enviarán al volver a entrar.'
+            )
+        })
+    }, [logout])
+
     useSaleSync(
         token ? (getSucursalIdFromToken(token) ?? 0) : 0,
-        token ? getOwnerIdFromToken(token) : null
+        token ? getOwnerIdFromToken(token) : null,
+        { token, onSessionExpired }
     )
 
     if (isLoading) return null

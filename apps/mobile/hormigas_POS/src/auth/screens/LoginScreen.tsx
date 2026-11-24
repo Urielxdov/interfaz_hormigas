@@ -12,6 +12,8 @@ import {
     View,
 } from 'react-native'
 import { loginSchema } from '@hormigas/mobile-shared'
+import { isNetworkError } from '@hormigas/application'
+import { useSyncQueueStatus } from '@/src/utils/hooks/useSyncQueueStatus'
 
 export default function LoginScreen() {
     const { login } = useAuth()
@@ -21,6 +23,7 @@ export default function LoginScreen() {
     const [emailError, setEmailError] = useState<string | null>(null)
     const [passwordError, setPasswordError] = useState<string | null>(null)
     const [loginError, setLoginError] = useState<string | null>(null)
+    const { pendingCount } = useSyncQueueStatus()
 
     const handleLogin = async () => {
         const result = loginSchema.safeParse({ email, password })
@@ -37,8 +40,11 @@ export default function LoginScreen() {
         try {
             await login(result.data)
             router.replace('/(tabs)/pos')
-        } catch {
-            setLoginError('Credenciales incorrectas')
+        } catch (e) {
+            const status = (e as { status?: number } | null)?.status
+            if (isNetworkError(e)) setLoginError('Sin conexión con el servidor')
+            else if (status === 401 || status === 403 || status === 400) setLoginError('Credenciales incorrectas')
+            else setLoginError('No se pudo iniciar sesión. Intenta de nuevo.')
         } finally {
             setLoading(false)
         }
@@ -52,6 +58,12 @@ export default function LoginScreen() {
             <View style={styles.card}>
                 <Text style={styles.title}>Hormigas POS</Text>
                 <Text style={styles.subtitle}>Inicia sesión para continuar</Text>
+                {pendingCount > 0 ? (
+                    <Text style={styles.pendingNotice}>
+                        Hay {pendingCount} venta{pendingCount !== 1 ? 's' : ''} sin sincronizar en este dispositivo.
+                        Se enviarán al iniciar sesión con el usuario que las registró.
+                    </Text>
+                ) : null}
 
                 <View>
                     <TextInput
@@ -133,6 +145,14 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: '600',
         fontSize: 16,
+    },
+    pendingNotice: {
+        backgroundColor: '#fffbeb',
+        color: '#92400e',
+        fontSize: 13,
+        borderRadius: 8,
+        padding: 10,
+        textAlign: 'center',
     },
     fieldError: {
         color: '#ef4444',

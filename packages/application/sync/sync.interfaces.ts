@@ -38,8 +38,8 @@ export interface ISyncQueueRepository {
     incrementRetries(id: string): Promise<boolean>
     /** Cuenta un intento fallido y programa el siguiente para `nextRetryAt`. */
     scheduleRetry(id: string, nextRetryAt: string): Promise<boolean>
-    /** Cuenta PENDING (incluye los que esperan backoff) y FAILED. */
-    countByStatus(entity?: string): Promise<SyncQueueCounts>
+    /** Cuenta PENDING (incluye los que esperan backoff) y FAILED; con ownerId, solo los suyos y heredados. */
+    countByStatus(entity?: string, ownerId?: string | null): Promise<SyncQueueCounts>
     /** Pasa FAILED -> PENDING con reintentos en 0. Devuelve cuantos se reactivaron. */
     retryFailed(entity?: string): Promise<number>
     clearProcessed(): Promise<boolean>
