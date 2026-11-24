@@ -34,7 +34,11 @@ export default function MovimientosBarChart({ data, containerWidth }: Movimiento
   if (containerWidth <= 0) return <View style={{ height: 200 }} />
 
   const chartWidth = chartAreaWidth(containerWidth)
-  const { data: bars, barWidth } = computeBarLayout(data, chartWidth)
+  const xLabelStyle = { color: labelColor, fontSize: 9, fontFamily: 'Inter_400Regular' }
+  const layout = computeBarLayout(data, chartWidth)
+  const barWidth = layout.barWidth
+  // labelTextStyle por barra reemplaza a xAxisLabelTextStyle: se le agrega color y tamaño.
+  const bars = layout.data.map(b => b.labelTextStyle ? { ...b, labelTextStyle: { ...xLabelStyle, ...b.labelTextStyle } } : b)
   const yAxis = computeYAxis(data.flatMap(d => [d.entradas, d.salidas]))
 
   return (
@@ -49,7 +53,7 @@ export default function MovimientosBarChart({ data, containerWidth }: Movimiento
       noOfSections={yAxis.noOfSections}
       formatYLabel={formatYLabel}
       yAxisTextStyle={{ color: labelColor, fontSize: 10, fontFamily: 'Inter_400Regular' }}
-      xAxisLabelTextStyle={{ color: labelColor, fontSize: 9, fontFamily: 'Inter_400Regular' }}
+      xAxisLabelTextStyle={xLabelStyle}
       rulesColor={axisColor}
       yAxisColor={axisColor}
       xAxisColor={axisColor}

@@ -69,7 +69,7 @@ export function useSaleSync(
                     toastRef.current.show({
                         type: 'info',
                         title: res.synced === 1 ? 'Venta pendiente enviada' : `${res.synced} ventas pendientes enviadas`,
-                        message: 'Ya están registradas en el servidor.',
+                        message: res.synced === 1 ? 'Ya está registrada en el servidor.' : 'Ya están registradas en el servidor.',
                     })
                 }
             } catch (e) {

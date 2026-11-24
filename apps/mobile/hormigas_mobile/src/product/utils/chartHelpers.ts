@@ -194,14 +194,17 @@ export function computeBarLayout(totals: DailyTotals[], chartWidth: number): Bar
   const step = labelStep(days, usable)
 
   const data: BarDataPoint[] = []
+  const labelWidth = Math.max(pairWidth, X_LABEL_MIN_WIDTH)
+  // La etiqueta del último día se saldría por la derecha si es más ancha que su par.
+  const lastOverflows = labelWidth > pairWidth + groupSpacing
   totals.forEach((t, i) => {
-    const showLabel = i % step === 0
+    const showLabel = i % step === 0 && !(i === days - 1 && i > 0 && lastOverflows)
     data.push({
       value: t.entradas,
       frontColor: COLOR_ENTRADA,
       spacing: innerSpacing,
       label: showLabel ? formatDayLabel(t.day) : '',
-      labelWidth: Math.max(pairWidth, X_LABEL_MIN_WIDTH),
+      labelWidth,
       labelTextStyle: { textAlign: 'center' },
     })
     data.push({ value: t.salidas, frontColor: COLOR_SALIDA, spacing: groupSpacing })

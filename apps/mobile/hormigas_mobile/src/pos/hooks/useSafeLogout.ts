@@ -41,7 +41,7 @@ export function useSafeLogout () {
       }
       Alert.alert(
         'No se enviaron todas las ventas',
-        `Quedan ${ventas(remaining)} sin sincronizar. Se enviarán cuando este usuario vuelva a iniciar sesión.`,
+        `${remaining === 1 ? 'Queda' : 'Quedan'} ${ventas(remaining)} sin sincronizar. Se enviará${remaining === 1 ? '' : 'n'} cuando este usuario vuelva a iniciar sesión.`,
         [
           { text: 'Cancelar', style: 'cancel' },
           { text: 'Salir de todos modos', style: 'destructive', onPress: () => { doLogout() } },
@@ -72,14 +72,14 @@ export function useSafeLogout () {
     if (!online) {
       Alert.alert(
         'Ventas sin enviar',
-        `Hay ${ventas(pending)} sin sincronizar y no hay conexión. Conéctate a internet para enviarlas antes de cerrar sesión.`
+        `Hay ${ventas(pending)} sin sincronizar y no hay conexión. Conéctate a internet para enviar${pending === 1 ? 'la' : 'las'} antes de cerrar sesión.`
       )
       return
     }
 
     Alert.alert(
       'Ventas sin enviar',
-      `Hay ${ventas(pending)} sin sincronizar. ¿Enviarlas antes de cerrar sesión?`,
+      `Hay ${ventas(pending)} sin sincronizar. ¿Enviar${pending === 1 ? 'la' : 'las'} antes de cerrar sesión?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Salir sin enviar', style: 'destructive', onPress: () => { doLogout() } },
