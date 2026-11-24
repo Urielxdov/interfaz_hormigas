@@ -4,8 +4,11 @@ import {
     MAX_SYNC_RETRIES,
     ILocalInventaryRepository,
     SaleTxScope,
+    NoInventoryError,
+    computeRetryDelayMs,
+    classifySyncError,
 } from '../sale.service'
-import { NetworkError } from '../../errors/NetworkError'
+import { NetworkError, InvalidResponseError } from '../../errors/NetworkError'
 import { ISaleRepository } from '../../repositories/sale.repository'
 import { IUnitOfWork } from '../../repositories/unit-of-work'
 import { FindPendingOptions, ISyncQueueRepository, SyncQueueItem } from '../../sync/sync.interfaces'
@@ -336,5 +339,260 @@ describe('pullProductsWithStock', () => {
         ])
         // solo el que tiene inventario genera upsert de stock
         expect(inventory.upserts).toEqual([[100, 11, 7, 9]])
+        // los que no vienen del servidor se desactivan en local
+        expect(inventory.deactivated).toEqual([[11, 12]])
+    })
+
+    it('un catalogo que no es lista no toca el inventario local', async () => {
+        const { svc, api, inventory } = setup()
+        api.products = { content: [] } as never
+        await expect(svc.pullProductsWithStock(7)).rejects.toBeInstanceOf(InvalidResponseError)
+        expect(inventory.deactivated).toEqual([])
     })
 })
+
+// ---------- robustez de la cola ----------
+
+describe('syncPending: clasificacion, backoff y payloads', () => {
+    async function withSales(n: number) {
+        const ctx = setup()
+        ctx.inventory.stock.set('cola-local', 100)
+        const created: Sale[] = []
+        for (let i = 0; i < n; i++) {
+            created.push(await ctx.svc.registerSale({ items: [cola], sucursalServerId: 7, montoRecibido: 40 }))
+            ctx.clock.t += 1000 // created_at distinto -> orden estable
+        }
+        const queued = () => [...ctx.queue.items.values()]
+        return { ...ctx, created, queued }
+    }
+
+    it('un 5xx gasta un intento, programa backoff e interrumpe la pasada', async () => {
+        const { svc, api, queued, clock } = await withSales(3)
+        api.behavior = async () => { throw httpError(503) }
+
+        const res = await svc.syncPending()
+
+        expect(res).toMatchObject({ interrupted: true, reason: 'server', synced: 0, failed: 0 })
+        expect(api.calls).toHaveLength(1) // no siguio con las demas
+        const [first, second] = queued()
+        expect(first.retries).toBe(1)
+        expect(first.nextRetryAt).toBe(new Date(clock.t + computeRetryDelayMs(1)).toISOString())
+        expect(second.retries).toBe(0)
+    })
+
+    it('clasificacion: 409/408/429/5xx reintentables, 400/404/422 FAILED, 401 y red interrumpen', () => {
+        for (const st of [409, 408, 429, 500, 502]) {
+            expect(classifySyncError(httpError(st)).kind).toBe('retry-interrupt')
+        }
+        for (const st of [400, 404, 422]) expect(classifySyncError(httpError(st)).kind).toBe('fail')
+        expect(classifySyncError(httpError(401))).toEqual({ kind: 'interrupt', reason: 'auth' })
+        expect(classifySyncError(new NetworkError('x', true))).toEqual({ kind: 'interrupt', reason: 'network' })
+        expect(classifySyncError(new SyntaxError('Unexpected token'))).toEqual({ kind: 'retry' })
+    })
+
+    it('timeout (NetworkError) no gasta intentos', async () => {
+        const { svc, api, queued } = await withSales(1)
+        api.behavior = async () => { throw new NetworkError('tiempo de espera agotado', true) }
+
+        const res = await svc.syncPending()
+
+        expect(res).toMatchObject({ interrupted: true, reason: 'network' })
+        expect(queued()[0]).toMatchObject({ status: 'PENDING', retries: 0, nextRetryAt: null })
+    })
+
+    it('backoff: no se reintenta antes de next_retry_at y luego si', async () => {
+        const { svc, api, queued, advance } = await withSales(1)
+        api.behavior = async () => { throw httpError(500) }
+        await svc.syncPending()
+        expect(api.calls).toHaveLength(1)
+
+        api.behavior = async req => ({ clientId: req.clientId, duplicada: false, procesados: [], rechazados: [] })
+        await svc.syncPending()
+        expect(api.calls).toHaveLength(1) // todavia en espera
+
+        advance(computeRetryDelayMs(1))
+        const res = await svc.syncPending()
+        expect(api.calls).toHaveLength(2)
+        expect(res.synced).toBe(1)
+        expect(queued()[0].status).toBe('DONE')
+    })
+
+    it('el backoff crece exponencialmente con tope', () => {
+        expect(computeRetryDelayMs(1)).toBe(15_000)
+        expect(computeRetryDelayMs(2)).toBe(30_000)
+        expect(computeRetryDelayMs(3)).toBe(60_000)
+        expect(computeRetryDelayMs(20)).toBe(10 * 60_000)
+    })
+
+    it('200 no-JSON (InvalidResponseError) no marca DONE: gasta intento e interrumpe', async () => {
+        const { svc, api, queued, sales, created } = await withSales(1)
+        api.behavior = async () => { throw new InvalidResponseError('no json', 200) }
+
+        const res = await svc.syncPending()
+
+        expect(res).toMatchObject({ interrupted: true, reason: 'invalid-response' })
+        expect(queued()[0]).toMatchObject({ status: 'PENDING', retries: 1 })
+        expect(sales.sales.get(created[0].localId)!.sincronizado).toBe(false)
+    })
+
+    it.each([
+        ['cuerpo vacio', null],
+        ['clientId distinto', { clientId: 'otro', duplicada: false, rechazados: [] }],
+        ['sin rechazados', { clientId: '__ID__', duplicada: false }],
+    ])('respuesta invalida (%s) no marca DONE', async (_n, body) => {
+        const { svc, api, queued } = await withSales(1)
+        api.behavior = async req => JSON.parse(JSON.stringify(body).replace('__ID__', req.clientId))
+
+        const res = await svc.syncPending()
+
+        expect(res.reason).toBe('invalid-response')
+        expect(queued()[0]).toMatchObject({ status: 'PENDING', retries: 1 })
+    })
+
+    it('un error inesperado (JSON corrupto / TypeError) gasta intento pero no bloquea la cola', async () => {
+        const { svc, api, queued } = await withSales(2)
+        let n = 0
+        api.behavior = async req => {
+            if (n++ === 0) throw new SyntaxError('Unexpected token < in JSON')
+            return { clientId: req.clientId, duplicada: false, rechazados: [] }
+        }
+
+        const res = await svc.syncPending()
+
+        expect(res).toMatchObject({ synced: 1, interrupted: false })
+        const [first, second] = queued()
+        expect(first).toMatchObject({ status: 'PENDING', retries: 1 })
+        expect(second.status).toBe('DONE')
+    })
+
+    it('un payload corrupto sin venta local gasta intento y la cola sigue', async () => {
+        const { svc, api, queue, queued } = await withSales(1)
+        await queue.save({
+            id: 'roto', entity: 'venta', entityId: 'no-existe', operation: 'CREATE', payload: '{no es json',
+            status: 'PENDING', retries: 0, createdAt: '2000-01-01T00:00:00.000Z', updatedAt: '2000-01-01T00:00:00.000Z',
+        })
+
+        const res = await svc.syncPending()
+
+        expect(res.synced).toBe(1)
+        expect(api.calls).toHaveLength(1)
+        expect(queue.items.get('roto')).toMatchObject({ status: 'PENDING', retries: 1 })
+        expect(queued().find(i => i.id !== 'roto')!.status).toBe('DONE')
+    })
+
+    it('payload heredado sin clientId ni sucursalId se reconstruye desde la venta', async () => {
+        const { svc, api, queue, queued, created } = await withSales(1)
+        const item = queued()[0]
+        await queue.save({ ...item, payload: JSON.stringify({ items: [{ productoId: 11, cantidad: 2, precioUnitario: 20 }], referencia: 'vieja' }) })
+
+        const res = await svc.syncPending()
+
+        expect(res.synced).toBe(1)
+        expect(api.calls[0]).toEqual({
+            clientId: created[0].localId,
+            sucursalId: 7,
+            referencia: 'vieja',
+            fecha: created[0].fecha,
+            items: [{ productoId: 11, cantidad: 2, precioUnitario: 20 }],
+        })
+        // el payload reparado queda guardado
+        expect(JSON.parse(queued()[0].payload).clientId).toBe(created[0].localId)
+    })
+
+    it('rechazo "Item ya registrado" cuenta como procesado; otros rechazos -> FAILED', async () => {
+        const { svc, api, queued } = await withSales(2)
+        let n = 0
+        api.behavior = async req => ({
+            clientId: req.clientId,
+            duplicada: false,
+            procesados: [],
+            rechazados: [{ productoId: 11, cantidad: 2, motivo: n++ === 0 ? 'Item ya registrado' : 'Datos inválidos' }],
+        })
+
+        const res = await svc.syncPending()
+
+        expect(res).toMatchObject({ synced: 1, failed: 1 })
+        expect(queued().map(i => i.status)).toEqual(['DONE', 'FAILED'])
+    })
+
+    it('retryFailed devuelve las FAILED a PENDING con reintentos en 0', async () => {
+        const { svc, api, queued } = await withSales(1)
+        api.behavior = async () => { throw httpError(400) }
+        await svc.syncPending()
+        expect(await svc.getQueueCounts()).toEqual({ pending: 0, failed: 1 })
+
+        expect(await svc.retryFailed()).toBe(1)
+        expect(queued()[0]).toMatchObject({ status: 'PENDING', retries: 0 })
+    })
+
+    it('solo envia las ventas del usuario de la sesion', async () => {
+        const { svc, api, inventory } = setup()
+        inventory.stock.set('cola-local', 100)
+        await svc.registerSale({ items: [cola], sucursalServerId: 7, montoRecibido: 40, ownerId: 'ana@x.com' })
+        await svc.registerSale({ items: [cola], sucursalServerId: 7, montoRecibido: 40, ownerId: 'beto@x.com' })
+
+        await svc.syncPending({ ownerId: 'beto@x.com' })
+
+        expect(api.calls).toHaveLength(1)
+    })
+
+    it('redondea precioUnitario a 2 decimales', async () => {
+        const { svc, queue } = setup()
+        await svc.registerSale({ items: [{ ...cola, precio: 10.006 }], sucursalServerId: 7, montoRecibido: 100 })
+        const [item] = [...queue.items.values()]
+        expect(JSON.parse(item.payload).items[0].precioUnitario).toBe(10.01)
+    })
+})
+
+describe('syncAndPull', () => {
+    it('baja el catalogo despues de enviar, bajo el mismo candado', async () => {
+        const { svc, api, inventory } = setup()
+        api.products = [{ id: 11, inventarioId: 100, nombre: 'Cola', sku: 'C1', precio: 20, stockActual: 9 }]
+        await svc.registerSale({ items: [cola], sucursalServerId: 7, montoRecibido: 40 })
+
+        const res = await svc.syncAndPull(7)
+
+        expect(res).toMatchObject({ synced: 1, pulled: true, skipped: false })
+        expect(inventory.upserts).toHaveLength(1)
+    })
+
+    it('no hace pull si la pasada se interrumpio', async () => {
+        const { svc, api, inventory } = setup()
+        await svc.registerSale({ items: [cola], sucursalServerId: 7, montoRecibido: 40 })
+        api.behavior = async () => { throw new NetworkError() }
+
+        const res = await svc.syncAndPull(7)
+
+        expect(res).toMatchObject({ interrupted: true, pulled: false })
+        expect(inventory.products).toHaveLength(0)
+    })
+
+    it('se omite si ya hay una sincronizacion en curso', async () => {
+        const { svc, api } = setup()
+        await svc.registerSale({ items: [cola], sucursalServerId: 7, montoRecibido: 40 })
+        let release!: () => void
+        api.behavior = req => new Promise(r => { release = () => r({ clientId: req.clientId, duplicada: false, rechazados: [] }) })
+
+        const first = svc.syncPending()
+        await new Promise(r => setTimeout(r, 0))
+        const second = await svc.syncAndPull(7)
+        release()
+        await first
+
+        expect(second).toMatchObject({ skipped: true, pulled: false })
+    })
+})
+
+describe('registerSale: sin inventario vs stock insuficiente', () => {
+    it('distingue producto sin inventario en la sucursal', async () => {
+        const { svc } = setup()
+        const err = await svc.registerSale({
+            items: [{ ...cola, productoLocalId: 'sin-inv', nombre: 'Agua' }],
+            sucursalServerId: 7,
+            montoRecibido: 100,
+        }).catch(e => e)
+        expect(err).toBeInstanceOf(NoInventoryError)
+        expect(err.message).toContain('no tiene inventario')
+    })
+})
+
