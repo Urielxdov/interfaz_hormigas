@@ -29,7 +29,7 @@ Referencia técnica completa del monorepo: arquitectura, paquetes, base de datos
 | Framework | React Native 0.81 + Expo 54 |
 | Navegación | Expo Router 6 (file-based) |
 | UI — hormigas_mobile | NativeWind (Tailwind CSS) + Lucide icons |
-| UI — hormigas_POS | StyleSheet nativo + Ionicons |
+| UI — punto de venta (`src/pos`) | StyleSheet nativo + Ionicons, con paleta clara/oscura (`src/pos/theme.ts`) |
 | Base de datos local | expo-sqlite v16 |
 | Almacenamiento seguro | expo-secure-store (JWT) |
 | Validación de formularios | Zod 4 + react-hook-form + @hookform/resolvers |
@@ -45,7 +45,7 @@ El proyecto sigue Clean Architecture. Cada capa tiene una responsabilidad única
 
 ```
 ┌──────────────────────────────────────────────┐
-│         app (hormigas_mobile / POS)          │
+│      app (hormigas_mobile: gestión + POS)    │
 │  screens, hooks, adapters, reducers, nav     │
 └──────────────────┬───────────────────────────┘
                    │ usa
@@ -149,7 +149,7 @@ Implementaciones concretas de los puertos. Aquí vive todo el I/O.
 
 ### `@hormigas/mobile-shared`
 
-Paquete compartido entre `hormigas_mobile` y `hormigas_POS`. Ubicación: `apps/mobile/shared/`.
+Paquete compartido de las apps móviles (hoy solo `hormigas_mobile`). Ubicación: `apps/mobile/shared/`.
 
 **Contiene:**
 
@@ -289,7 +289,7 @@ PENDING → (retries ≥ 5)  → FAILED
 
 ## Esquema SQLite
 
-Base de datos: `hormigas.db` (hormigas_mobile) / `hormigas_pos.db` (hormigas_POS).
+Base de datos única: `hormigas.db` (inventario y POS comparten tablas y `sync_queue`, separada por `entity`). Al arrancar se ejecuta `CREATE_TABLES_SQL` y después `migrateLocalSchema` (`packages/infrastructure/db/sqlite/localSchemaMigrations.ts`), que agrega con `PRAGMA table_info` las columnas que falten en instalaciones anteriores (`sync_queue.next_retry_at/owner_id`, cache de `inventario`).
 
 ```sql
 -- Sucursales
@@ -404,29 +404,33 @@ El JWT se decodifica en el cliente (base64) para extraer `roles` y `sucursalId`.
 
 ### Flujo de redirección post-login
 
+Las reglas viven en `apps/mobile/hormigas_mobile/src/login/utils/session.ts` (`getRoleFromToken`, `HOME_ROUTE`, `ROUTE_ACCESS`). Se usa el rol de mayor privilegio; un token sin roles conocidos se trata como cajero.
+
 ```
-Login → decodifica JWT
+Login → decodifica JWT (exp vencido → se borra el token y se pide login)
   │
-  ├── roles incluye ROLE_SUPER_ADMIN
-  │     └── → /(superadmin)   panel de gestión de empresas
-  │
-  └── ROLE_ADMIN / ROLE_USER
-        └── → /(tabs)/home    app de gestión normal
+  ├── ROLE_SUPER_ADMIN → /(superadmin)   panel de gestión de empresas
+  ├── ROLE_ADMIN       → /(tabs)/home    gestión + pestaña del carrito que abre /(pos)/venta
+  └── ROLE_USER        → /(pos)/venta    punto de venta (venta + historial)
 ```
+
+Cada grupo de rutas está protegido con `RoleGate` (`src/login/components/RoleGate.tsx`): un cajero que abre un deep link a `/(tabs)`, `/(branche)`, `/(product-detail)`, `/categorias` o `/(superadmin)` es redirigido a `/(pos)/venta`.
+
+La sesión es única (`AuthProvider` en `src/login/hooks/useAuth.tsx`). La sincronización de ventas en segundo plano (`PosSessionProvider`) solo corre con sesión USER o ADMIN; un ADMIN cuyo token no trae `sucursalId` elige la sucursal de venta en el POS.
 
 ### Roles y permisos
 
 | Rol | App | Acceso |
 |-----|-----|--------|
-| `ROLE_USER` | hormigas_POS | Registrar ventas, ver historial |
-| `ROLE_ADMIN` | hormigas_mobile | Todo excepto panel super admin |
-| `ROLE_SUPER_ADMIN` | hormigas_mobile | Panel de empresas, crear admins |
+| `ROLE_USER` | hormigas_mobile — `/(pos)` | Registrar ventas, ver historial |
+| `ROLE_ADMIN` | hormigas_mobile — `/(tabs)` + `/(pos)` | Todo excepto panel super admin, incluido el punto de venta |
+| `ROLE_SUPER_ADMIN` | hormigas_mobile — `/(superadmin)` | Panel de empresas, crear admins |
 
 ---
 
 ## Validación de formularios con Zod
 
-Todos los formularios usan **Zod 4** como fuente única de verdad para las reglas de validación. Los esquemas viven en `apps/mobile/shared/schemas/` y se comparten entre `hormigas_mobile` y `hormigas_POS`.
+Todos los formularios usan **Zod 4** como fuente única de verdad para las reglas de validación. Los esquemas viven en `apps/mobile/shared/schemas/` y se usan en `hormigas_mobile` (gestión y punto de venta).
 
 ### Ubicación
 
@@ -557,30 +561,22 @@ pnpm install
 
 ### Variables de entorno
 
-Crear un archivo `.env` en la carpeta de cada app:
+Crear un archivo `.env` en la carpeta de la app:
 
 ```bash
 # apps/mobile/hormigas_mobile/.env
 EXPO_PUBLIC_API_URL=http://192.168.1.100:8080
-
-# apps/mobile/hormigas_POS/.env
-EXPO_PUBLIC_API_URL=http://192.168.1.100:8080
 ```
 
-### Comandos por app
+### Comandos
 
 ```bash
-# hormigas_mobile
+# hormigas_mobile (gestión + punto de venta)
 cd apps/mobile/hormigas_mobile
 pnpm start         # Metro bundler (escanear QR con Expo Go)
 pnpm android       # Emulador Android
 pnpm ios           # Simulador iOS
-
-# hormigas_POS
-cd apps/mobile/hormigas_POS
-pnpm start
-pnpm android
-pnpm ios
+pnpm test          # Jest
 ```
 
 ### TypeScript

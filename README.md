@@ -7,16 +7,19 @@ Gestiona productos, sucursales y ventas desde el celular — con o sin conexión
 
 ## ¿Qué es Hormigas?
 
-Hormigas es una suite de aplicaciones móviles para negocios con múltiples sucursales. Permite a los administradores controlar su inventario en tiempo real y a los cajeros registrar ventas aunque no haya señal. Cuando regresa la conexión, todo se sincroniza automáticamente.
+Hormigas es una aplicación móvil para negocios con múltiples sucursales. Permite a los administradores controlar su inventario en tiempo real y a los cajeros registrar ventas aunque no haya señal. Cuando regresa la conexión, todo se sincroniza automáticamente.
 
 ---
 
-## Aplicaciones incluidas
+## Una sola app, vistas por rol
 
-| App | Para quién | Qué hace |
-|-----|-----------|----------|
-| **hormigas_mobile** | Administradores | Gestiona productos, sucursales, inventario, usuarios y categorías |
-| **hormigas_POS** | Cajeros | Registra ventas, calcula cambio, historial con estado de sync |
+`hormigas_mobile` es la única app móvil. Después del login, cada usuario ve lo que le corresponde según el claim `roles` del JWT:
+
+| Rol | Para quién | Qué ve |
+|-----|-----------|--------|
+| `ROLE_USER` | Cajeros | Punto de venta: registrar ventas, calcular cambio, historial con estado de sync |
+| `ROLE_ADMIN` | Administradores | Productos, sucursales, inventario, movimientos y usuarios, más acceso al punto de venta (pestaña del carrito) |
+| `ROLE_SUPER_ADMIN` | Super administradores | Panel de empresas |
 
 ---
 
@@ -62,16 +65,11 @@ cd interfaz_hormigas
 # 2. Instalar dependencias
 pnpm install
 
-# 3. Configurar la URL de la API (crear archivo .env en cada app)
+# 3. Configurar la URL de la API
 echo "EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080" > apps/mobile/hormigas_mobile/.env
-echo "EXPO_PUBLIC_API_URL=http://<ip-del-servidor>:8080" > apps/mobile/hormigas_POS/.env
 
-# 4. Iniciar la app de gestión
+# 4. Iniciar la app (gestión + punto de venta)
 cd apps/mobile/hormigas_mobile
-pnpm start
-
-# 5. Iniciar el POS (en otra terminal)
-cd apps/mobile/hormigas_POS
 pnpm start
 ```
 
@@ -85,8 +83,7 @@ Luego escanea el QR con la app **Expo Go** o conecta un dispositivo/emulador.
 interfaz_hormigas/
 ├── apps/
 │   └── mobile/
-│       ├── hormigas_mobile/   # App de gestión (Admin / Super Admin)
-│       ├── hormigas_POS/      # App de punto de venta (Cajero)
+│       ├── hormigas_mobile/   # App única: POS (Cajero), gestión (Admin) y empresas (Super Admin)
 │       └── shared/            # Contextos y factories compartidos
 └── packages/
     ├── domain/                # Entidades y esquema SQLite

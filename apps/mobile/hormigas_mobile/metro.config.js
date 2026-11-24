@@ -28,13 +28,10 @@ config.resolver.extraNodeModules = {
   'react-native-css-interop/jsx-runtime': path.resolve(projectRoot, 'node_modules/react-native-css-interop/jsx-runtime'),
 }
 
-// Bloqueamos el acceso a la otra aplicacion de app
+// Bloqueamos el acceso a los node_modules de la app de escritorio
 config.resolver.blockList = [
   new RegExp(
     `${path.resolve(workspaceRoot, 'apps', 'desktop', 'hormigas_desktop', 'node_modules').replace(/\\/g, '\\\\')}.*`
-  ),
-  new RegExp(
-    `${path.resolve(workspaceRoot, 'apps', 'mobile', 'hormigas_POS', 'node_modules').replace(/\\/g, '\\\\')}.*`
   ),
 ]
 module.exports = withNativeWind(config, { input: "./global.css" })

@@ -8,7 +8,7 @@ El proyecto sigue una arquitectura en capas inspirada en Clean Architecture. Cad
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   app (mobile / POS)                │
+│        app (hormigas_mobile: gestión + POS)         │
 │  screens, hooks, adapters, reducers, navigación     │
 └───────────────────────┬─────────────────────────────┘
                         │ usa
@@ -138,7 +138,7 @@ export class SqliteBranchRepositoryImpl {
 
 ---
 
-## Capa: app (hormigas_mobile / hormigas_POS)
+## Capa: app (hormigas_mobile)
 
 La capa más externa. Ensambla las capas inferiores, gestiona estado de UI y define la navegación.
 
