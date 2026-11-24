@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { AppState } from 'react-native'
 import { getSaleService } from '@/src/adapters/saleServiceInstance'
 import { isTokenExpired } from '@/src/login/utils/session'
+import { useToast } from '@/src/utils/components/ToastProvider'
 
 const SYNC_INTERVAL_MS = 30_000
 
@@ -32,6 +33,9 @@ export function useSaleSync(
 ) {
     const expiredRef = useRef(onSessionExpired)
     expiredRef.current = onSessionExpired
+    const toast = useToast()
+    const toastRef = useRef(toast)
+    toastRef.current = toast
 
     useEffect(() => {
         if (!token) return
@@ -54,6 +58,20 @@ export function useSaleSync(
                     ? await svc.syncAndPull(sucursalId, { ownerId })
                     : await svc.syncPending({ ownerId })
                 if (res.reason === 'auth') sessionExpired()
+                // Ventas que estaban en cola (sin conexion / servidor caido) y se enviaron ahora
+                if (res.failed > 0) {
+                    toastRef.current.show({
+                        type: 'error',
+                        title: res.failed === 1 ? '1 venta rechazada por el servidor' : `${res.failed} ventas rechazadas por el servidor`,
+                        message: 'Revisa las ventas fallidas en el indicador de sincronización.',
+                    })
+                } else if (res.synced > 0) {
+                    toastRef.current.show({
+                        type: 'info',
+                        title: res.synced === 1 ? 'Venta pendiente enviada' : `${res.synced} ventas pendientes enviadas`,
+                        message: 'Ya están registradas en el servidor.',
+                    })
+                }
             } catch (e) {
                 console.warn('[POS] sync/pull falló:', e)
             }

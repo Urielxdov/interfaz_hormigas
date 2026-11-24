@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CartItem, ProductWithStock, InsufficientStockError } from '@hormigas/application'
+import { CartItem, ProductWithStock, InsufficientStockError, NoInventoryError } from '@hormigas/application'
 import { getSaleService } from '@/src/adapters/saleServiceInstance'
+import { useToast } from '@/src/utils/components/ToastProvider'
 
 export type { CartItem, ProductWithStock }
 
@@ -20,6 +21,7 @@ export function usePOS(sucursalId: number, ownerId: string | null) {
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const toast = useToast()
 
     const search = useCallback(async (q: string) => {
         if (!q.trim()) {
@@ -113,20 +115,43 @@ export function usePOS(sucursalId: number, ownerId: string | null) {
                 montoRecibido: montoNum,
                 ownerId,
             })
+            const totalVenta = total
             setCart([])
             setMontoRecibido('')
             setQuery('')
-            setSuccessMsg(`Venta registrada. Cambio: $${cambio.toFixed(2)}`)
-            setTimeout(() => setSuccessMsg(null), 3000)
+            setSuccessMsg(null)
+            toast.show({
+                type: 'success',
+                title: 'Venta registrada',
+                message: `Total $${totalVenta.toFixed(2)} · Cambio $${cambio.toFixed(2)}`,
+            })
             // Intento inmediato de sync; si no hay red queda en cola. El servicio evita ejecuciones solapadas.
-            svc.syncPending({ ownerId }).catch(e => console.warn('[POS] sync tras venta falló:', e))
+            svc.syncPending({ ownerId })
+                .then(res => {
+                    if (res.failed > 0) {
+                        toast.show({
+                            type: 'error',
+                            title: 'Venta rechazada por el servidor',
+                            message: 'Revisa las ventas fallidas en el indicador de sincronización.',
+                        })
+                    } else if (res.interrupted && res.reason !== 'auth') {
+                        toast.show({
+                            type: 'warning',
+                            title: res.reason === 'network' ? 'Venta guardada sin conexión' : 'Venta guardada, servidor no disponible',
+                            message: 'Se enviará automáticamente en cuanto sea posible.',
+                        })
+                    }
+                })
+                .catch(e => console.warn('[POS] sync tras venta falló:', e))
         } catch (e) {
-            if (e instanceof InsufficientStockError) {
-                setErrorMsg(e.message)
-            } else {
-                setErrorMsg('Error al registrar la venta')
-                console.error('[POS] registerSale error:', e)
-            }
+            const message = e instanceof NoInventoryError
+                ? e.message
+                : e instanceof InsufficientStockError
+                    ? e.message
+                    : 'No se pudo guardar la venta. Intenta de nuevo.'
+            if (!(e instanceof InsufficientStockError)) console.error('[POS] registerSale error:', e)
+            setErrorMsg(message)
+            toast.show({ type: 'error', title: 'Error en la venta', message })
         } finally {
             setRegistering(false)
         }
