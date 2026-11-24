@@ -68,6 +68,13 @@ export class SqliteSaleRepositoryImpl implements ISaleRepository {
         await this.db.run('UPDATE venta SET sincronizado = 1 WHERE id = ?', [localId])
     }
 
+    async findById(localId: string): Promise<Sale | null> {
+        const venta = await this.db.getOne<VentaRow>('SELECT * FROM venta WHERE id = ?', [localId])
+        if (!venta) return null
+        const [sale] = await this._attachItems([venta])
+        return sale ?? null
+    }
+
     async findAll(): Promise<Sale[]> {
         const ventas = await this.db.getMany<VentaRow>('SELECT * FROM venta ORDER BY fecha DESC')
         return this._attachItems(ventas)

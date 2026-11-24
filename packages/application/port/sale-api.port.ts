@@ -23,8 +23,13 @@ export interface VentaBatchItemRechazado {
 export interface VentaBatchResponse {
     clientId: string | null
     duplicada: boolean
+    /** Movimientos registrados (o ya registrados antes, si es un reintento). */
+    procesados?: unknown[]
     rechazados: VentaBatchItemRechazado[]
 }
+
+/** Motivo con el que el backend reporta un item que ya estaba registrado (reintento concurrente). */
+export const MOTIVO_ITEM_YA_REGISTRADO = 'Item ya registrado'
 
 export interface ProductoConStockResponse {
     id: number

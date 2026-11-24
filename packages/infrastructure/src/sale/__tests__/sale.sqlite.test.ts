@@ -26,15 +26,20 @@ class NodeSqliteClient implements DatabaseClient {
     async getMany<T>(query: string, params: unknown[] = []): Promise<T[]> {
         return this.db.prepare(query).all(...params) as T[]
     }
-    async transaction<T>(fn: () => Promise<T>): Promise<T> {
+    private inTx = false
+    async transaction<T>(fn: (tx: DatabaseClient) => Promise<T>): Promise<T> {
+        if (this.inTx) return fn(this)   // anidada: reutiliza la transaccion en curso
         this.db.exec('BEGIN')
+        this.inTx = true
         try {
-            const out = await fn()
+            const out = await fn(this)
             this.db.exec('COMMIT')
             return out
         } catch (e) {
             this.db.exec('ROLLBACK')
             throw e
+        } finally {
+            this.inTx = false
         }
     }
 }
@@ -57,7 +62,13 @@ function build() {
         new SqliteInventaryForSaleImpl(db),
         new SqliteSyncQueueRepositoryImpl(db),
         api,
-        { run: fn => db.transaction(fn) }
+        {
+            run: fn => db.transaction(tx => fn({
+                saleRepo: new SqliteSaleRepositoryImpl(tx),
+                inventaryRepo: new SqliteInventaryForSaleImpl(tx),
+                syncQueueRepo: new SqliteSyncQueueRepositoryImpl(tx),
+            })),
+        }
     )
     return { db, svc, api }
 }

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CartItem, ProductWithStock, InsufficientStockError } from '@hormigas/application'
 import { getSaleService } from '@/src/adapters/saleServiceInstance'
-import { getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
+import { getOwnerIdFromToken, getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
 
 export type { CartItem, ProductWithStock }
 
 export function usePOS(token: string | null) {
     const sucursalId = token ? (getSucursalIdFromToken(token) ?? 0) : 0
+    const ownerId = token ? getOwnerIdFromToken(token) : null
 
     const [query, setQuery] = useState('')
     const [results, setResults] = useState<ProductWithStock[]>([])
@@ -104,6 +105,7 @@ export function usePOS(token: string | null) {
                 sucursalServerId: sucursalId,
                 items: cart,
                 montoRecibido: montoNum,
+                ownerId,
             })
             setCart([])
             setMontoRecibido('')
@@ -111,7 +113,7 @@ export function usePOS(token: string | null) {
             setSuccessMsg(`Venta registrada. Cambio: $${cambio.toFixed(2)}`)
             setTimeout(() => setSuccessMsg(null), 3000)
             // Intento inmediato de sync; si no hay red queda en cola. El servicio evita ejecuciones solapadas.
-            svc.syncPending().catch(e => console.warn('[POS] sync tras venta falló:', e))
+            svc.syncPending({ ownerId }).catch(e => console.warn('[POS] sync tras venta falló:', e))
         } catch (e) {
             if (e instanceof InsufficientStockError) {
                 setErrorMsg(e.message)

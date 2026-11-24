@@ -4,6 +4,7 @@ export interface ISaleRepository {
     save(sale: Sale): Promise<void>
     findAll(): Promise<Sale[]>
     findByDate(fecha: string): Promise<Sale[]>
+    findById(localId: string): Promise<Sale | null>
     /** Marca la venta como reconocida por el servidor. */
     markSynced(localId: string): Promise<void>
 }

@@ -72,7 +72,9 @@ export const CREATE_TABLES_SQL = `
     status TEXT NOT NULL DEFAULT 'PENDING',
     retries INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    next_retry_at TEXT,
+    owner_id TEXT
   );
 
   CREATE TABLE IF NOT EXISTS venta (

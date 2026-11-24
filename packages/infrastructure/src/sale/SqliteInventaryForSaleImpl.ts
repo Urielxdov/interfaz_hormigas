@@ -25,6 +25,36 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
         return changes > 0
     }
 
+    async hasInventory(productoLocalId: string, sucursalServerId: number): Promise<boolean> {
+        const row = await this.db.getOne<{ n: number }>(
+            `SELECT COUNT(*) AS n FROM inventario
+             WHERE producto_id = (SELECT server_id FROM producto WHERE local_id = ?)
+               AND sucursal_id = ?`,
+            [productoLocalId, sucursalServerId]
+        )
+        return Number(row?.n ?? 0) > 0
+    }
+
+    async deactivateProductsNotIn(serverIds: number[]): Promise<void> {
+        const ids = serverIds.filter(id => Number.isFinite(id))
+        // Solo productos que vienen del servidor; los locales sin server_id no se tocan.
+        if (ids.length === 0) {
+            await this.db.run(`UPDATE producto SET activo = 0 WHERE server_id IS NOT NULL AND activo = 1`)
+            return
+        }
+        await this.db.transaction(async tx => {
+            await tx.run(`CREATE TEMP TABLE IF NOT EXISTS _pull_ids (id INTEGER PRIMARY KEY)`)
+            await tx.run(`DELETE FROM _pull_ids`)
+            for (const id of ids) await tx.run(`INSERT OR IGNORE INTO _pull_ids (id) VALUES (?)`, [id])
+            await tx.run(
+                `UPDATE producto SET activo = 0
+                 WHERE server_id IS NOT NULL AND activo = 1
+                   AND server_id NOT IN (SELECT id FROM _pull_ids)`
+            )
+            await tx.run(`DELETE FROM _pull_ids`)
+        })
+    }
+
     async upsertProductFromServer(product: ServerProductData): Promise<void> {
         const { changes } = await this.db.run(
             `UPDATE producto
@@ -84,28 +114,32 @@ export class SqliteInventaryForSaleImpl implements ILocalInventaryRepository, II
         stockMinimo: number = 0,
         stockMaximo: number = 9999
     ): Promise<void> {
-        // Lo vendido en este dispositivo y aun no confirmado por el servidor ya salio del stock real:
-        // se resta para que el pull no lo devuelva.
-        const pending = await this.db.getOne<{ qty: number | null }>(
-            `SELECT SUM(vi.cantidad) AS qty
-             FROM venta_item vi
-             JOIN venta v ON v.id = vi.venta_id
-             WHERE v.sincronizado = 0
-               AND v.sucursal_id = ?
-               AND vi.producto_server_id = ?`,
-            [String(sucursalServerId), productoServerId]
-        )
-        const stock = Math.max(0, stockActual - (pending?.qty ?? 0))
-        // inventario.sucursal_id tiene FK a sucursal: el POS no sincroniza sucursales, asi que la creamos si falta.
-        await this.db.run(
-            `INSERT OR IGNORE INTO sucursal (id, nombre, activa) VALUES (?, ?, 1)`,
-            [sucursalServerId, `Sucursal #${sucursalServerId}`]
-        )
-        await this.db.run(
-            `INSERT OR REPLACE INTO inventario (id, producto_id, sucursal_id, stock_actual, stock_minimo, stock_maximo)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [inventarioId, productoServerId, sucursalServerId, stock, stockMinimo, stockMaximo]
-        )
+        // Lectura de pendientes + escritura en la misma transaccion: una venta registrada en medio
+        // no puede quedar fuera del calculo.
+        await this.db.transaction(async tx => {
+            // Lo vendido en este dispositivo y aun no confirmado por el servidor ya salio del stock real:
+            // se resta para que el pull no lo devuelva.
+            const pending = await tx.getOne<{ qty: number | null }>(
+                `SELECT SUM(vi.cantidad) AS qty
+                 FROM venta_item vi
+                 JOIN venta v ON v.id = vi.venta_id
+                 WHERE v.sincronizado = 0
+                   AND v.sucursal_id = ?
+                   AND vi.producto_server_id = ?`,
+                [String(sucursalServerId), productoServerId]
+            )
+            const stock = Math.max(0, stockActual - (pending?.qty ?? 0))
+            // inventario.sucursal_id tiene FK a sucursal: el POS no sincroniza sucursales, asi que la creamos si falta.
+            await tx.run(
+                `INSERT OR IGNORE INTO sucursal (id, nombre, activa) VALUES (?, ?, 1)`,
+                [sucursalServerId, `Sucursal #${sucursalServerId}`]
+            )
+            await tx.run(
+                `INSERT OR REPLACE INTO inventario (id, producto_id, sucursal_id, stock_actual, stock_minimo, stock_maximo)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [inventarioId, productoServerId, sucursalServerId, stock, stockMinimo, stockMaximo]
+            )
+        })
     }
 
     async applyMovement(

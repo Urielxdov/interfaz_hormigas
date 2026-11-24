@@ -1,5 +1,5 @@
 import { SqliteSyncQueueRepositoryImpl } from '@hormigas/infrastructure'
-import { getDB } from '@/db/DataBase'
+import { getDB, initDatabase } from '@/db/DataBase'
 import { ExpoSQLiteClient } from './ExpoSQLiteClient'
 
 let _repo: SqliteSyncQueueRepositoryImpl | null = null
@@ -10,6 +10,7 @@ export const getSyncQueueRepo = (): Promise<SqliteSyncQueueRepositoryImpl> => {
     if (_initPromise) return _initPromise
 
     _initPromise = (async () => {
+        await initDatabase()
         const db = await getDB()
         _repo = new SqliteSyncQueueRepositoryImpl(new ExpoSQLiteClient(db))
         return _repo

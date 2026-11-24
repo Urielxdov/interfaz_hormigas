@@ -3,13 +3,16 @@ import { Ionicons } from '@expo/vector-icons'
 import { useAuth } from '@/src/auth/hooks/useAuth'
 import { POSHeader } from '@/src/utils/components/POSHeader'
 import { useSaleSync } from '@/src/utils/hooks/useSaleSync'
-import { getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
+import { getOwnerIdFromToken, getSucursalIdFromToken } from '@/src/auth/hooks/useAuth'
 
 type IconName = React.ComponentProps<typeof Ionicons>['name']
 
 export default function TabLayout() {
     const { token, isLoading } = useAuth()
-    useSaleSync(token ? (getSucursalIdFromToken(token) ?? 0) : 0)
+    useSaleSync(
+        token ? (getSucursalIdFromToken(token) ?? 0) : 0,
+        token ? getOwnerIdFromToken(token) : null
+    )
 
     if (isLoading) return null
     if (!token) return <Redirect href="/(login)" />

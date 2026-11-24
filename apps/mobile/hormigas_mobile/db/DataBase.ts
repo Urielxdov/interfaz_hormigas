@@ -1,5 +1,7 @@
 import * as SQLite from 'expo-sqlite'
 import { CREATE_TABLES_SQL } from '@hormigas/domain'
+import { migrateSyncQueue } from '@hormigas/infrastructure'
+import { ExpoSQLiteClient } from '@/src/adapters/ExpoSQLiteClient'
 
 let db: SQLite.SQLiteDatabase | null = null
 let initPromise: Promise<void> | null = null
@@ -28,7 +30,10 @@ const runDatabaseInit = async () => {
         //     DROP TABLE IF EXISTS inventario;
         // `)
 
+        await db.execAsync('PRAGMA busy_timeout = 5000;')
         await db.execAsync(CREATE_TABLES_SQL)
+        // sync_queue: columnas nuevas (next_retry_at, owner_id) en bases ya instaladas.
+        await migrateSyncQueue(new ExpoSQLiteClient(db))
 
         for (const sql of INVENTARIO_MIGRATIONS) {
             try {

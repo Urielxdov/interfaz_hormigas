@@ -5,12 +5,9 @@ export class ApiSaleRepositoryImpl implements IApiSaleRepository {
     constructor(private http: ApiHttpClient) {}
 
     async registrarVentaBatch(request: VentaBatchRequest): Promise<VentaBatchResponse> {
-        const res = await this.http.post<Partial<VentaBatchResponse> | null>('/api/movimiento/venta/batch', request)
-        return {
-            clientId: res?.clientId ?? null,
-            duplicada: res?.duplicada ?? false,
-            rechazados: res?.rechazados ?? [],
-        }
+        // Sin normalizar: SaleService valida clientId y arreglos; rellenar con defaults
+        // ocultaria una respuesta vacia o incompleta.
+        return this.http.post<VentaBatchResponse>('/api/movimiento/venta/batch', request)
     }
 
     async buscarProductosConStock(q: string, sucursalId: number): Promise<ProductoConStockResponse[]> {

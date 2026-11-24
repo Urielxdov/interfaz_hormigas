@@ -24,6 +24,12 @@ export function getSucursalIdFromToken(token: string): number | null {
     return typeof id === 'number' ? id : null
 }
 
+/** Identificador del usuario de la sesion (claim `sub`, el correo). */
+export function getOwnerIdFromToken(token: string): string | null {
+    const sub = decodeJWTPayload(token)['sub']
+    return typeof sub === 'string' && sub !== '' ? sub : null
+}
+
 export const useAuth = () => {
     const [token, setToken] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)

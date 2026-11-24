@@ -3,18 +3,20 @@ import {
     InsufficientStockError,
     MAX_SYNC_RETRIES,
     ILocalInventaryRepository,
+    SaleTxScope,
 } from '../sale.service'
+import { NetworkError } from '../../errors/NetworkError'
 import { ISaleRepository } from '../../repositories/sale.repository'
 import { IUnitOfWork } from '../../repositories/unit-of-work'
-import { ISyncQueueRepository, SyncQueueItem } from '../../sync/sync.interfaces'
+import { FindPendingOptions, ISyncQueueRepository, SyncQueueItem } from '../../sync/sync.interfaces'
 import { IApiSaleRepository, VentaBatchRequest, VentaBatchResponse } from '../../port/sale-api.port'
 import type { Sale } from '@hormigas/domain'
 
 // ---------- fakes en memoria ----------
 
-class FakeUnitOfWork implements IUnitOfWork {
+class FakeUnitOfWork implements IUnitOfWork<SaleTxScope> {
     constructor(private stores: { snapshot(): unknown; restore(s: unknown): void }[]) {}
-    async run<T>(fn: () => Promise<T>): Promise<T> {
+    async run<T>(fn: (scope?: SaleTxScope) => Promise<T>): Promise<T> {
         const snaps = this.stores.map(s => s.snapshot())
         try {
             return await fn()
@@ -37,9 +39,12 @@ class FakeInventory implements ILocalInventaryRepository {
         this.stock.set(productoLocalId, cur - cantidad)
         return true
     }
+    async hasInventory(productoLocalId: string) { return this.stock.has(productoLocalId) }
     async searchWithStock() { return [] }
     async upsertProductFromServer(p: unknown) { this.products.push(p) }
     async upsertFromServer(...args: unknown[]) { this.upserts.push(args) }
+    deactivated: number[][] = []
+    async deactivateProductsNotIn(ids: number[]) { this.deactivated.push(ids) }
 }
 
 class FakeSales implements ISaleRepository {
@@ -49,6 +54,7 @@ class FakeSales implements ISaleRepository {
     async save(sale: Sale) { this.sales.set(sale.localId, { ...sale }) }
     async findAll() { return [...this.sales.values()] }
     async findByDate() { return [] }
+    async findById(id: string) { return this.sales.get(id) ?? null }
     async markSynced(id: string) {
         const s = this.sales.get(id)
         if (s) s.sincronizado = true
@@ -60,8 +66,32 @@ class FakeQueue implements ISyncQueueRepository {
     snapshot() { return new Map([...this.items].map(([k, v]) => [k, { ...v }])) }
     restore(s: unknown) { this.items = new Map(s as Map<string, SyncQueueItem>) }
     async save(i: SyncQueueItem) { this.items.set(i.id, { ...i }); return true }
-    async findPending(limit = 20) {
-        return [...this.items.values()].filter(i => i.status === 'PENDING').slice(0, limit).map(i => ({ ...i }))
+    async findPending(limit = 20, o: FindPendingOptions = {}) {
+        const now = o.now ?? new Date().toISOString()
+        return [...this.items.values()]
+            .filter(i => i.status === 'PENDING')
+            .filter(i => !i.nextRetryAt || i.nextRetryAt <= now)
+            .filter(i => !o.entity || i.entity === o.entity)
+            .filter(i => !o.ownerId || !i.ownerId || i.ownerId === o.ownerId)
+            .slice(0, limit)
+            .map(i => ({ ...i }))
+    }
+    async scheduleRetry(id: string, at: string) {
+        const it = this.items.get(id)!
+        it.retries++
+        it.nextRetryAt = at
+        return true
+    }
+    async countByStatus() {
+        const all = [...this.items.values()]
+        return { pending: all.filter(i => i.status === 'PENDING').length, failed: all.filter(i => i.status === 'FAILED').length }
+    }
+    async retryFailed() {
+        let n = 0
+        for (const it of this.items.values()) {
+            if (it.status === 'FAILED') { it.status = 'PENDING'; it.retries = 0; it.nextRetryAt = null; n++ }
+        }
+        return n
     }
     async findByEntity() { return [] }
     async markAsProcessed(id: string) { this.items.get(id)!.status = 'DONE'; return true }
@@ -88,10 +118,13 @@ function setup() {
     const queue = new FakeQueue()
     const api = new FakeApi()
     const uow = new FakeUnitOfWork([inventory, sales, queue])
-    const svc = new SaleService(sales, inventory, queue, api, uow)
+    const clock = { t: Date.parse('2026-01-01T12:00:00.000Z') }
+    const svc = new SaleService(sales, inventory, queue, api, uow, { now: () => clock.t })
     inventory.stock.set('cola-local', 10)
     inventory.stock.set('papas-local', 1)
-    return { svc, inventory, sales, queue, api }
+    /** Avanza el reloj mas alla del backoff maximo. */
+    const advance = (ms = 11 * 60_000) => { clock.t += ms }
+    return { svc, inventory, sales, queue, api, clock, advance }
 }
 
 const cola = { productoLocalId: 'cola-local', productoServerId: 11, nombre: 'Cola', sku: 'C1', precio: 20, cantidad: 2, subtotal: 40 }
@@ -173,7 +206,7 @@ describe('syncPending', () => {
 
     it('sin red (error sin status) no consume reintentos y deja la venta PENDING', async () => {
         const { svc, api, queue } = await withPendingSale()
-        api.behavior = async () => { throw new TypeError('Network request failed') }
+        api.behavior = async () => { throw new NetworkError('Network request failed') }
 
         const res = await svc.syncPending()
 
@@ -194,12 +227,13 @@ describe('syncPending', () => {
     })
 
     it('error 500 incrementa reintentos y pasa a FAILED al llegar a MAX_SYNC_RETRIES', async () => {
-        const { svc, api, queue } = await withPendingSale()
+        const { svc, api, queue, advance } = await withPendingSale()
         api.behavior = async () => { throw httpError(500) }
 
         for (let i = 0; i < MAX_SYNC_RETRIES - 1; i++) {
             await svc.syncPending()
             expect([...queue.items.values()][0].status).toBe('PENDING')
+            advance()
         }
         const last = await svc.syncPending()
 
@@ -273,7 +307,7 @@ describe('syncPending', () => {
 
     it('el candado se libera aunque falle, y se puede volver a sincronizar', async () => {
         const { svc, api } = await withPendingSale()
-        api.behavior = async () => { throw new TypeError('offline') }
+        api.behavior = async () => { throw new NetworkError('offline') }
         await svc.syncPending()
 
         api.behavior = async req => ({ clientId: req.clientId, duplicada: false, rechazados: [] })

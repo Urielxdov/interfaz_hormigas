@@ -7,19 +7,18 @@ const SYNC_INTERVAL_MS = 30_000
 /**
  * Mantiene el dispositivo sincronizado mientras la sesion esta activa:
  *  - al montar y al volver a primer plano: envia ventas pendientes y baja catalogo/stock
- *  - cada 30 s: reintenta enviar las ventas pendientes
- * El servicio tiene un candado interno, asi que varias llamadas simultaneas no se solapan.
+ *    (syncAndPull: el pull corre bajo el mismo candado que el envio y se omite si
+ *    otra sincronizacion estaba en curso o si la pasada se interrumpio)
+ *  - cada 30 s: reintenta enviar las ventas pendientes (respetando el backoff de la cola)
  */
-export function useSaleSync(sucursalId: number) {
+export function useSaleSync(sucursalId: number, ownerId: string | null = null) {
     useEffect(() => {
         if (!sucursalId) return
-
-        let cancelled = false
 
         const pushOnly = async () => {
             try {
                 const svc = await getSaleService()
-                await svc.syncPending()
+                await svc.syncPending({ ownerId })
             } catch (e) {
                 console.warn('[POS] syncPending falló:', e)
             }
@@ -28,9 +27,7 @@ export function useSaleSync(sucursalId: number) {
         const pushAndPull = async () => {
             try {
                 const svc = await getSaleService()
-                const res = await svc.syncPending()
-                if (cancelled || res.interrupted) return
-                await svc.pullProductsWithStock(sucursalId)
+                await svc.syncAndPull(sucursalId, { ownerId })
             } catch (e) {
                 console.warn('[POS] sync/pull falló:', e)
             }
@@ -43,9 +40,8 @@ export function useSaleSync(sucursalId: number) {
         })
 
         return () => {
-            cancelled = true
             clearInterval(interval)
             sub.remove()
         }
-    }, [sucursalId])
+    }, [sucursalId, ownerId])
 }

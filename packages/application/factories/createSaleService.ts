@@ -1,4 +1,4 @@
-import { SaleService, ILocalInventaryRepository } from '../services/sale.service'
+import { SaleService, ILocalInventaryRepository, SaleTxScope, SaleServiceOptions } from '../services/sale.service'
 import { ISaleRepository } from '../repositories/sale.repository'
 import { IUnitOfWork } from '../repositories/unit-of-work'
 import { ISyncQueueRepository } from '../sync/sync.interfaces'
@@ -9,7 +9,8 @@ export function createSaleService(
     inventaryRepo: ILocalInventaryRepository,
     syncQueueRepo: ISyncQueueRepository,
     apiSaleRepo: IApiSaleRepository,
-    unitOfWork: IUnitOfWork
+    unitOfWork: IUnitOfWork<SaleTxScope>,
+    options?: SaleServiceOptions
 ): SaleService {
-    return new SaleService(saleRepo, inventaryRepo, syncQueueRepo, apiSaleRepo, unitOfWork)
+    return new SaleService(saleRepo, inventaryRepo, syncQueueRepo, apiSaleRepo, unitOfWork, options)
 }
